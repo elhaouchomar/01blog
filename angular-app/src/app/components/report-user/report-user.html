@@ -1,85 +1,68 @@
-<!-- Modal Overlay -->
-<div aria-modal="true" class="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6" role="dialog">
-    <!-- Backdrop -->
-    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" (click)="close()"></div>
-    <!-- Modal Container -->
-    <div (click)="$event.stopPropagation()"
-        class="relative w-full max-w-[600px] bg-white dark:bg-background-dark rounded-2xl shadow-2xl flex flex-col max-h-[90vh] border border-gray-100 dark:border-gray-800 transform transition-all group/design-root">
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
-            <h2 class="text-[#111118] dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">Report
-                User</h2>
-            <button
-                class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-surface-dark focus:outline-none focus:ring-2 focus:ring-primary/50"
-                (click)="close()">
+<div class="report-modal-overlay" aria-modal="true" role="dialog">
+    <div class="report-modal-backdrop" (click)="close()"></div>
+
+    <div class="report-modal-container" (click)="$event.stopPropagation()">
+        <header class="report-modal-header">
+            <h2 class="report-modal-title">Report Content</h2>
+            <button class="report-close-btn" (click)="close()" aria-label="Close">
                 <span class="material-symbols-outlined">close</span>
             </button>
-        </div>
-        <!-- Scrollable Content -->
-        <div class="overflow-y-auto custom-scrollbar p-6 flex-1">
-            <!-- Target User Info -->
-            <div *ngIf="user"
-                class="flex items-center gap-3 p-3 mb-6 bg-background-light dark:bg-surface-dark rounded-lg border border-gray-200 dark:border-gray-700">
-                <div class="relative">
-                    <div class="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600 bg-cover bg-center"
+        </header>
+
+        <div class="report-modal-body">
+            <!-- Target User Section -->
+            <div class="report-target-card" *ngIf="user">
+                <div class="report-target-avatar-wrapper">
+                    <div class="report-target-avatar"
                         [style.background-image]="'url(' + (user.avatar || 'assets/default-avatar.png') + ')'">
                     </div>
-                    <div class="absolute -bottom-1 -right-1 bg-white dark:bg-background-dark rounded-full p-0.5">
-                        <span class="material-symbols-outlined text-[16px] text-red-500">warning</span>
+                    <div class="report-target-badge">
+                        <span class="material-symbols-outlined">warning</span>
                     </div>
                 </div>
-                <div class="flex flex-col">
-                    <span
-                        class="text-xs uppercase tracking-wider font-semibold text-gray-500 dark:text-gray-400">Reporting</span>
-                    <span class="text-[#111118] dark:text-white font-medium">{{ user.handle }}</span>
+                <div class="report-target-info">
+                    <span class="report-target-label">Reporting User</span>
+                    <span class="report-target-name">{{ user.name }}</span>
+                    <span class="report-target-handle">{{ user.handle }}</span>
                 </div>
             </div>
 
-            <!-- Reason Radio List -->
-            <div class="mb-6">
-                <label class="block text-sm font-semibold text-[#111118] dark:text-white mb-3">Reason for
-                    report</label>
-                <div class="flex flex-col gap-3">
-                    <label *ngFor="let reason of reasons"
-                        class="group relative flex items-center justify-between p-4 rounded-xl border border-[#dbdbe6] dark:border-gray-700 bg-white dark:bg-background-dark cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-surface-dark"
-                        [class.active-reason]="selectedReason === reason">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-gray-500"
-                                [style.color]="selectedReason === reason ? 'var(--primary)' : ''">report</span>
-                            <span class="text-sm font-medium text-[#111118] dark:text-gray-200">{{ reason }}</span>
-                        </div>
-                        <input
-                            class="w-5 h-5 border-gray-300 text-primary focus:ring-primary focus:ring-offset-0 bg-transparent"
-                            name="report_reason" type="radio" [value]="reason" [(ngModel)]="selectedReason" />
-                    </label>
-                </div>
+            <p class="report-instruction">Help us understand what's happening. Why are you reporting this user?</p>
+
+            <!-- Reason Selection -->
+            <div class="report-reasons-group">
+                <label *ngFor="let reason of reasons" class="report-reason-item"
+                    [class.is-selected]="selectedReason === reason">
+                    <div class="reason-indicator">
+                        <div class="indicator-inner"></div>
+                    </div>
+                    <div class="reason-content">
+                        <span class="reason-text">{{ reason }}</span>
+                    </div>
+                    <input type="radio" name="report_reason" [value]="reason" [(ngModel)]="selectedReason"
+                        class="reason-input-hidden">
+                </label>
             </div>
 
-            <!-- Additional Details -->
-            <div class="mb-2">
-                <label class="block text-sm font-semibold text-[#111118] dark:text-white mb-2">Additional details
-                    (optional)</label>
-                <textarea [(ngModel)]="details" name="details"
-                    class="w-full px-4 py-3 rounded-xl border border-[#dbdbe6] dark:border-gray-700 bg-white dark:bg-background-dark text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-                    placeholder="Provide context about this report..." rows="3"></textarea>
+            <!-- Additional Context -->
+            <div class="report-details-section">
+                <label class="report-details-label">
+                    Additional Details
+                    <span class="label-optional">(Optional)</span>
+                </label>
+                <textarea [(ngModel)]="details" name="details" class="report-details-textarea"
+                    placeholder="Please provide any additional information that might help our moderation team..."></textarea>
             </div>
         </div>
 
-        <!-- Footer -->
-        <div
-            class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-background-dark/50 flex justify-end items-center gap-3 rounded-b-2xl shrink-0">
-            <button
-                class="px-5 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-surface-dark transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
-                (click)="close()">
-                Cancel
+        <footer class="report-modal-footer">
+            <button class="report-btn-secondary" (click)="close()">Cancel</button>
+            <button class="report-btn-primary" [disabled]="isSubmitting || !selectedReason" (click)="submitReport()">
+                <span *ngIf="!isSubmitting">Submit Report</span>
+                <span *ngIf="isSubmitting">Sending...</span>
+                <span class="material-symbols-outlined" *ngIf="!isSubmitting">send</span>
+                <div class="report-spinner" *ngIf="isSubmitting"></div>
             </button>
-            <button
-                class="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all flex items-center gap-2"
-                [disabled]="isSubmitting || !selectedReason" (click)="submitReport()">
-                <span>{{ isSubmitting ? 'Submitting...' : 'Submit Report' }}</span>
-                <span *ngIf="!isSubmitting" class="material-symbols-outlined text-[18px]">send</span>
-                <div *ngIf="isSubmitting"
-                    class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            </button>
-        </div>
+        </footer>
     </div>
 </div>
