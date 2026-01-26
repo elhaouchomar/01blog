@@ -91,7 +91,7 @@ export class Users implements OnInit {
   }
 
   editUser(user: any) {
-    this.modalService.open('edit-profile', user);
+    this.modalService.open('admin-edit-user', user);
   }
 
   nextPage() {

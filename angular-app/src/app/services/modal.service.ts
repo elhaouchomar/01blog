@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 
-export type ModalType = 'create-post' | 'edit-post' | 'post-details' | 'report-post' | 'report' | 'success' | 'confirm-delete-post' | 'confirm-delete' | 'delete-v2' | 'media-viewer' | 'edit-profile' | 'create-user' | 'confirm-ban' | null;
+export type ModalType = 'create-post' | 'edit-post' | 'post-details' | 'report-post' | 'report' | 'success' | 'confirm-delete-post' | 'confirm-delete' | 'delete-v2' | 'media-viewer' | 'edit-profile' | 'create-user' | 'confirm-ban' | 'admin-edit-user' | null;
 
 @Injectable({
     providedIn: 'root'

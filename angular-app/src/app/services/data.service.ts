@@ -233,6 +233,15 @@ export class DataService {
         );
     }
 
+    adminUpdateUser(userId: number, user: Partial<User>): Observable<User> {
+        return this.http.put<any>(`${this.API_URL}/users/${userId}`, user).pipe(
+            tap((userDTO: any) => {
+                this.loadUsers();
+                this.loadDashboardStats();
+            })
+        );
+    }
+
     updateReportStatus(reportId: number, status: string): Observable<any> {
         return this.http.put<any>(`${this.API_URL}/reports/${reportId}/status`, {}, { params: { status } }).pipe(
             tap(() => {

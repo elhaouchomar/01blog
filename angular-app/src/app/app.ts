@@ -13,6 +13,7 @@ import { CreateUser } from './components/create-user/create-user';
 import { EditProfileModal } from './components/edit-profile/edit-profile';
 import { ConfirmBanUser } from './components/confirm-ban-user/confirm-ban-user';
 import { ToastContainer } from './components/toast-container/toast-container';
+import { AdminEditUser } from './components/admin-edit-user/admin-edit-user';
 
 import { DataService } from './services/data.service';
 
@@ -32,7 +33,8 @@ import { DataService } from './services/data.service';
     CreateUser,
     EditProfileModal,
     ConfirmBanUser,
-    ToastContainer
+    ToastContainer,
+    AdminEditUser
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'

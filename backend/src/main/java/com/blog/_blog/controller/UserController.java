@@ -66,4 +66,11 @@ public class UserController {
         String email = authentication.getName();
         return ResponseEntity.ok(userService.toggleBan(id, email));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDTO> adminUpdateUser(@PathVariable Integer id, @RequestBody UserDTO userDTO,
+            Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(userService.adminUpdateUser(id, userDTO, email));
+    }
 }

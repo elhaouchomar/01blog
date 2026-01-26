@@ -84,7 +84,7 @@ export interface Notification {
     actorName: string;
     actorAvatar: string;
     actorId?: number; // ID of the user who triggered the notification
-    type: 'LIKE' | 'COMMENT' | 'FOLLOW' | 'SYSTEM';
+    type: 'LIKE' | 'COMMENT' | 'FOLLOW' | 'SYSTEM' | 'NEW_POST';
     entityId: number;
     isRead: boolean;
     createdAt: string;

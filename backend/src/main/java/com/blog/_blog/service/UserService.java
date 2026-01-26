@@ -135,6 +135,35 @@ public class UserService {
         return convertToDTO(saved, requester);
     }
 
+    @Transactional
+    public UserDTO adminUpdateUser(Integer id, UserDTO updateRequest, String requesterEmail) {
+        User requester = userRepository.findByEmail(requesterEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (requester.getRole() != com.blog._blog.entity.Role.ADMIN) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        User userToUpdate = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (updateRequest.getFirstname() != null)
+            userToUpdate.setFirstname(updateRequest.getFirstname());
+        if (updateRequest.getLastname() != null)
+            userToUpdate.setLastname(updateRequest.getLastname());
+        if (updateRequest.getBio() != null)
+            userToUpdate.setBio(updateRequest.getBio());
+        if (updateRequest.getAvatar() != null)
+            userToUpdate.setAvatar(updateRequest.getAvatar());
+        if (updateRequest.getCover() != null)
+            userToUpdate.setCover(updateRequest.getCover());
+        if (updateRequest.getRole() != null)
+            userToUpdate.setRole(com.blog._blog.entity.Role.valueOf(updateRequest.getRole()));
+
+        User saved = userRepository.save(userToUpdate);
+        return convertToDTO(saved, requester);
+    }
+
     public UserDTO convertToDTO(User user, User currentUser) {
         return UserDTO.builder()
                 .id(user.getId())
