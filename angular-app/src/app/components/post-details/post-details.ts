@@ -91,6 +91,24 @@ export class PostDetails implements OnInit {
     return u.endsWith('.mp4') || u.endsWith('.webm') || u.endsWith('.mov');
   }
 
+  editPost() {
+    if (!this.post) return;
+    this.modalService.open('edit-post', this.post);
+  }
+
+  deletePost() {
+    if (!this.post) return;
+    if (confirm(`Are you sure you want to permanently delete "${this.post.title}"?`)) {
+      this.dataService.deletePost(this.post.id).subscribe({
+        next: () => {
+          this.close();
+          this.dataService.loadPosts(); // Refresh dashboard list
+        },
+        error: (err) => console.error('Error deleting post:', err)
+      });
+    }
+  }
+
   close() {
     this.modalService.close();
   }

@@ -1,152 +1,164 @@
-<!-- Post Details Modal -->
-<div class="modal-overlay" *ngIf="post">
-    <!-- Backdrop -->
-    <div class="modal-backdrop" (click)="close()"></div>
+<!-- Post Details Premium Modal -->
+<div class="premium-post-overlay" *ngIf="post">
+    <div class="premium-post-backdrop" (click)="close()"></div>
 
-    <!-- Close Button (Desktop) -->
-    <button class="modal-close-desktop" (click)="close()">
-        <span class="material-symbols-outlined">close</span>
-    </button>
-
-    <!-- Modal Content -->
-    <div class="post-modal-container">
-
-        <!-- Close Button (Mobile) -->
-        <button class="modal-close-mobile" (click)="close()">
+    <div class="premium-post-window">
+        <!-- Close button floating -->
+        <button class="glass-close-btn" (click)="close()">
             <span class="material-symbols-outlined">close</span>
         </button>
 
-        <!-- Left Column: Article/Content (Scrollable) -->
-        <div class="post-content-column">
+        <!-- Main Content Area (Dual Pane) -->
+        <div class="premium-post-layout">
 
-            <!-- Hero Image -->
-            <!-- Media Stack (Images/Videos) -->
-            <div class="post-media-stack" *ngIf="(post.images && post.images.length > 0) || post.video">
-                <!-- Video Object -->
-                <div *ngIf="post.video?.url" class="video-container">
-                    <video controls [poster]="post.video?.thumbnail" class="post-video">
-                        <source [src]="post.video?.url" type="video/mp4">
-                    </video>
-                </div>
-
-                <!-- Images Array -->
-                <ng-container *ngIf="post.images && post.images.length > 0">
-                    <div class="media-item" *ngFor="let mediaUrl of post.images">
-                        <div *ngIf="isVideo(mediaUrl)" class="video-container">
-                            <video controls class="post-video">
-                                <source [src]="mediaUrl" type="video/mp4">
+            <!-- Left: Visuals & Core Content (Scrollable) -->
+            <div class="premium-main-view">
+                <!-- Media Section -->
+                <div class="premium-media-container" *ngIf="(post.images && post.images.length > 0) || post.video">
+                    <div class="media-track">
+                        <!-- Video Support -->
+                        <div *ngIf="post.video?.url" class="premium-media-item video-item">
+                            <video controls [poster]="post.video?.thumbnail">
+                                <source [src]="post.video?.url" type="video/mp4">
                             </video>
                         </div>
-                        <img *ngIf="!isVideo(mediaUrl)" [src]="mediaUrl" class="detail-image" alt="Post media">
-                    </div>
-                </ng-container>
-            </div>
 
-            <!-- Title (moved out of hero) -->
-            <div class="post-header-title">
-                <div class="post-tags-row" *ngIf="post.category || post.readTime">
-                    <span *ngIf="post.category" class="post-tag-primary">{{ post.category }}</span>
-                    <span *ngIf="post.readTime" class="post-tag-secondary">{{ post.readTime }}</span>
-                </div>
-                <h1 class="post-title">{{ post.title }}</h1>
-            </div>
-
-            <!-- Content Body -->
-            <div class="post-body">
-                <!-- Author Header (Mobile/Inline) -->
-                <div class="post-author-header">
-                    <div class="post-author-info">
-                        <div class="post-author-avatar" [style.background-image]="'url(' + post.user.avatar + ')'">
-                        </div>
-                        <div>
-                            <h3 class="post-author-name">{{ post.user.name }}</h3>
-                            <p class="post-author-role">{{ post.user.role || '@' + post.user.handle }}</p>
-                        </div>
-                    </div>
-                    <div class="post-date">
-                        <span class="material-symbols-outlined icon-small">calendar_today</span>
-                        <span>{{ post.time }}</span>
+                        <!-- Images Support -->
+                        <ng-container *ngIf="post.images && post.images.length > 0">
+                            <div class="premium-media-item" *ngFor="let mediaUrl of post.images">
+                                <div *ngIf="isVideo(mediaUrl)" class="premium-video-wrapper">
+                                    <video controls>
+                                        <source [src]="mediaUrl" type="video/mp4">
+                                    </video>
+                                </div>
+                                <img *ngIf="!isVideo(mediaUrl)" [src]="mediaUrl" alt="Post content preview">
+                            </div>
+                        </ng-container>
                     </div>
                 </div>
 
-                <!-- Text Content -->
-                <div class="post-text-content">
-                    <p>{{ post.content }}</p>
-                    <!-- Simulated extra paragraphs -->
-
-                </div>
-
-                <!-- Tags -->
-                <div class="post-tags-section" *ngIf="post.tags">
-                    <div class="tags-list">
-                        <span *ngFor="let tag of post.tags" class="tag-item">#{{ tag }}</span>
+                <!-- Article Content -->
+                <div class="premium-article-body">
+                    <div class="article-breadcrumb" *ngIf="post.category">
+                        <span class="breadcrumb-tag">{{ post.category }}</span>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-id">#{{ post.id }}</span>
                     </div>
-                </div>
 
-                <!-- Engagement Bar -->
-                <div class="post-engagement-bar">
-                    <button class="engagement-btn like-btn" (click)="toggleLike()" [class.active]="post.isLiked">
-                        <div class="icon-wrapper">
-                            <span class="material-symbols-outlined" [class.filled]="post.isLiked">favorite</span>
-                        </div>
-                        <span class="engagement-count">{{ post.likes }}</span>
-                    </button>
-                    <button class="engagement-btn share-btn">
-                        <div class="icon-wrapper">
-                            <span class="material-symbols-outlined">share</span>
-                        </div>
-                        <span class="engagement-label">Share</span>
-                    </button>
-                    <button class="engagement-btn bookmark-btn">
-                        <div class="icon-wrapper">
-                            <span class="material-symbols-outlined">bookmark</span>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
+                    <h1 class="article-title text-gradient">{{ post.title }}</h1>
 
-        <!-- Right Column: Comments (Sidebar) -->
-        <div class="comments-sidebar">
-            <!-- Sidebar Header -->
-            <div class="comments-header">
-                <h3 class="comments-title">Comments</h3>
-                <span class="comments-count">{{ comments.length }}</span>
-            </div>
-
-            <!-- Comments List -->
-            <div class="comments-list">
-                <div *ngIf="comments.length === 0" class="empty-comments">
-                    <span class="material-symbols-outlined empty-icon">chat_bubble_outline</span>
-                    <p>No comments yet. Be the first to start the conversation!</p>
-                </div>
-
-                <div *ngFor="let comment of comments" class="comment-item">
-                    <div class="comment-avatar" [style.background-image]="'url(' + comment.user.avatar + ')'"></div>
-                    <div class="comment-content">
-                        <div class="comment-meta">
-                            <h4 class="comment-author">{{ comment.user.name }}</h4>
-                            <span class="comment-time">{{ comment.time }}</span>
+                    <div class="article-metadata-row">
+                        <div class="author-capsule" [routerLink]="['/profile', post.user?.id]" (click)="close()">
+                            <img [src]="post.user?.avatar || 'assets/default-avatar.png'" alt="Author avatar">
+                            <div class="author-details">
+                                <span class="author-name">{{ post.user?.name }}</span>
+                                <span class="author-status">Active contributor</span>
+                            </div>
                         </div>
-                        <p class="comment-text">{{ comment.content }}</p>
-                        <div class="comment-actions">
-                            <button class="comment-action-btn like">
-                                Like <span *ngIf="comment.likes > 0">({{ comment.likes }})</span>
+                        <div class="post-metrics">
+                            <span class="metric-item">
+                                <span class="material-symbols-outlined">calendar_today</span>
+                                {{ post.createdAt | date:'longDate' }}
+                            </span>
+                            <span class="metric-item" *ngIf="post.readTime">
+                                <span class="material-symbols-outlined">schedule</span>
+                                {{ post.readTime }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="article-main-text">
+                        {{ post.content }}
+                    </div>
+
+                    <!-- Admin/Editor Tools Section -->
+                    <div class="premium-admin-dock"
+                        *ngIf="post.user?.id === dataService.currentUser()?.id || dataService.isAdmin()">
+                        <div class="dock-label">Administrative Actions</div>
+                        <div class="dock-actions">
+                            <button class="dock-btn edit-btn" (click)="editPost()">
+                                <span class="material-symbols-outlined">edit</span>
+                                Edit Post
                             </button>
-                            <button class="comment-action-btn">Reply</button>
+                            <button class="dock-btn delete-btn" (click)="deletePost()">
+                                <span class="material-symbols-outlined">delete</span>
+                                Remove Globally
+                            </button>
                         </div>
+                    </div>
+
+                    <div class="article-tags-cloud" *ngIf="post.tags?.length">
+                        <span *ngFor="let tag of post.tags" class="cloud-tag">#{{ tag }}</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Footer: Input -->
-            <div class="comments-footer">
-                <div class="comment-input-wrapper">
-                    <textarea [(ngModel)]="newComment" (keyup.enter)="addComment()" placeholder="Write a comment..."
-                        class="comment-input"></textarea>
-                    <button class="send-btn" (click)="addComment()" [disabled]="!newComment.trim()">
-                        <span class="material-symbols-outlined filled">send</span>
-                    </button>
+            <!-- Right: Engagement & Intelligence Sidecar -->
+            <div class="premium-post-sidecar">
+                <!-- Sidecar Header -->
+                <div class="sidecar-header">
+                    <div class="sidecar-stats">
+                        <div class="stat-bubble">
+                            <span class="stat-val">{{ post.likes || 0 }}</span>
+                            <span class="stat-lab">Likes</span>
+                        </div>
+                        <div class="stat-bubble">
+                            <span class="stat-val">{{ comments.length }}</span>
+                            <span class="stat-lab">Comments</span>
+                        </div>
+                    </div>
+                    <div class="engaged-action">
+                        <button class="engagement-trigger" [class.is-liked]="post.isLiked" (click)="toggleLike()">
+                            <span class="material-symbols-outlined" [class.filled]="post.isLiked">favorite</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Discussions Area -->
+                <div class="sidecar-discussions">
+                    <div class="discussion-label">Community Discussions</div>
+
+                    <div *ngIf="comments.length === 0" class="discussion-empty">
+                        <div class="empty-glow">
+                            <span class="material-symbols-outlined">forum</span>
+                        </div>
+                        <p>No perspectives shared yet.</p>
+                        <span>Initiate the conversation below.</span>
+                    </div>
+
+                    <div class="discussion-timeline">
+                        <div *ngFor="let comment of comments" class="discussion-node">
+                            <div class="node-author-ring">
+                                <img [src]="comment.user.avatar || 'assets/default-avatar.png'"
+                                    [alt]="comment.user.name">
+                            </div>
+                            <div class="node-payload">
+                                <div class="node-meta">
+                                    <span class="node-author">{{ comment.user.name }}</span>
+                                    <span class="node-time">{{ comment.time }}</span>
+                                </div>
+                                <p class="node-text">{{ comment.content }}</p>
+                                <div class="node-actions">
+                                    <button class="node-mini-btn">
+                                        <span class="material-symbols-outlined">thumb_up</span>
+                                        {{ comment.likes || 0 }}
+                                    </button>
+                                    <button class="node-mini-btn">Reply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidecar Input -->
+                <div class="sidecar-composer">
+                    <div class="composer-container">
+                        <textarea [(ngModel)]="newComment" (keyup.enter)="addComment()"
+                            placeholder="Share your perspective..." rows="1"></textarea>
+                        <button class="composer-submit" (click)="addComment()" [disabled]="!newComment.trim()">
+                            <span class="material-symbols-outlined">send</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
