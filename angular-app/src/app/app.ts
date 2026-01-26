@@ -14,6 +14,7 @@ import { EditProfileModal } from './components/edit-profile/edit-profile';
 import { ConfirmBanUser } from './components/confirm-ban-user/confirm-ban-user';
 import { ToastContainer } from './components/toast-container/toast-container';
 import { AdminEditUser } from './components/admin-edit-user/admin-edit-user';
+import { ReportUser } from './components/report-user/report-user';
 
 import { DataService } from './services/data.service';
 
@@ -34,7 +35,8 @@ import { DataService } from './services/data.service';
     EditProfileModal,
     ConfirmBanUser,
     ToastContainer,
-    AdminEditUser
+    AdminEditUser,
+    ReportUser
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'
