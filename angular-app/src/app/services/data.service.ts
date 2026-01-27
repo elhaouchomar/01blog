@@ -67,7 +67,10 @@ export class DataService {
         const token = localStorage.getItem('auth_token');
         if (token) {
             this.getProfile().subscribe({
-                next: () => this._authChecked.set(true),
+                next: () => {
+                    this._authChecked.set(true);
+                    this.refreshAllData();
+                },
                 error: (err) => {
                     if (err.status === 401 || err.status === 403) {
                         this.handleTokenExpiration();

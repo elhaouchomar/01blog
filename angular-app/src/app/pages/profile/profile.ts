@@ -9,11 +9,12 @@ import { SidebarComponent } from '../../components/left-sidebar/left-sidebar';
 import { RightSidebarComponent } from '../../components/right-sidebar/right-sidebar';
 import { ActionMenuComponent, ActionMenuItem } from '../../components/action-menu/action-menu';
 import { getInitials } from '../../utils/string.utils';
+import { PostCardComponent } from '../../components/post-card/post-card';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [NavbarComponent, SidebarComponent, RightSidebarComponent, CommonModule, RouterModule, ActionMenuComponent],
+  imports: [NavbarComponent, SidebarComponent, RightSidebarComponent, CommonModule, RouterModule, ActionMenuComponent, PostCardComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.css'
 })

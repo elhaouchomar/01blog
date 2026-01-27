@@ -22,11 +22,16 @@ export class PostDetails implements OnInit {
   }
   get post(): Post | undefined { return this._post; }
 
-  comments: any[] = [];
+  comments: any[] = []; // The subset shown in UI
+  allComments: any[] = [];       // The source of truth
   newComment = '';
   currentSlide = 0;
   isSubmitting = false;
   cachedMediaItems: { url: string, isVideo: boolean }[] = [];
+
+  // Pagination
+  commentPageSize = 10;
+  hasMoreComments = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -51,17 +56,39 @@ export class PostDetails implements OnInit {
         }
 
         // 2. Refresh from server (or fetch if not cached)
+        // 2. Refresh from server (or fetch if not cached)
         this.dataService.getPost(modalData.id).subscribe({
           next: (post) => {
             this.post = post;
-            this.comments = post.replies || [];
+            // Fetch comments specifically to ensure we see old ones
+            this.dataService.getCommentsForPost(post.id).subscribe({
+              next: (comments) => {
+                this.allComments = comments || [];
+                this.updateDisplayedComments();
+                this.cdr.detectChanges();
+                this.scrollToBottom();
+              },
+              error: (err) => console.error('Error loading comments:', err)
+            });
             this.cdr.detectChanges();
           },
           error: (err) => console.error('Error loading post:', err)
         });
       } else {
         this.post = modalData;
-        this.comments = modalData.replies || [];
+        // Even if passed via modal, try to fetch comments if they are missing/empty
+        if (modalData.id) {
+          this.dataService.getCommentsForPost(modalData.id).subscribe({
+            next: (comments) => {
+              this.allComments = comments;
+              this.updateDisplayedComments();
+              this.cdr.detectChanges();
+            }
+          });
+        } else {
+          this.allComments = modalData.replies || [];
+          this.updateDisplayedComments();
+        }
       }
     }
   }
@@ -114,40 +141,69 @@ export class PostDetails implements OnInit {
     };
 
     // 2. Apply Optimistic Updates
-    this.comments = [...this.comments, tempComment];
-    this.newComment = ''; // Clear input immediately
+    const optimisticComment = { ...tempComment };
+    this.allComments = [...this.allComments, optimisticComment];
+    this.updateDisplayedComments(); // Should adjust visible count to include new one
+
+    this.newComment = '';
     if (this.post) this.post.comments++;
 
     // Force immediate UI refresh
     this.cdr.detectChanges();
-    this.scrollToBottom(); // Auto-scroll to show new comment
+    this.scrollToBottom();
 
     this.isSubmitting = true;
 
     // 3. Send to Server
     this.dataService.addComment(this.post.id, content).subscribe({
       next: (realComment) => {
-        // Replace temp comment with real one
-        const index = this.comments.findIndex(c => c.id === tempComment.id);
+        // Replace temp comment with real one in ALL lists
+        const index = this.allComments.findIndex(c => c.id === tempComment.id);
         if (index !== -1) {
-          const updatedComments = [...this.comments];
-          updatedComments[index] = realComment;
-          this.comments = updatedComments; // Trigger CD check
+          const updated = [...this.allComments];
+          updated[index] = realComment;
+          this.allComments = updated;
+          this.updateDisplayedComments(); // Refresh view
         }
         this.isSubmitting = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error adding comment:', err);
-        // Revert changes on error
-        this.comments = this.comments.filter(c => c.id !== tempComment.id);
-        this.newComment = content; // Restore input
+        // Revert 
+        this.allComments = this.allComments.filter(c => c.id !== tempComment.id);
+        this.updateDisplayedComments();
+
+        this.newComment = content;
         if (this.post) this.post.comments--;
 
         this.isSubmitting = false;
         this.cdr.detectChanges();
       }
     });
+  }
+
+  updateDisplayedComments() {
+    // Logic: View latest N comments.
+    // If we have 50 comments, and size is 10, show 40..49.
+    // Load more -> size 20 -> show 30..49.
+    // If we add a comment, we want to make sure it's visible.
+
+    const count = this.allComments.length;
+    // Ensure we show at least the pageSize, but bounded
+    const startIndex = Math.max(0, count - this.commentPageSize);
+
+    this.comments = this.allComments.slice(startIndex, count);
+    this.hasMoreComments = startIndex > 0;
+  }
+
+  loadMoreComments() {
+    this.commentPageSize += 10;
+    this.updateDisplayedComments();
+    this.cdr.detectChanges();
+    // Maintain scroll position? Usually desirable to stay where you were (relative to bottom).
+    // But since we prepend, the scroll height increases.
+    // Simple for now.
   }
 
   private scrollToBottom() {
@@ -210,10 +266,13 @@ export class PostDetails implements OnInit {
 
     this.dataService.toggleCommentLike(comment.id).subscribe({
       next: (updatedComment) => {
-        const index = this.comments.findIndex(c => c.id === updatedComment.id);
+        // Update in allComments
+        const index = this.allComments.findIndex(c => c.id === updatedComment.id);
         if (index !== -1) {
-          this.comments[index] = { ...this.comments[index], ...updatedComment };
-          this.comments = [...this.comments];
+          this.allComments[index] = { ...this.allComments[index], ...updatedComment };
+          // visual update automatically via reference if object mutated? No, we spread.
+          // Need to update displayed slice
+          this.updateDisplayedComments();
         }
       },
       error: (err) => {

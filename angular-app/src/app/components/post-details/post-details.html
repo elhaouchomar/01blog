@@ -117,6 +117,13 @@
 
                     <!-- Dynamic Comments -->
                     <div class="comments-vortex">
+                        <div *ngIf="hasMoreComments" class="load-more-wrapper">
+                            <button class="btn-load-more" (click)="loadMoreComments()">
+                                <span class="material-symbols-outlined">refresh</span>
+                                Load previous comments
+                            </button>
+                        </div>
+
                         <div *ngIf="comments.length === 0" class="vortex-empty-state">
                             <span class="material-symbols-outlined">bubble_chart</span>
                             <p>Be the first to share a perspective</p>
