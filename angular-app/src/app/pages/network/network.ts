@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { SidebarComponent } from '../../components/left-sidebar/left-sidebar';
 import { RightSidebarComponent } from '../../components/right-sidebar/right-sidebar';
@@ -21,7 +21,8 @@ export class Network implements OnInit {
     constructor(
         private dataService: DataService,
         protected modalService: ModalService,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        private router: Router
     ) { }
 
     ngOnInit() {
@@ -29,6 +30,10 @@ export class Network implements OnInit {
         this.loadUsers();
 
         // Don't reload on user change to keep subscribed users visible until refresh
+    }
+
+    navigateToProfile(userId: number) {
+        this.router.navigate(['/profile', userId]);
     }
 
     loadUsers() {

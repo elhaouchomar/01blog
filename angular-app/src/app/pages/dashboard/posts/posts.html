@@ -70,11 +70,11 @@
                                 style="cursor: pointer; color: var(--text-main);">{{ post.title }}</p>
                             <div class="post-meta">
                                 <div class="author-avatar"
-                                    [style.background-image]="'url(' + (post.user?.avatar || 'assets/default-avatar.png') + ')'">
+                                    [style.background-image]="'url(' + (post.user.avatar || 'assets/default-avatar.png') + ')'">
                                 </div>
-                                <a [routerLink]="['/profile', post.user?.id]" class="author-name"
+                                <a [routerLink]="['/profile', post.user.id]" class="author-name"
                                     style="text-decoration: none; color: var(--text-secondary); transition: color 0.2s;">{{
-                                    post.user?.name }}</a>
+                                    post.user.name }}</a>
                                 <span class="dot">•</span>
                                 <span class="date">{{ post.createdAt | date:'shortTime' }} ago</span>
                             </div>

@@ -2,42 +2,30 @@
     <div class="post-header">
         <div class="post-author">
             <!-- Changed post.author to post.user to match data model -->
-            <div class="post-avatar" *ngIf="post.user.avatar"
-                [style.background-image]="'url(' + post.user.avatar + ')'">
+            <div class="post-avatar" *ngIf="post.user.avatar" [style.background-image]="'url(' + post.user.avatar + ')'"
+                [routerLink]="['/profile', post.user.id]" style="cursor: pointer;">
             </div>
-            <div class="post-avatar avatar-initials" *ngIf="!post.user.avatar">
+            <div class="post-avatar avatar-initials" *ngIf="!post.user.avatar" [routerLink]="['/profile', post.user.id]"
+                style="cursor: pointer;">
                 {{ getInitials(post.user.name) }}
             </div>
             <div class="post-author-info">
                 <div class="author-row">
-                    <a [routerLink]="['/profile', post.user.id]" class="post-author-name">{{ post.user.name }}</a>
+                    <a [routerLink]="['/profile', post.user.id]" class="post-author-name" style="cursor: pointer;">{{
+                        post.user.name }}</a>
                     <span class="post-author-handle">{{ post.user.handle }}</span>
                 </div>
                 <p class="post-meta">{{ post.user.role || 'User' }} • {{ (post.createdAt || post.time) | date:'short'
                     }}</p>
             </div>
         </div>
-        <div class="post-menu-container">
-            <input type="checkbox" id="menu-{{ post.id }}" class="menu-toggle" />
-            <label for="menu-{{ post.id }}" class="post-menu-btn">
-                <span class="material-symbols-outlined">more_horiz</span>
-            </label>
-            <div class="menu-dropdown">
-                <button class="menu-item" *ngIf="canEdit" (click)="editPost()">
-                    <span class="material-symbols-outlined">edit</span> Edit Post
-                </button>
-                <button class="menu-item delete" *ngIf="canDelete" (click)="deletePost()">
-                    <span class="material-symbols-outlined">delete</span> Delete Post
-                </button>
-                <button class="menu-item warning" *ngIf="canReport" (click)="reportPost()">
-                    <span class="material-symbols-outlined">flag</span> Report Post
-                </button>
-            </div>
-        </div>
+        <app-action-menu [items]="postActions" (actionSelected)="handleDropdownAction($event)"
+            buttonClass="post-menu-btn"></app-action-menu>
     </div>
 
     <div class="post-content">
-        <h3 class="post-title truncated-title" *ngIf="post.title">{{ post.title }}</h3>
+        <h3 class="post-title truncated-title" *ngIf="post.title" (click)="openPostDetails($event)"
+            style="cursor: pointer;">{{ post.title }}</h3>
         <p class="post-text" [class.truncated]="!isExpanded">
             {{ post.content }}
         </p>
@@ -50,9 +38,10 @@
 
     <!-- Media Content (Image or Video) -->
     <!-- Media Content (Image or Video) -->
-    <div class="post-media" *ngIf="hasMedia">
-        <div class="media-slider" id="slider-{{ post.id }}" (scroll)="onScroll($event)">
-            <div class="media-slide" *ngFor="let media of mediaItems; let i = index">
+    <div class="post-media" *ngIf="hasMedia" (click)="openPostDetails($event)" style="cursor: pointer;">
+        <div class="media-slider" id="slider-{{ post.id }}" (scroll)="onScroll($event)"
+            [class.has-multiple]="mediaItems.length > 1">
+            <div class="media-slide" *ngFor="let media of mediaItems; let i = index; trackBy: trackByMedia">
                 <!-- Video Player -->
                 <div *ngIf="media.isVideo" class="video-container" (click)="openMediaViewer(i)"
                     style="cursor: pointer;">
@@ -96,7 +85,7 @@
                 <span class="material-symbols-outlined" [class.filled]="post.isLiked">favorite</span>
                 <span class="action-count">{{ post.likes }}</span>
             </button>
-            <button class="post-action-btn" [routerLink]="['/post', post.id]">
+            <button class="post-action-btn" (click)="openPostDetails($event)">
                 <span class="material-symbols-outlined">chat_bubble</span>
                 <span class="action-count">{{ post.comments }}</span>
             </button>

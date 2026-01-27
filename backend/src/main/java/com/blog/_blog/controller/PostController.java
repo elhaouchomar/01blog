@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -51,13 +52,14 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostDTO> createPost(@RequestBody CreatePostRequest request, Authentication authentication) {
+    public ResponseEntity<PostDTO> createPost(@Valid @RequestBody CreatePostRequest request,
+            Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(postService.createPost(request, email));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PostDTO> updatePost(@PathVariable Long id, @RequestBody CreatePostRequest request,
+    public ResponseEntity<PostDTO> updatePost(@PathVariable Long id, @Valid @RequestBody CreatePostRequest request,
             Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(postService.updatePost(id, request, email));
@@ -77,7 +79,8 @@ public class PostController {
     }
 
     @PostMapping("/{id}/comment")
-    public ResponseEntity<CommentDTO> addComment(@PathVariable Long id, @RequestBody CreateCommentRequest request,
+    public ResponseEntity<CommentDTO> addComment(@PathVariable Long id,
+            @Valid @RequestBody CreateCommentRequest request,
             Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(postService.addComment(id, request, email));
@@ -87,5 +90,11 @@ public class PostController {
     public ResponseEntity<List<CommentDTO>> getComments(@PathVariable Long id, Authentication authentication) {
         String email = authentication != null ? authentication.getName() : null;
         return ResponseEntity.ok(postService.getComments(id, email));
+    }
+
+    @PostMapping("/comment/{id}/like")
+    public ResponseEntity<CommentDTO> toggleCommentLike(@PathVariable Long id, Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(postService.toggleCommentLike(id, email));
     }
 }

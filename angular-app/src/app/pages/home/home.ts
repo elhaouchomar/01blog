@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, effect, computed } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, effect, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
@@ -25,6 +25,9 @@ import { ModalService } from '../../services/modal.service';
 })
 export class Home implements OnInit {
   isLoading = computed(() => this.dataService.posts().length === 0 && this.dataService.isLoggedIn());
+  currentPage = 0;
+  pageSize = 10;
+  isMoreAvailable = signal(true);
 
   constructor(
     public dataService: DataService,
@@ -34,8 +37,17 @@ export class Home implements OnInit {
 
   ngOnInit() {
     if (this.dataService.posts().length === 0 && this.dataService.isLoggedIn()) {
-      this.dataService.loadPosts();
+      this.loadPosts();
     }
+  }
+
+  loadPosts() {
+    this.dataService.loadPosts(this.currentPage, this.pageSize);
+  }
+
+  loadMore() {
+    this.currentPage++;
+    this.dataService.loadPosts(this.currentPage, this.pageSize, true);
   }
 
   get posts() {

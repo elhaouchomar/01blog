@@ -1,0 +1,15 @@
+<div class="menu-container">
+    <button [class]="buttonClass" (click)="toggle($event)" type="button" [class.menu-open]="isOpen">
+        <span class="material-symbols-outlined">{{ isOpen ? 'close' : 'more_horiz' }}</span>
+    </button>
+
+    <div class="menu-dropdown" [class.active]="isOpen">
+        <ng-container *ngFor="let item of items">
+            <button *ngIf="item.showIf !== false" class="menu-item" [class]="item.class"
+                (click)="selectAction(item.id, $event)" type="button">
+                <span class="material-symbols-outlined">{{ item.icon }}</span>
+                {{ item.label }}
+            </button>
+        </ng-container>
+    </div>
+</div>

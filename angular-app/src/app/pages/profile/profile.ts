@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, effect } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, effect, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
@@ -7,12 +7,12 @@ import { User, Post } from '../../models/data.models';
 import { ModalService } from '../../services/modal.service';
 import { SidebarComponent } from '../../components/left-sidebar/left-sidebar';
 import { RightSidebarComponent } from '../../components/right-sidebar/right-sidebar';
-import { PostCardComponent } from '../../components/post-card/post-card';
+import { ActionMenuComponent, ActionMenuItem } from '../../components/action-menu/action-menu';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [NavbarComponent, SidebarComponent, RightSidebarComponent, CommonModule, RouterModule, PostCardComponent],
+  imports: [NavbarComponent, SidebarComponent, RightSidebarComponent, CommonModule, RouterModule, ActionMenuComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.css'
 })
@@ -28,7 +28,8 @@ export class Profile implements OnInit {
     public modalService: ModalService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private elementRef: ElementRef
   ) {
     // Handle route changes
     this.route.params.subscribe(params => {
@@ -91,8 +92,10 @@ export class Profile implements OnInit {
     });
   }
 
-  toggleMenu() {
+  toggleMenu(event?: Event) {
+    if (event) event.stopPropagation();
     this.isMenuOpen = !this.isMenuOpen;
+    console.log('Profile Menu Toggled:', this.isMenuOpen);
   }
 
   get isOwnProfile(): boolean {
@@ -144,5 +147,47 @@ export class Profile implements OnInit {
 
   get isAdmin(): boolean {
     return this.user?.role === 'ADMIN';
+  }
+
+  get currentUserIsAdmin(): boolean {
+    return this.dataService.currentUser()?.role === 'ADMIN';
+  }
+
+  get profileActions(): ActionMenuItem[] {
+    if (!this.user) return [];
+    return [
+      { id: 'report', label: 'Report User', icon: 'flag' },
+      {
+        id: 'ban',
+        label: this.user.banned ? 'Unban User' : 'Ban User',
+        icon: this.user.banned ? 'gavel' : 'block',
+        class: 'delete',
+        showIf: this.currentUserIsAdmin
+      }
+    ];
+  }
+
+  handleDropdownAction(actionId: string) {
+    if (actionId === 'report') this.reportUser();
+    if (actionId === 'ban') this.toggleBan();
+  }
+
+  toggleBan() {
+    this.isMenuOpen = false;
+    if (this.user && this.user.id) {
+      this.modalService.open('confirm-ban', {
+        id: this.user.id,
+        name: this.user.name,
+        isBanned: this.user.banned
+      });
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.isMenuOpen = false;
+      this.cdr.detectChanges();
+    }
   }
 }

@@ -39,6 +39,8 @@ public class SecurityConfiguration {
                 .antMatchers(HttpMethod.GET, "/api/v1/posts/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/v1/trends").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/v1/search").permitAll()
+                .antMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                .antMatchers("/error").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .sessionManagement()

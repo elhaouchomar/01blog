@@ -15,9 +15,11 @@ import { Post } from '../../models/data.models';
 export class EditPost implements OnInit, OnDestroy {
     title = '';
     content = '';
-    imageUrls: string[] = []; // Changed to array
-    selectedFileNames: string[] = []; // Changed to array
+    imageUrls: string[] = []; // For preview/existing
+    selectedFileNames: string[] = [];
+    selectedFiles: File[] = []; // Added for newly selected files
     post: Post | null = null;
+    isLoading = false;
 
     constructor(protected modalService: ModalService, private dataService: DataService) {
         // Get the post data from modal service
@@ -49,6 +51,7 @@ export class EditPost implements OnInit, OnDestroy {
                 }
 
                 this.selectedFileNames.push(file.name);
+                this.selectedFiles.push(file);
 
                 // Convert file to Base64
                 const reader = new FileReader();
@@ -65,25 +68,42 @@ export class EditPost implements OnInit, OnDestroy {
 
     updatePost() {
         if (!this.title || !this.content || !this.post) return;
+        this.isLoading = true;
 
+        if (this.selectedFiles.length > 0) {
+            this.dataService.uploadFiles(this.selectedFiles).subscribe({
+                next: (fileNames) => {
+                    const newRemoteUrls = fileNames.map(name => `${this.dataService.getBaseUrl()}/uploads/${name}`);
+                    const remainingExistingUrls = this.imageUrls.filter(url => url.startsWith('http'));
+                    this.submitUpdate([...remainingExistingUrls, ...newRemoteUrls]);
+                },
+                error: (err) => {
+                    console.error('Error uploading files:', err);
+                    alert('Failed to upload media.');
+                    this.isLoading = false;
+                }
+            });
+        } else {
+            this.submitUpdate(this.imageUrls);
+        }
+    }
+
+    private submitUpdate(finalUrls: string[]) {
+        if (!this.post) return;
         this.dataService.updatePost(this.post.id, {
             title: this.title,
             content: this.content,
-            images: this.imageUrls.length > 0 ? this.imageUrls : undefined
+            images: finalUrls.length > 0 ? finalUrls : undefined
         }).subscribe({
             next: (updatedPost) => {
                 console.log('Post updated successfully:', updatedPost);
-                // Clear form
-                this.title = '';
-                this.content = '';
-                this.imageUrls = [];
-                this.selectedFileNames = [];
-                // Close modal
+                this.isLoading = false;
                 this.modalService.close();
             },
             error: (err) => {
                 console.error('Error updating post:', err);
-                alert('Failed to update post. Please try again.');
+                alert('Failed to update post.');
+                this.isLoading = false;
             }
         });
     }

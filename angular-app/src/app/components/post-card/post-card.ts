@@ -5,20 +5,27 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Post } from '../../models/data.models';
 import { ModalService } from '../../services/modal.service';
 import { DataService } from '../../services/data.service';
+import { ActionMenuComponent, ActionMenuItem } from '../action-menu/action-menu';
 
 @Component({
     selector: 'app-post-card',
     standalone: true,
-    imports: [CommonModule, RouterModule],
+    imports: [CommonModule, RouterModule, ActionMenuComponent],
     templateUrl: './post-card.html',
     styleUrl: './post-card.css'
 })
 export class PostCardComponent {
-    @Input() post!: Post;
+    private _post!: Post;
+    @Input() set post(value: Post) {
+        this._post = value;
+        this.computeMediaItems();
+    }
+    get post(): Post { return this._post; }
 
     currentUser: any = null;
     isExpanded: boolean = false;
     currentSlide = 0;
+    cachedMediaItems: { url: SafeUrl, isVideo: boolean }[] = [];
 
     constructor(
         protected modalService: ModalService,
@@ -31,36 +38,38 @@ export class PostCardComponent {
         });
     }
 
-    toggleExpand() {
-        this.isExpanded = !this.isExpanded;
-    }
-
-    get hasMedia(): boolean {
-        return this.mediaItems.length > 0;
-    }
-
-    get mediaItems(): { url: SafeUrl, isVideo: boolean }[] {
+    private computeMediaItems() {
+        if (!this._post) return;
         const items: { content: string, isVideo: boolean }[] = [];
 
-        // Add images from list
-        if (this.post.images && Array.isArray(this.post.images) && this.post.images.length > 0) {
-            items.push(...this.post.images.map(img => ({ content: img, isVideo: this.checkIsVideo(img) })));
+        if (this._post.images && Array.isArray(this._post.images) && this._post.images.length > 0) {
+            items.push(...this._post.images.map(img => ({ content: img, isVideo: this.checkIsVideo(img) })));
+        }
+        if (items.length === 0 && this._post.image) {
+            items.push({ content: this._post.image, isVideo: this.checkIsVideo(this._post.image) });
+        }
+        if (this._post.video?.url) {
+            items.push({ content: this._post.video.url, isVideo: true });
         }
 
-        // Fallback for single image
-        if (items.length === 0 && this.post.image) {
-            items.push({ content: this.post.image, isVideo: this.checkIsVideo(this.post.image) });
-        }
-
-        // Add video if present
-        if (this.post.video?.url) {
-            items.push({ content: this.post.video.url, isVideo: true });
-        }
-
-        return items.map(item => ({
+        this.cachedMediaItems = items.map(item => ({
             url: this.sanitizer.bypassSecurityTrustUrl(item.content),
             isVideo: item.isVideo
         }));
+    }
+
+    get mediaItems() { return this.cachedMediaItems; }
+
+    get hasMedia(): boolean {
+        return this.cachedMediaItems.length > 0;
+    }
+
+    trackByMedia(index: number, item: any) {
+        return item.url || index;
+    }
+
+    toggleExpand() {
+        this.isExpanded = !this.isExpanded;
     }
 
     checkIsVideo(url: string): boolean {
@@ -86,11 +95,6 @@ export class PostCardComponent {
     }
 
     scrollToSlide() {
-        // Element scroll handling would be best done with ViewChild, but for simplicity we rely on data binding + *ngIf or direct DOM if needed.
-        // Actually, with simple indexing and *ngIf/transform, or scrollIntoView.
-        // For a true scroll snap slider, we assume the user scrolls OR we programmatically scroll. 
-        // Let's grab the slider element via ID or class if needed, or simply rely on the user scrolling for now?
-        // Wait, I added buttons. I should implement the scroll logic.
         const slider = document.querySelector(`#slider-${this.post.id}`);
         if (slider) {
             const slideWidth = slider.clientWidth;
@@ -98,11 +102,12 @@ export class PostCardComponent {
         }
     }
 
-    // Capture scroll events to update dots
     onScroll(event: Event) {
         const target = event.target as HTMLElement;
         const slideWidth = target.clientWidth;
-        this.currentSlide = Math.round(target.scrollLeft / slideWidth);
+        if (slideWidth > 0) {
+            this.currentSlide = Math.round(target.scrollLeft / slideWidth);
+        }
     }
 
     getInitials(name: string): string {
@@ -130,40 +135,55 @@ export class PostCardComponent {
         return this.currentUser && this.post.user && this.currentUser.id !== this.post.user.id;
     }
 
+    get postActions(): ActionMenuItem[] {
+        return [
+            { id: 'edit', label: 'Edit Post', icon: 'edit', showIf: this.canEdit },
+            { id: 'delete', label: 'Delete Post', icon: 'delete', class: 'delete', showIf: this.canDelete },
+            { id: 'report', label: 'Report Post', icon: 'flag', class: 'warning', showIf: this.canReport }
+        ];
+    }
+
+    handleDropdownAction(actionId: string) {
+        if (actionId === 'edit') this.editPost();
+        if (actionId === 'delete') this.deletePost();
+        if (actionId === 'report') this.reportPost();
+    }
+
     toggleLike() {
         if (!this.post || !this.post.id) return;
         this.dataService.toggleLike(this.post.id).subscribe({
             next: (updatedPost) => {
                 this.post = updatedPost;
-                this.cdr.detectChanges(); // Use injected CDR
+                this.cdr.detectChanges();
             },
             error: (err) => console.error('Error liking post:', err)
         });
     }
 
     editPost() {
-        // Close dropdown by unchecking the checkbox
-        const checkbox = document.getElementById(`menu-${this.post.id}`) as HTMLInputElement;
-        if (checkbox) checkbox.checked = false;
         this.modalService.open('edit-post', this.post);
     }
 
     deletePost() {
-        const checkbox = document.getElementById(`menu-${this.post.id}`) as HTMLInputElement;
-        if (checkbox) checkbox.checked = false;
         this.modalService.open('delete-v2', this.post);
     }
 
     reportPost() {
-        const checkbox = document.getElementById(`menu-${this.post.id}`) as HTMLInputElement;
-        if (checkbox) checkbox.checked = false;
         const reportData = { ...this.post, reportType: 'post' };
         this.modalService.open('report-post', reportData);
     }
+
     openMediaViewer(index: number) {
         this.modalService.open('media-viewer', {
             items: this.mediaItems,
             initialIndex: index
         });
+    }
+
+    openPostDetails(event?: Event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        this.modalService.open('post-details', this.post);
     }
 }

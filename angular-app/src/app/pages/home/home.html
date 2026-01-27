@@ -42,17 +42,20 @@
 
             <!-- Posts List -->
             <div class="post-list">
-                <div class="loading-state" *ngIf="isLoading"
-                    style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-                    Loading posts...
-                </div>
-
                 <div class="empty-state" *ngIf="!isLoading && posts.length === 0"
                     style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                     No posts yet. Be the first to share something!
                 </div>
 
                 <app-post-card *ngFor="let post of posts" [post]="post"></app-post-card>
+
+                <!-- Load More -->
+                <div class="pagination-footer" *ngIf="posts.length >= 10" style="text-align: center; padding: 2rem;">
+                    <button class="btn-load-more-premium" (click)="loadMore()" [disabled]="!isMoreAvailable()"
+                        style="padding: 0.75rem 2rem; border-radius: 1rem; background: var(--primary); color: white; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(19, 19, 236, 0.2);">
+                        {{ isMoreAvailable() ? 'Load More Articles' : 'No More Articles' }}
+                    </button>
+                </div>
             </div>
         </main>
 

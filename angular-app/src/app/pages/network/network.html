@@ -10,8 +10,9 @@
 
             <!-- User Grid -->
             <div class="network-grid">
-                <div *ngFor="let user of users" class="network-user-card">
-                    <button class="btn-close-card" (click)="removeFromSuggestions(user)">
+                <div *ngFor="let user of users" class="network-user-card" (click)="navigateToProfile(user.id)"
+                    style="cursor: pointer;">
+                    <button class="btn-close-card" (click)="removeFromSuggestions(user); $event.stopPropagation()">
                         <span class="material-symbols-outlined icon-small">close</span>
                     </button>
 
@@ -22,8 +23,8 @@
                         {{ getInitials(user.name) }}
                     </div>
 
-                    <a class="network-user-name cursor-pointer hover:underline"
-                        (click)="modalService.open('post-details', {id: user.id})">
+
+                    <a [routerLink]="['/profile', user.id]" class="network-user-name hover:underline">
                         {{ user.name }}
                     </a>
 
@@ -38,10 +39,10 @@
                     <p class="network-user-bio" *ngIf="!user.bio">Passionate about tech. Let's connect!</p>
 
                     <div class="network-actions">
-                        <button (click)="toggleSubscribe(user)" 
-                                [class.subscribed]="user.isFollowing"
-                                class="btn-subscribe">
-                            <span class="material-symbols-outlined icon-small">{{ user.isFollowing ? 'check' : 'add' }}</span>
+                        <button (click)="toggleSubscribe(user); $event.stopPropagation()"
+                            [class.subscribed]="user.isFollowing" class="btn-subscribe">
+                            <span class="material-symbols-outlined icon-small">{{ user.isFollowing ? 'check' : 'add'
+                                }}</span>
                             <span>{{ user.isFollowing ? 'Subscribed' : 'Subscribe' }}</span>
                         </button>
                     </div>

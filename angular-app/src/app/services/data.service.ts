@@ -8,7 +8,8 @@ import { User, Post, Notification, Comment, AuthenticationRequest, Authenticatio
 })
 export class DataService {
     public injector = inject(Injector);
-    private API_URL = 'http://localhost:8080/api/v1';
+    private BASE_URL = 'http://localhost:8080';
+    private API_URL = `${this.BASE_URL}/api/v1`;
 
     // Signals state
     private _currentUser = signal<User | null>(null);
@@ -47,7 +48,19 @@ export class DataService {
         this.initializeAuth();
         if (this.isLoggedIn()) {
             this.refreshAllData();
+            this.startPolling();
         }
+    }
+
+    private pollingInterval: any;
+
+    private startPolling() {
+        if (this.pollingInterval) clearInterval(this.pollingInterval);
+        this.pollingInterval = setInterval(() => {
+            if (this.isLoggedIn()) {
+                this.loadNotifications();
+            }
+        }, 30000); // Poll every 30 seconds
     }
 
     private initializeAuth() {
@@ -136,9 +149,15 @@ export class DataService {
 
     // --- Data Loading Methods (Update Signals) ---
 
-    loadPosts() {
-        this.http.get<Post[]>(`${this.API_URL}/posts`).subscribe({
-            next: (posts) => this._posts.set(posts),
+    loadPosts(page: number = 0, size: number = 10, append: boolean = false) {
+        this.http.get<Post[]>(`${this.API_URL}/posts`, { params: { page: page.toString(), size: size.toString() } }).subscribe({
+            next: (posts) => {
+                if (append) {
+                    this._posts.update(current => [...current, ...posts]);
+                } else {
+                    this._posts.set(posts);
+                }
+            },
             error: (err) => console.error('Failed to load posts:', err)
         });
     }
@@ -150,8 +169,8 @@ export class DataService {
         });
     }
 
-    loadNotifications() {
-        this.http.get<Notification[]>(`${this.API_URL}/notifications`).subscribe({
+    loadNotifications(page: number = 0, size: number = 20) {
+        this.http.get<Notification[]>(`${this.API_URL}/notifications`, { params: { page: page.toString(), size: size.toString() } }).subscribe({
             next: (notifs) => this._notifications.set(notifs),
             error: (err) => console.error('Failed to load notifications:', err)
         });
@@ -211,6 +230,10 @@ export class DataService {
 
     getCommentsForPost(postId: number): Observable<Comment[]> {
         return this.http.get<Comment[]>(`${this.API_URL}/posts/${postId}/comments`);
+    }
+
+    toggleCommentLike(commentId: number): Observable<Comment> {
+        return this.http.post<Comment>(`${this.API_URL}/posts/comment/${commentId}/like`, {});
     }
 
     // --- Admin Action Methods ---
@@ -348,5 +371,9 @@ export class DataService {
     // Helper for manual getCurrentUser if needed (though using signal is better)
     getCurrentUser() {
         return this._currentUser();
+    }
+
+    getBaseUrl() {
+        return this.BASE_URL;
     }
 }

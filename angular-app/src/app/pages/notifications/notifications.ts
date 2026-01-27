@@ -75,7 +75,7 @@ export class Notifications implements OnInit {
         if (notification.type === 'LIKE' || notification.type === 'COMMENT' || notification.type === 'NEW_POST') {
             // Redirect to post detail page
             if (notification.entityId) {
-                this.router.navigate(['/post', notification.entityId]);
+                this.modalService.open('post-details', { id: notification.entityId });
             }
         } else if (notification.type === 'FOLLOW') {
             // For FOLLOW, entityId is the actor's (follower's) ID

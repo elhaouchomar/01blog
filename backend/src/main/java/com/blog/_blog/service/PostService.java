@@ -155,6 +155,25 @@ public class PostService {
     }
 
     @Transactional
+    public CommentDTO toggleCommentLike(Long commentId, String email) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (comment.getLikes().contains(user)) {
+            comment.getLikes().remove(user);
+        } else {
+            comment.getLikes().add(user);
+            // Optionally notify comment author
+        }
+
+        Comment saved = commentRepository.save(comment);
+        return convertToCommentDTO(saved, user);
+    }
+
+    @Transactional
     public CommentDTO addComment(Long postId, CreateCommentRequest request, String email) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));

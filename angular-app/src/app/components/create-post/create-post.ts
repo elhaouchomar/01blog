@@ -48,14 +48,28 @@ export class CreatePost implements OnInit, OnDestroy {
   }
 
   createPost() {
-    if (!this.title || !this.content) return;
+    if (!this.title.trim() || !this.content.trim()) {
+      alert('Title and content are required.');
+      return;
+    }
+
+    if (this.title.length < 3 || this.title.length > 150) {
+      alert('Title must be between 3 and 150 characters.');
+      return;
+    }
+
+    if (this.content.length < 3) {
+      alert('Content must be at least 3 characters.');
+      return;
+    }
+
     this.isLoading = true;
 
     if (this.selectedFiles.length > 0) {
       // First upload files
       this.dataService.uploadFiles(this.selectedFiles).subscribe({
         next: (fileNames) => {
-          const remoteUrls = fileNames.map(name => `http://localhost:8080/uploads/${name}`);
+          const remoteUrls = fileNames.map(name => `${this.dataService.getBaseUrl()}/uploads/${name}`);
           this.submitPost(remoteUrls);
         },
         error: (err) => {

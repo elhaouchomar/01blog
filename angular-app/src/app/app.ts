@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common'; // Import CommonModule
+import { filter } from 'rxjs';
 import { ModalService } from './services/modal.service';
 import { CreatePost } from './components/create-post/create-post';
 import { EditPost } from './components/edit-post/edit-post';
@@ -28,7 +29,6 @@ import { DataService } from './services/data.service';
     PostDetails,
     ReportModal,
     SuccessPosted,
-    SuccessPosted,
     ConfirmDeletePost,
     MediaViewer,
     CreateUser,
@@ -43,11 +43,24 @@ import { DataService } from './services/data.service';
 })
 export class App {
   protected readonly title = signal('angular-app');
-  constructor(protected modalService: ModalService, private dataService: DataService) {
+  constructor(protected modalService: ModalService, private dataService: DataService, private router: Router) {
     if (localStorage.getItem('auth_token')) {
       this.dataService.getProfile().subscribe({
         error: () => localStorage.removeItem('auth_token') // Clear invalid tokens
       });
     }
+
+    // Handle deep links for posts (unify modal experience)
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      const url = event.urlAfterRedirects || event.url;
+      const match = url.match(/\/post\/(\d+)/);
+      if (match) {
+        const postId = match[1];
+        this.modalService.open('post-details', { id: +postId });
+        this.router.navigate(['/home'], { replaceUrl: true }); // Clean up URL
+      }
+    });
   }
 }

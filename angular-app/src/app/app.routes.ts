@@ -4,7 +4,6 @@ import { Register } from './pages/auth/register/register';
 import { Home } from './pages/home/home';
 import { Profile } from './pages/profile/profile';
 import { NotFound } from './pages/not-found/not-found';
-import { PostDetail } from './pages/post-detail/post-detail';
 
 import { DashboardLayout } from './layout/dashboard-layout/dashboard-layout';
 import { DashboardOverview } from './pages/dashboard/overview/overview';
@@ -25,7 +24,7 @@ export const routes: Routes = [
     { path: 'home', component: Home, canActivate: [authGuard] },
     { path: 'profile', component: Profile, canActivate: [authGuard] },
     { path: 'profile/:id', component: Profile, canActivate: [authGuard] },
-    { path: 'post/:id', component: PostDetail, canActivate: [authGuard] },
+    { path: 'post/:id', component: Home, canActivate: [authGuard] },
 
     { path: 'notifications', component: Notifications, canActivate: [authGuard] },
     { path: 'network', component: Network, canActivate: [authGuard] },

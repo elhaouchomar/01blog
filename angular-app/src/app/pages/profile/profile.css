@@ -1,548 +1,390 @@
-/* Professional Profile Card */
-.profile-card-premium {
-    background-color: var(--surface-light);
-    border-radius: 1.25rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--gray-100);
-    overflow: hidden;
-    position: relative;
-    margin-bottom: 2rem;
-    transition: transform 0.3s ease;
+/* Page container now inherits from global styles.css to match home page */
+/* 
+.page-container {
+    max-width: 935px;
+    margin: 0 auto;
+    padding: 30px 20px;
 }
+*/
 
-.dark .profile-card-premium {
-    background-color: var(--surface-dark);
-    border-color: var(--gray-800);
-}
-
-/* Cover Section */
-.header-cover {
-    height: 180px;
-    width: 100%;
-    background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
-    background-size: cover;
-    background-position: center;
-    position: relative;
-}
-
-.cover-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
-}
-
-/* Content Layout */
-.header-content {
-    padding: 0 1.5rem 1.5rem;
-    position: relative;
-}
-
-.header-main-row {
+.main-feed {
+    min-width: 0;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-top: -3.5rem;
-    margin-bottom: 1.5rem;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-/* Avatar Styling */
-.avatar-container-premium {
+/* INSTAGRAM PROFILE HEADER */
+.insta-profile-header {
+    display: flex;
+    margin-bottom: 44px;
+}
+
+.header-avatar-col {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    margin-right: 30px;
+}
+
+.insta-avatar-wrapper {
     position: relative;
+    width: 150px;
+    height: 150px;
 }
 
-.avatar-main {
-    width: 110px;
-    height: 110px;
-    border-radius: 2rem;
-    /* Modern squircles */
-    border: 5px solid var(--surface-light);
-    background-color: var(--gray-100);
+.insta-avatar-main {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid var(--gray-200);
     background-size: cover;
     background-position: center;
-    box-shadow: var(--shadow-lg);
-    z-index: 2;
-}
-
-.dark .avatar-main {
-    border-color: var(--surface-dark);
-    background-color: var(--gray-800);
+    background-color: var(--gray-50);
 }
 
 .avatar-initials {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.5rem;
-    font-weight: 800;
+    font-size: 3rem;
+    font-weight: 700;
     color: var(--primary);
-    background: var(--gray-50);
 }
 
-.status-ring {
+.status-ring.hero {
     position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 22px;
-    height: 22px;
-    background-color: #10b981;
+    bottom: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    background: #10b981;
     border: 4px solid var(--surface-light);
     border-radius: 50%;
-    z-index: 3;
 }
 
-.dark .status-ring {
-    border-color: var(--surface-dark);
-}
-
-/* Action Buttons */
-.header-actions {
-    display: flex;
-    gap: 0.75rem;
-    padding-bottom: 0.5rem;
-}
-
-.btn-subscribe-premium {
-    padding: 0.625rem 1.5rem;
-    border-radius: 0.75rem;
-    background-color: var(--primary);
-    color: white;
-    font-weight: 700;
-    font-size: 0.875rem;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 12px rgba(19, 19, 236, 0.2);
-    transition: all 0.2s;
-}
-
-.btn-subscribe-premium:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(19, 19, 236, 0.3);
-}
-
-.btn-subscribe-premium.active {
-    background-color: var(--gray-100);
-    color: var(--text-main);
-    box-shadow: none;
-}
-
-.dark .btn-subscribe-premium.active {
-    background-color: var(--gray-800);
-    color: white;
-}
-
-.btn-icon-premium,
-.btn-edit-premium {
-    padding: 0.625rem;
-    border-radius: 0.75rem;
-    background-color: var(--gray-50);
-    border: 1px solid var(--gray-200);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s;
-}
-
-.dark .btn-icon-premium,
-.dark .btn-edit-premium {
-    background-color: var(--gray-800);
-    border-color: var(--gray-700);
-}
-
-.btn-edit-premium {
-    padding: 0.625rem 1.25rem;
-    gap: 0.5rem;
-    font-weight: 600;
-}
-
-.btn-icon-premium:hover,
-.btn-edit-premium:hover {
-    background-color: var(--gray-100);
-    \n color: var(--primary);
-}
-
-.btn-report-user {
-    padding: 0.625rem;
-    border-radius: 0.75rem;
-    background-color: transparent;
-    border: 1px solid var(--gray-200);
-    color: var(--text-secondary);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s;
-}
-
-.btn-report-user:hover {
-    background-color: #fef2f2;
-    border-color: #fca5a5;
-    color: #dc2626;
-}
-
-.dark .btn-report-user {
-    border-color: var(--gray-700);
-}
-
-.dark .btn-report-user:hover {
-    background-color: rgba(220, 38, 38, 0.1);
-    border-color: #dc2626;
-    color: #ef4444;
-}
-
-/* Identity Section */
-.user-identity {
-    margin-bottom: 0.75rem;
-}
-
-.name-badge-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.user-display-name {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: var(--text-main);
-    letter-spacing: -0.02em;
-}
-
-.dark .user-display-name {
-    color: white;
-}
-
-.user-handle-premium {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
-
-.verified-badge {
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-}
-
-.user-bio-premium {
-    font-size: 1rem;
-    line-height: 1.6;
-    color: var(--text-main);
-    max-width: 600px;
-    margin-bottom: 1.5rem;
-}
-
-.dark .user-bio-premium {
-    color: var(--gray-300);
-}
-
-.user-bio-premium.empty {
-    font-style: italic;
-    opacity: 0.6;
-}
-
-/* Stats Dashboard */
-.stats-dashboard {
-    display: flex;
-    align-items: center;
-    background-color: var(--gray-50);
-    border-radius: 1rem;
-    padding: 1rem;
-    width: fit-content;
-}
-
-.dark .stats-dashboard {
-    background-color: rgba(31, 41, 55, 0.5);
-}
-
-.stat-box {
+.header-info-col {
+    flex: 2;
     display: flex;
     flex-direction: column;
-    padding: 0 1.5rem;
+    gap: 20px;
 }
 
-.stat-box.clickable {
-    transition: background-color 0.2s;
-    border-radius: 0.5rem;
+.info-top-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
 }
 
-.stat-box.clickable:hover {
+.insta-username {
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.header-ctas {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.insta-btn-follow {
+    background-color: #0095f6;
+    color: white;
+    border: none;
+    padding: 5px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
     cursor: pointer;
+}
+
+.insta-btn-follow:hover {
+    background-color: #1877f2;
+}
+
+.insta-btn-follow.following {
     background-color: var(--gray-100);
-}
-
-.dark .stat-box.clickable:hover {
-    background-color: var(--gray-800);
-}
-
-.stat-count {
-    font-size: 1.125rem;
-    font-weight: 800;
     color: var(--text-main);
 }
 
-.dark .stat-count {
-    color: white;
-}
-
-.stat-name {
-    font-size: 0.75rem;
+.insta-btn-secondary {
+    background-color: var(--gray-100);
+    border: none;
+    padding: 5px 16px;
+    border-radius: 8px;
     font-weight: 600;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.875rem;
+    color: var(--text-main);
+    cursor: pointer;
 }
 
-.stat-divider {
-    width: 1px;
-    height: 24px;
+.insta-btn-secondary:hover {
     background-color: var(--gray-200);
 }
 
-.dark .stat-divider {
-    background-color: var(--gray-700);
-}
-
-/* Navigation Tabs */
-.profile-tabs-premium {
-    display: flex;
-    padding: 0 1rem;
-    border-top: 1px solid var(--gray-100);
-    gap: 0.5rem;
-}
-
-.dark .profile-tabs-premium {
-    border-color: var(--gray-800);
-}
-
-.tab-btn {
-    padding: 1rem 1.25rem;
-    font-weight: 700;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
+.insta-btn-icon {
     background: none;
     border: none;
-    border-bottom: 3px solid transparent;
     cursor: pointer;
+    color: var(--text-main);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
 }
 
-.tab-btn:hover {
-    color: var(--primary);
-}
-
-.tab-btn.active {
-    color: var(--primary);
-    border-bottom-color: var(--primary);
-}
-
-.tab-icon {
-    font-size: 1.25rem;
-}
-
-/* Feed Section Styles */
-.profile-feed-container {
-    margin-top: 1rem;
-}
-
-.feed-header-row {
+.info-stats-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+    gap: 40px;
 }
 
-.feed-title {
-    font-size: 1.25rem;
-    font-weight: 800;
+.stat-item {
+    font-size: 1rem;
     color: var(--text-main);
 }
 
-.dark .feed-title {
-    color: white;
+.stat-item strong {
+    font-weight: 700;
 }
 
-.feed-filters {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.filter-label {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.feed-select {
-    background-color: var(--surface-light);
-    border: 1px solid var(--gray-200);
-    border-radius: 0.5rem;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-    color: var(--text-main);
-    outline: none;
-}
-
-.dark .feed-select {
-    background-color: var(--surface-dark);
-    border-color: var(--gray-700);
-    color: white;
-}
-
-/* Loading States */
-.loading-state-premium {
-    text-align: center;
-    padding: 3rem;
-    color: var(--text-secondary);
-}
-
-.shimmer-card {
-    height: 150px;
-    background: linear-gradient(90deg, var(--gray-50) 25%, var(--gray-100) 50%, var(--gray-50) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 1rem;
-    margin-bottom: 1rem;
-}
-
-@keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-
-    100% {
-        background-position: 200% 0;
-    }
-}
-
-/* Spinner */
-.spinner {
-    width: 30px;
-    height: 30px;
-    border: 3px solid rgba(19, 19, 236, 0.1);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 2rem auto;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-/* Responsive Overrides */
-@media (max-width: 768px) {
-    .header-main-row {
-        flex-direction: column;
-        align-items: flex-start;
-        margin-top: -3rem;
-        gap: 1rem;
-    }
-
-    .header-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-
-    .user-display-name {
-        font-size: 1.5rem;
-    }
-
-    .stats-dashboard {
-        width: 100%;
-        justify-content: space-around;
-    }
-
-    .stat-box {
-        padding: 0 0.5rem;
-        flex: 1;
-        text-align: center;
-    }
-
-    .profile-tabs-premium {
-        overflow-x: auto;
-        scrollbar-width: none;
-    }
-
-    .profile-tabs-premium::-webkit-scrollbar {
-        display: none;
-    }
-
-    .tab-btn {
-        white-space: nowrap;
-    }
-}
-
-/* About Section Grid */
-.about-grid {
+.insta-bio-container {
     display: flex;
     flex-direction: column;
 }
 
-.about-item {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    color: var(--text-secondary);
-}
-
-.about-item .material-symbols-outlined {
-    font-size: 1.75rem;
-    color: var(--primary);
-    background-color: rgba(19, 19, 236, 0.05);
-    padding: 0.75rem;
-    border-radius: 1rem;
-}
-
-/* Premium Empty States */
-.empty-state-premium {
-    background-color: var(--surface-light);
-    border-radius: 1.25rem;
-    padding: 4rem 2rem;
-    text-align: center;
-    border: 1px solid var(--gray-100);
-}
-
-.dark .empty-state-premium {
-    background-color: var(--surface-dark);
-    border-color: var(--gray-800);
-}
-
-.empty-icon-box {
-    width: 80px;
-    height: 80px;
-    background-color: var(--gray-50);
-    border-radius: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-}
-
-.dark .empty-icon-box {
-    background-color: var(--gray-800);
-}
-
-.empty-icon-box .material-symbols-outlined {
-    font-size: 3rem;
-    color: var(--gray-300);
-}
-
-.empty-state-premium h3 {
-    font-size: 1.25rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
+.insta-full-name {
+    font-weight: 700;
+    font-size: 1rem;
     color: var(--text-main);
 }
 
-.empty-state-premium p {
+.insta-bio-text {
+    font-size: 1rem;
+    line-height: 1.4;
+    color: var(--text-main);
+    margin: 0;
+}
+
+/* TABS BAR */
+.insta-tabs-bar {
+    display: flex;
+    justify-content: center;
+    border-top: 1px solid var(--gray-200);
+    gap: 60px;
+}
+
+.insta-tab {
+    background: none;
+    border: none;
+    border-top: 1px solid transparent;
+    margin-top: -1px;
+    padding: 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.insta-tab.active {
+    color: var(--text-main);
+    border-top-color: var(--text-main);
+}
+
+.insta-tab .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+/* PHOTO GRID */
+.insta-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    margin-top: 3px;
+}
+
+.insta-grid-item {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1/1;
+    cursor: pointer;
+    background-color: var(--gray-100);
+    overflow: hidden;
+}
+
+.grid-media-wrapper {
+    width: 100%;
+    height: 100%;
+}
+
+.grid-media-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-thumb-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-400);
+}
+
+.media-type-overlay {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: white;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.insta-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    color: white;
+    font-weight: 700;
+}
+
+.insta-grid-item:hover .insta-hover-overlay {
+    opacity: 1;
+}
+
+.overlay-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.overlay-stat .material-symbols-outlined {
+    font-size: 1.5rem;
+}
+
+/* UTILS */
+.mobile-only {
+    display: none;
+}
+
+/* DARK MODE */
+.dark .insta-profile-header,
+.dark .insta-username,
+.dark .stat-item,
+.dark .insta-full-name,
+.dark .insta-bio-text,
+.dark .insta-tab.active {
+    color: white;
+}
+
+.dark .insta-tab {
+    color: var(--gray-400);
+}
+
+.dark .insta-tabs-bar {
+    border-color: var(--gray-800);
+}
+
+.dark .insta-btn-secondary {
+    background-color: var(--gray-800);
+    color: white;
+}
+
+.dark .insta-avatar-main {
+    border-color: var(--gray-800);
+    background-color: var(--gray-900);
+}
+
+/* RESPONSIVE */
+@media (max-width: 735px) {
+    .insta-profile-header {
+        margin-bottom: 24px;
+        padding: 0 16px;
+    }
+
+    .header-avatar-col {
+        margin-right: 16px;
+        flex: 0;
+    }
+
+    .insta-avatar-wrapper {
+        width: 77px;
+        height: 77px;
+    }
+
+    .header-info-col {
+        flex: 1;
+        gap: 12px;
+    }
+
+    .insta-username {
+        font-size: 1.5rem;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+
+    .mobile-only {
+        display: flex;
+    }
+
+    .insta-bio-container {
+        padding: 0 16px 21px;
+    }
+
+    .info-stats-row {
+        border-top: 1px solid var(--gray-200);
+        padding: 12px 0;
+        gap: 0;
+        justify-content: space-around;
+    }
+
+    .mobile-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .mobile-stat .val {
+        font-weight: 700;
+        color: var(--text-main);
+    }
+
+    .mobile-stat .lab {
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+    }
+
+    .insta-tabs-bar {
+        gap: 0;
+        justify-content: space-around;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .insta-tab {
+        flex: 1;
+        justify-content: center;
+        border-top: none;
+    }
+
+    .insta-tab.active {
+        color: #0095f6;
+        border-top: none;
+    }
+
+    .insta-grid {
+        gap: 3px;
+    }
 }

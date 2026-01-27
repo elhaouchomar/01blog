@@ -1,0 +1,129 @@
+.menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: 12rem;
+    background-color: var(--surface-light);
+    border-radius: 0.875rem;
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--gray-100);
+    z-index: 1000;
+    /* Higher priority to avoid clipping */
+    overflow: hidden;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    display: none;
+    flex-direction: column;
+    transform-origin: top right;
+    animation: menuFadeIn 0.15s ease-out;
+}
+
+@keyframes menuFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.menu-dropdown.active {
+    display: flex;
+}
+
+.menu-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-main);
+    text-align: left;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+
+.menu-item:hover {
+    background-color: var(--gray-50);
+    color: var(--primary);
+}
+
+.menu-item.delete,
+.menu-item.danger {
+    color: var(--error);
+}
+
+.menu-item.delete:hover,
+.menu-item.danger:hover {
+    background-color: rgba(239, 68, 68, 0.05);
+}
+
+.menu-item.warning {
+    color: var(--warning);
+}
+
+.menu-item.warning:hover {
+    background-color: rgba(245, 158, 11, 0.05);
+}
+
+.menu-item .material-symbols-outlined {
+    font-size: 1.25rem;
+}
+
+/* Dark mode support */
+:host-context(.dark) .menu-dropdown {
+    background-color: var(--surface-dark);
+    border-color: var(--gray-800);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+:host-context(.dark) .menu-item {
+    color: var(--gray-300);
+}
+
+:host-context(.dark) .menu-item:hover {
+    background-color: var(--gray-800);
+    color: white;
+}
+
+/* Action button styles if used with common classes */
+.btn-icon-premium {
+    padding: 0.625rem;
+    border-radius: 0.75rem;
+    background-color: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-icon-premium:hover {
+    background-color: var(--gray-100);
+    color: var(--primary);
+}
+
+.btn-icon-premium.menu-open {
+    background-color: var(--primary);
+    color: white;
+    transform: rotate(90deg);
+}
+
+.dark .btn-icon-premium {
+    background-color: var(--gray-800);
+    border-color: var(--gray-700);
+}

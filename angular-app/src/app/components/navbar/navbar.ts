@@ -145,7 +145,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         if (notification.type === 'LIKE' || notification.type === 'COMMENT' || notification.type === 'NEW_POST') {
             // Redirect to post detail page
             if (notification.entityId) {
-                this.router.navigate(['/post', notification.entityId]);
+                this.modalService.open('post-details', { id: notification.entityId });
                 this.isNotificationsOpen = false; // Close dropdown
             }
         } else if (notification.type === 'FOLLOW') {

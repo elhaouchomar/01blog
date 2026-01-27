@@ -31,9 +31,37 @@ export class Register {
         return score; // Max 4
     }
 
+    validateEmail(email: string): boolean {
+        return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+    }
+
+    validateName(name: string): boolean {
+        return /^[A-Za-z\-']{2,50}$/.test(name);
+    }
+
     onRegister() {
         if (!this.firstname || !this.lastname || !this.email || !this.password) {
             this.error = 'All fields are required.';
+            return;
+        }
+
+        if (!this.validateName(this.firstname)) {
+            this.error = 'First name must contain only letters and be 2-50 characters.';
+            return;
+        }
+
+        if (!this.validateName(this.lastname)) {
+            this.error = 'Last name must contain only letters and be 2-50 characters.';
+            return;
+        }
+
+        if (!this.validateEmail(this.email)) {
+            this.error = 'Please enter a valid email address.';
+            return;
+        }
+
+        if (this.password.length < 6) {
+            this.error = 'Password must be at least 6 characters.';
             return;
         }
 

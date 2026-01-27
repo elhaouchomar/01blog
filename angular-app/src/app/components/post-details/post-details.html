@@ -1,166 +1,193 @@
-<!-- Post Details Premium Modal -->
-<div class="premium-post-overlay" *ngIf="post">
-    <div class="premium-post-backdrop" (click)="close()"></div>
+<div class="superior-modal-container" *ngIf="post">
+    <!-- Immersive Backdrop -->
+    <div class="superior-backdrop" (click)="close()"></div>
 
-    <div class="premium-post-window">
-        <!-- Close button floating -->
-        <button class="glass-close-btn" (click)="close()">
-            <span class="material-symbols-outlined">close</span>
-        </button>
+    <div class="superior-window">
+        <!-- UNIFIED CINEMATIC NAVBAR -->
+        <nav class="superior-navbar">
+            <button class="nav-control-btn back-trigger" (click)="close()" aria-label="Go back">
+                <span class="material-symbols-outlined">west</span>
+            </button>
+            <div class="nav-spacer"></div>
+            <app-action-menu [items]="postActions" (actionSelected)="handleDropdownAction($event)"
+                buttonClass="nav-control-btn menu-trigger"></app-action-menu>
+        </nav>
 
-        <!-- Main Content Area (Dual Pane) -->
-        <div class="premium-post-layout">
+        <div class="superior-layout">
 
-            <!-- Left: Visuals & Core Content (Scrollable) -->
-            <div class="premium-main-view">
-                <!-- Media Section -->
-                <div class="premium-media-container" *ngIf="(post.images && post.images.length > 0) || post.video">
-                    <div class="media-track">
-                        <!-- Video Support -->
-                        <div *ngIf="post.video?.url" class="premium-media-item video-item">
-                            <video controls [poster]="post.video?.thumbnail">
-                                <source [src]="post.video?.url" type="video/mp4">
-                            </video>
-                        </div>
+            <!-- CINEMATIC CONTENT PANE (Left) -->
+            <div class="superior-content-pane no-scrollbar">
+                <!-- Hero Section: Title & Metadata -->
+                <header class="superior-hero-header">
+                    <div class="superior-category-tag" *ngIf="post.category">{{ post.category }}</div>
+                    <h1 class="superior-title">{{ post.title }}</h1>
+                    <div class="superior-meta-strip">
+                        <span class="meta-icon-group">
+                            <span class="material-symbols-outlined">schedule</span>
+                            {{ post.readTime || '5 min read' }}
+                        </span>
+                        <span class="meta-divider"></span>
+                        <span class="meta-icon-group">
+                            <span class="material-symbols-outlined">calendar_today</span>
+                            {{ post.createdAt | date:'longDate' }}
+                        </span>
+                    </div>
+                </header>
 
-                        <!-- Images Support -->
-                        <ng-container *ngIf="post.images && post.images.length > 0">
-                            <div class="premium-media-item" *ngFor="let mediaUrl of post.images">
-                                <div *ngIf="isVideo(mediaUrl)" class="premium-video-wrapper">
-                                    <video controls>
-                                        <source [src]="mediaUrl" type="video/mp4">
+                <!-- Immersive Media Arena -->
+                <div class="superior-media-arena" *ngIf="mediaItems.length > 0">
+                    <div class="media-track-container">
+                        <div class="media-filmstrip" [style.transform]="'translateX(-' + (currentSlide * 100) + '%)'">
+                            <div class="media-frame" *ngFor="let media of mediaItems; trackBy: trackByMedia">
+                                <div *ngIf="media.isVideo" class="video-stage">
+                                    <video controls playsinline>
+                                        <source [src]="media.url" type="video/mp4">
                                     </video>
                                 </div>
-                                <img *ngIf="!isVideo(mediaUrl)" [src]="mediaUrl" alt="Post content preview">
-                            </div>
-                        </ng-container>
-                    </div>
-                </div>
-
-                <!-- Article Content -->
-                <div class="premium-article-body">
-                    <div class="article-breadcrumb" *ngIf="post.category">
-                        <span class="breadcrumb-tag">{{ post.category }}</span>
-                        <span class="breadcrumb-separator">/</span>
-                        <span class="breadcrumb-id">#{{ post.id }}</span>
-                    </div>
-
-                    <h1 class="article-title text-gradient">{{ post.title }}</h1>
-
-                    <div class="article-metadata-row">
-                        <div class="author-capsule" [routerLink]="['/profile', post.user?.id]" (click)="close()">
-                            <img [src]="post.user?.avatar || 'assets/default-avatar.png'" alt="Author avatar">
-                            <div class="author-details">
-                                <span class="author-name">{{ post.user?.name }}</span>
-                                <span class="author-status">Active contributor</span>
+                                <img *ngIf="!media.isVideo" [src]="media.url" alt="Post content" loading="eager">
                             </div>
                         </div>
-                        <div class="post-metrics">
-                            <span class="metric-item">
-                                <span class="material-symbols-outlined">calendar_today</span>
-                                {{ post.createdAt | date:'longDate' }}
-                            </span>
-                            <span class="metric-item" *ngIf="post.readTime">
-                                <span class="material-symbols-outlined">schedule</span>
-                                {{ post.readTime }}
-                            </span>
+                    </div>
+
+                    <!-- Precision Navigation overlays -->
+                    <ng-container *ngIf="mediaItems.length > 1">
+                        <button class="nav-trigger prev" (click)="prevSlide()" [disabled]="currentSlide === 0">
+                            <span class="material-symbols-outlined">west</span>
+                        </button>
+                        <button class="nav-trigger next" (click)="nextSlide()"
+                            [disabled]="currentSlide === mediaItems.length - 1">
+                            <span class="material-symbols-outlined">east</span>
+                        </button>
+
+                        <div class="arena-indicators">
+                            <span class="indicator-dot" *ngFor="let dot of mediaItems; let i = index"
+                                [class.active]="i === currentSlide" (click)="currentSlide = i"></span>
                         </div>
-                    </div>
-
-                    <div class="article-main-text">
-                        {{ post.content }}
-                    </div>
-
-                    <!-- Admin/Editor Tools Section -->
-                    <div class="premium-admin-dock"
-                        *ngIf="post.user?.id === dataService.currentUser()?.id || dataService.isAdmin()">
-                        <div class="dock-label">Administrative Actions</div>
-                        <div class="dock-actions">
-                            <button class="dock-btn edit-btn" (click)="editPost()">
-                                <span class="material-symbols-outlined">edit</span>
-                                Edit Post
-                            </button>
-                            <button class="dock-btn delete-btn" (click)="deletePost()">
-                                <span class="material-symbols-outlined">delete</span>
-                                Remove Globally
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="article-tags-cloud" *ngIf="post.tags?.length">
-                        <span *ngFor="let tag of post.tags" class="cloud-tag">#{{ tag }}</span>
-                    </div>
+                    </ng-container>
                 </div>
+
+                <!-- Long-form Narrative -->
+                <article class="superior-narrative">
+                    <p class="narrative-text">{{ post.content }}</p>
+
+                    <div class="narrative-footer" *ngIf="post.tags?.length">
+                        <div class="tag-cloud">
+                            <span class="pill-tag" *ngFor="let tag of post.tags">#{{ tag }}</span>
+                        </div>
+                    </div>
+                </article>
             </div>
 
-            <!-- Right: Engagement & Intelligence Sidecar -->
-            <div class="premium-post-sidecar">
-                <!-- Sidecar Header -->
-                <div class="sidecar-header">
-                    <div class="sidecar-stats">
-                        <div class="stat-bubble">
-                            <span class="stat-val">{{ post.likes || 0 }}</span>
-                            <span class="stat-lab">Likes</span>
+            <!-- INTELLIGENT ENGAGEMENT SIDEBAR (Right) -->
+            <aside class="superior-engagement-sidebar">
+                <!-- Author Mini Profile (Secondary) -->
+                <div class="sidebar-top-bar">
+                    <div class="author-capsule" (click)="goToProfile(post.user.id)">
+                        <div class="avatar-aura">
+                            <img [src]="post.user.avatar || 'assets/default-avatar.png'" alt="Author">
                         </div>
-                        <div class="stat-bubble">
-                            <span class="stat-val">{{ comments.length }}</span>
-                            <span class="stat-lab">Comments</span>
+                        <div class="author-info">
+                            <span class="author-name">{{ post.user.name }}</span>
+                            <span class="author-handle">@{{ post.user.handle }}</span>
                         </div>
-                    </div>
-                    <div class="engaged-action">
-                        <button class="engagement-trigger" [class.is-liked]="post.isLiked" (click)="toggleLike()">
-                            <span class="material-symbols-outlined" [class.filled]="post.isLiked">favorite</span>
-                        </button>
                     </div>
                 </div>
 
-                <!-- Discussions Area -->
-                <div class="sidecar-discussions">
-                    <div class="discussion-label">Community Discussions</div>
-
-                    <div *ngIf="comments.length === 0" class="discussion-empty">
-                        <div class="empty-glow">
-                            <span class="material-symbols-outlined">forum</span>
+                <!-- Discussion Nodes Timeline -->
+                <div class="sidebar-scroll-zone no-scrollbar">
+                    <!-- Author's Note / Captain -->
+                    <div class="timeline-node author-node">
+                        <div class="node-avatar">
+                            <img [src]="post.user.avatar || 'assets/default-avatar.png'" alt="">
                         </div>
-                        <p>No perspectives shared yet.</p>
-                        <span>Initiate the conversation below.</span>
+                        <div class="node-content">
+                            <div class="node-bubble">
+                                <span class="node-author-name" (click)="goToProfile(post.user.id)"
+                                    style="cursor: pointer;">{{ post.user.name }}</span>
+                                <span class="node-body">{{ post.content | slice:0:200 }}{{ post.content.length > 200 ?
+                                    '...' : '' }}</span>
+                            </div>
+                            <div class="node-meta">
+                                <span>{{ post.createdAt | date:'shortTime' }}</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="discussion-timeline">
-                        <div *ngFor="let comment of comments" class="discussion-node">
-                            <div class="node-author-ring">
-                                <img [src]="comment.user.avatar || 'assets/default-avatar.png'"
-                                    [alt]="comment.user.name">
+                    <div class="timeline-divider"><span>Perspectives</span></div>
+
+                    <!-- Dynamic Comments -->
+                    <div class="comments-vortex">
+                        <div *ngIf="comments.length === 0" class="vortex-empty-state">
+                            <span class="material-symbols-outlined">bubble_chart</span>
+                            <p>Be the first to share a perspective</p>
+                        </div>
+
+                        <div *ngFor="let comment of comments; trackBy: trackByComment"
+                            class="timeline-node comment-node">
+                            <div class="node-avatar" (click)="goToProfile(comment.user.id)" style="cursor: pointer;">
+                                <img [src]="comment.user.avatar || 'assets/default-avatar.png'" alt="">
                             </div>
-                            <div class="node-payload">
+                            <div class="node-content">
+                                <div class="node-bubble">
+                                    <span class="node-author-name" (click)="goToProfile(comment.user.id)"
+                                        style="cursor: pointer;">{{ comment.user.name }}</span>
+                                    <span class="node-body">{{ comment.content }}</span>
+                                </div>
                                 <div class="node-meta">
-                                    <span class="node-author">{{ comment.user.name }}</span>
-                                    <span class="node-time">{{ comment.time }}</span>
-                                </div>
-                                <p class="node-text">{{ comment.content }}</p>
-                                <div class="node-actions">
-                                    <button class="node-mini-btn">
-                                        <span class="material-symbols-outlined">thumb_up</span>
-                                        {{ comment.likes || 0 }}
-                                    </button>
-                                    <button class="node-mini-btn">Reply</button>
+                                    <span>{{ comment.time || 'now' }}</span>
+                                    <button class="node-action">Reply</button>
+                                    <span class="node-likes">{{ comment.likes || 0 }} likes</span>
                                 </div>
                             </div>
+                            <button class="node-heart" [class.active]="comment.isLiked"
+                                (click)="toggleCommentLike(comment)">
+                                <span class="material-symbols-outlined">favorite</span>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sidecar Input -->
-                <div class="sidecar-composer">
-                    <div class="composer-container">
-                        <textarea [(ngModel)]="newComment" (keyup.enter)="addComment()"
-                            placeholder="Share your perspective..." rows="1"></textarea>
-                        <button class="composer-submit" (click)="addComment()" [disabled]="!newComment.trim()">
-                            <span class="material-symbols-outlined">send</span>
+                <!-- High-Performance Interaction Footer -->
+                <footer class="sidebar-bottom-panel">
+                    <div class="interaction-dashboard">
+                        <div class="primary-actions">
+                            <button class="dash-btn heart" [class.active]="post.isLiked" (click)="toggleLike()">
+                                <span class="material-symbols-outlined" [class.filled]="post.isLiked">
+                                    {{ post.isLiked ? 'favorite' : 'favorite_border' }}
+                                </span>
+                            </button>
+                            <button class="dash-btn subscribe" (click)="toggleSubscribe()"
+                                aria-label="Subscribe to author">
+                                <span class="material-symbols-outlined">loyalty</span>
+                            </button>
+                            <button class="dash-btn share">
+                                <span class="material-symbols-outlined">ios_share</span>
+                            </button>
+                        </div>
+                        <button class="dash-btn bookmark">
+                            <span class="material-symbols-outlined">bookmark</span>
                         </button>
                     </div>
-                </div>
-            </div>
+
+                    <div class="engagement-summary">
+                        <span class="likes-count">{{ post.likes | number }} people like this</span>
+                        <span class="post-timestamp">{{ post.createdAt | date:'longDate' }}</span>
+                    </div>
+
+                    <div class="comment-composer">
+                        <div class="composer-inner">
+                            <span class="material-symbols-outlined composer-icon">add_comment</span>
+                            <input type="text" placeholder="Add a perspective..." [(ngModel)]="newComment"
+                                [disabled]="isSubmitting" (keyup.enter)="addComment()">
+                            <button class="send-trigger" [disabled]="!newComment.trim() || isSubmitting"
+                                (click)="addComment()">
+                                <span class="material-symbols-outlined">{{ isSubmitting ? 'sync' : 'arrow_upward'
+                                    }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </footer>
+            </aside>
         </div>
     </div>
 </div>

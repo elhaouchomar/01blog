@@ -7,137 +7,101 @@
 
         <!-- Main Feed -->
         <main class="main-feed" *ngIf="user">
-            <!-- Professional Profile Header -->
-            <div class="profile-card-premium">
-                <!-- Dynamic Cover -->
-                <div class="header-cover" [style.background-image]="user.cover ? 'url(' + user.cover + ')' : ''">
-                    <div class="cover-overlay" *ngIf="!user.cover"></div>
+            <!-- Instagram Style Header -->
+            <div class="insta-profile-header">
+                <!-- Large Avatar Left -->
+                <div class="header-avatar-col">
+                    <div class="insta-avatar-wrapper">
+                        <div class="insta-avatar-main" *ngIf="user.avatar"
+                            [style.background-image]="'url(' + user.avatar + ')'">
+                        </div>
+                        <div class="insta-avatar-main avatar-initials" *ngIf="!user.avatar">
+                            {{ getInitials(user.name) }}
+                        </div>
+                        <div class="status-ring hero" *ngIf="user.isOnline"></div>
+                    </div>
                 </div>
 
-                <div class="header-content">
-                    <div class="header-main-row">
-                        <!-- Avatar with Status -->
-                        <div class="avatar-container-premium">
-                            <div class="avatar-main" *ngIf="user.avatar"
-                                [style.background-image]="'url(' + user.avatar + ')'">
-                            </div>
-                            <div class="avatar-main avatar-initials" *ngIf="!user.avatar">
-                                {{ getInitials(user.name) }}
-                            </div>
-                            <div class="status-ring" *ngIf="user.isOnline" title="Online"></div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="header-actions">
+                <!-- Stats & Actions Right -->
+                <div class="header-info-col">
+                    <div class="info-top-row">
+                        <h1 class="insta-username">@{{ user.handle }}</h1>
+                        <div class="header-ctas">
                             <ng-container *ngIf="!isOwnProfile; else ownActions">
-                                <button class="btn-subscribe-premium" [class.active]="user.isFollowing"
+                                <button class="insta-btn-follow" [class.following]="user.isFollowing"
                                     (click)="toggleSubscribe()">
-                                    <span class="material-symbols-outlined">{{ user.isFollowing ? 'check' :
-                                        'person_add' }}</span>
-                                    {{ user.isFollowing ? 'Following' : 'Follow' }}
+                                    {{ user.isFollowing ? 'Following' : 'Subscribe' }}
                                 </button>
-                                <button class="btn-report-user" (click)="reportUser()" title="Report User">
-                                    <span class="material-symbols-outlined">flag</span>
-                                </button>
-                                <button class="btn-icon-premium" (click)="toggleMenu()">
-                                    <span class="material-symbols-outlined">more_horiz</span>
-                                </button>
+                                <app-action-menu [items]="profileActions"
+                                    (actionSelected)="handleDropdownAction($event)"></app-action-menu>
                             </ng-container>
                             <ng-template #ownActions>
-                                <button class="btn-edit-premium" routerLink="/settings">
+                                <button class="insta-btn-secondary" routerLink="/settings">Edit Profile</button>
+                                <button class="insta-btn-icon" routerLink="/settings">
                                     <span class="material-symbols-outlined">settings</span>
-                                    <span>Settings</span>
                                 </button>
                             </ng-template>
                         </div>
                     </div>
 
-                    <!-- User Details -->
-                    <div class="user-identity">
-                        <div class="name-badge-row">
-                            <h1 class="user-display-name">{{ user.name }}</h1>
-                            <span class="verified-badge" *ngIf="isAdmin" title="Admin">
-                                <span class="material-symbols-outlined">verified</span>
-                            </span>
-                        </div>
-                        <p class="user-handle-premium">@{{ user.handle }}</p>
+                    <!-- Desktop Stats Row -->
+                    <div class="info-stats-row" *ngIf="user.stats">
+                        <span class="stat-item"><strong>{{ user.stats.posts }}</strong> posts</span>
+                        <span class="stat-item"><strong>{{ user.stats.followers }}</strong> followers</span>
+                        <span class="stat-item"><strong>{{ user.stats.following }}</strong> following</span>
                     </div>
 
-                    <!-- Professional Bio -->
-                    <p class="user-bio-premium" [class.empty]="!user.bio">
-                        {{ user.bio || 'Professional developer and community member. Passionate about building great
-                        software.' }}
-                    </p>
-
-                    <!-- Stats Dashboard -->
-                    <div class="stats-dashboard" *ngIf="user.stats">
-                        <div class="stat-box">
-                            <span class="stat-count">{{ user.stats.posts }}</span>
-                            <span class="stat-name">Articles</span>
-                        </div>
-                        <div class="stat-divider"></div>
-                        <div class="stat-box clickable">
-                            <span class="stat-count">{{ user.stats.followers > 1000 ?
-                                (user.stats.followers/1000).toFixed(1) + 'k' : user.stats.followers }}</span>
-                            <span class="stat-name">Subscribers</span>
-                        </div>
-                        <div class="stat-divider"></div>
-                        <div class="stat-box clickable">
-                            <span class="stat-count">{{ user.stats.following }}</span>
-                            <span class="stat-name">Subscriptions</span>
-                        </div>
+                    <!-- Bio Section (Desktop) -->
+                    <div class="insta-bio-container desktop-only">
+                        <span class="insta-full-name">{{ user.name }}</span>
+                        <p class="insta-bio-text">{{ user.bio || 'Community member and builder.' }}</p>
                     </div>
-                </div>
-
-                <!-- Navigation Tabs -->
-                <div class="profile-tabs-premium">
-                    <button class="tab-btn" [class.active]="activeTab === 'Posts'" (click)="setTab('Posts')">
-                        <span class="material-symbols-outlined tab-icon">article</span>
-                        Posts
-                    </button>
-                    <button class="tab-btn" [class.active]="activeTab === 'About'" (click)="setTab('About')">
-                        <span class="material-symbols-outlined tab-icon">info</span>
-                        About
-                    </button>
-                    <button class="tab-btn" [class.active]="activeTab === 'Media'" (click)="setTab('Media')">
-                        <span class="material-symbols-outlined tab-icon">image</span>
-                        Media
-                    </button>
-                    <button class="tab-btn" [class.active]="activeTab === 'Likes'" (click)="setTab('Likes')">
-                        <span class="material-symbols-outlined tab-icon">favorite</span>
-                        Likes
-                    </button>
                 </div>
             </div>
 
-            <!-- Feed Section -->
-            <div class="profile-feed-container" *ngIf="activeTab === 'Posts'">
-                <div class="feed-header-row">
-                    <h2 class="feed-title">Recent Posts</h2>
-                    <div class="feed-filters">
-                        <span class="filter-label">Sort by:</span>
-                        <select class="feed-select">
-                            <option>Latest</option>
-                            <option>Popular</option>
-                        </select>
-                    </div>
+            <!-- Mobile Bio Section -->
+            <div class="insta-bio-container mobile-only">
+                <span class="insta-full-name">{{ user.name }}</span>
+                <p class="insta-bio-text">{{ user.bio || 'Community member and builder.' }}</p>
+            </div>
+
+            <!-- Mobile Stats Row -->
+            <div class="info-stats-row mobile-only" *ngIf="user.stats">
+                <div class="mobile-stat"><span class="val">{{ user.stats.posts }}</span><span class="lab">posts</span>
+                </div>
+                <div class="mobile-stat"><span class="val">{{ user.stats.followers }}</span><span
+                        class="lab">followers</span></div>
+                <div class="mobile-stat"><span class="val">{{ user.stats.following }}</span><span
+                        class="lab">following</span></div>
+            </div>
+
+            <!-- Profile Navigation Tabs -->
+            <div class="insta-tabs-bar">
+                <button class="insta-tab" [class.active]="activeTab === 'Posts'" (click)="setTab('Posts')">
+                    <span class="material-symbols-outlined">grid_on</span>
+                    <span>POSTS</span>
+                </button>
+                <button class="insta-tab" [class.active]="activeTab === 'Likes'" (click)="setTab('Likes')">
+                    <span class="material-symbols-outlined">favorite_border</span>
+                    <span>LIKED</span>
+                </button>
+                <button class="insta-tab" [class.active]="activeTab === 'About'" (click)="setTab('About')">
+                    <span class="material-symbols-outlined">info</span>
+                    <span>ABOUT</span>
+                </button>
+            </div>
+
+            <!-- Post Grid Section (Replaced with Main Feed to match Home Page) -->
+            <div class="post-list" *ngIf="activeTab === 'Posts'">
+                <div class="empty-state-premium" *ngIf="!isLoading && posts.length === 0">
+                    <div class="empty-icon-box"><span class="material-symbols-outlined">photo_camera</span></div>
+                    <h3>No posts yet</h3>
                 </div>
 
-                <div class="post-list" style="margin-top: 1rem;">
-                    <div class="loading-state-premium" *ngIf="isLoading">
-                        <div class="shimmer-card"></div>
-                        <p>Loading your latest updates...</p>
-                    </div>
+                <app-post-card *ngFor="let post of posts" [post]="post"></app-post-card>
 
-                    <div class="empty-state-premium" *ngIf="!isLoading && posts.length === 0">
-                        <div class="empty-icon-box">
-                            <span class="material-symbols-outlined">post_add</span>
-                        </div>
-                        <h3>No posts to show yet</h3>
-                        <p>Share your first article with the community!</p>
-                    </div>
-
-                    <app-post-card *ngFor="let post of posts" [post]="post"></app-post-card>
+                <div class="loading-state-premium" *ngIf="isLoading">
+                    <div class="spinner"></div>
                 </div>
             </div>
 
