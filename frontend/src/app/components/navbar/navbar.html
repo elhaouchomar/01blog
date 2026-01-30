@@ -1,10 +1,16 @@
-<header class="navbar">
+<header class="navbar" [class.admin-view]="dataService.isAdmin()">
     <div class="navbar-container">
         <!-- Left: Logo & Search -->
         <div class="navbar-left">
-            <a class="navbar-logo" routerLink="/home" routerLinkActive="active"
-                [routerLinkActiveOptions]="{exact: true}">
-                <div class="logo-icon">
+            <!-- Burger Menu for Admin in Dashboard -->
+            <button *ngIf="dataService.isAdmin() && isDashboardRoute" class="burger-menu-btn"
+                (click)="onToggleSidebar.emit()" aria-label="Toggle Sidebar">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+
+            <a class="navbar-logo" [routerLink]="dataService.isAdmin() ? '/dashboard' : '/home'"
+                routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+                <div class="logo-icon" *ngIf="!dataService.isAdmin()">
                     <span class="material-symbols-outlined nav-item-icon">code_blocks</span>
                 </div>
                 <h1 class="logo-text">01Blog</h1>
@@ -119,17 +125,17 @@
                     <span class="nav-item-text">Network</span>
                 </a>
                 <div class="notif-wrapper">
-                    <button class="nav-item" (click)="toggleNotifications()"
+                    <button class="nav-item" (click)="toggleNotifications($event)"
                         [class.active]="isNotificationsOpen || isNotificationRoute">
                         <div class="icon-wrapper">
-                            <span class="material-symbols-outlined nav-item-icon"
+                            <span class="material-symbols-outlined nav-item-icon-notifications"
                                 [class.filled]="isNotificationsOpen || isNotificationRoute">notifications</span>
                             <span class="nav-badge" *ngIf="dataService.unreadNotificationsCount() > 0">
                                 {{ dataService.unreadNotificationsCount() > 99 ? '99+' :
                                 dataService.unreadNotificationsCount() }}
                             </span>
                         </div>
-                        <span class="nav-item-text">Notifications</span>
+                        <span class="nav-item-text-notifications">Notifications</span>
                     </button>
 
                     <app-dropdown-notif *ngIf="isNotificationsOpen" [notifications]="dataService.notifications()"
@@ -141,17 +147,12 @@
 
             <!-- Actions -->
             <div class="navbar-actions">
-                <button class="btn-create-post" (click)="modalService.open('create-post')">
-                    <span class="material-symbols-outlined icon-edit">edit_square</span>
-                    <span>Write Post</span>
-                </button>
-
                 <div class="user-menu">
-                    <div class="user-avatar" (click)="toggleUserMenu()"
+                    <div class="user-avatar" (click)="toggleUserMenu($event)"
                         [style.background-image]="'url(' + (dataService.currentUser()?.avatar || 'assets/default-avatar.png') + ')'">
                     </div>
 
-                    <div class="dropdown-menu" *ngIf="isProfileOpen">
+                    <div class="navbar-dropdown-menu" *ngIf="isProfileOpen">
                         <div class="dropdown-header">
                             <p class="user-name">{{ dataService.currentUser()?.name || 'User' }}</p>
                             <p class="user-handle">{{ dataService.currentUser()?.handle || '@user' }}</p>
@@ -166,6 +167,10 @@
                             <span class="material-symbols-outlined icon-small">dashboard</span>
                             Dashboard
                         </button>
+                        <button class="dropdown-item" routerLink="/settings" (click)="isProfileOpen = false">
+                            <span class="material-symbols-outlined icon-small">settings</span>
+                            Settings
+                        </button>
                         <div class="dropdown-divider"></div>
                         <button class="dropdown-item text-danger" (click)="dataService.logout()">
                             <span class="material-symbols-outlined icon-small">logout</span>
@@ -178,13 +183,11 @@
     </div>
 
     <!-- Mobile Search Overlay -->
-    <div class="mobile-search-overlay" [class.active]="isSearchOpen && isMobileSearch"
-        *ngIf="isSearchOpen && isMobileSearch" (click)="closeSearch()"></div>
+    <!-- Mobile Search Overlay -->
+    <div class="mobile-search-overlay" [class.active]="isSearchOpen && isMobileSearch" (click)="closeSearch()"></div>
 
-    <div class="mobile-search-bar" [class.active]="isSearchOpen && isMobileSearch"
-        *ngIf="isSearchOpen && isMobileSearch">
+    <div class="mobile-search-bar" [class.active]="isSearchOpen && isMobileSearch">
         <div class="mobile-search-header">
-            <span class="material-symbols-outlined search-icon">search</span>
             <input type="text" class="search-input" placeholder="Search for posts or people..."
                 [(ngModel)]="searchQuery" (input)="onSearchInput()" #mobileSearchInput (keyup.enter)="performSearch()">
 

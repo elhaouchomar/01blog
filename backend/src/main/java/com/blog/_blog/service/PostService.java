@@ -1,5 +1,6 @@
 package com.blog._blog.service;
 
+import com.blog._blog.util.HtmlSanitizer;
 import com.blog._blog.dto.*;
 import com.blog._blog.entity.Comment;
 import com.blog._blog.entity.Post;
@@ -73,9 +74,9 @@ public class PostService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Post post = Post.builder()
-                .title(request.getTitle())
-                .content(request.getContent())
-                .category(request.getCategory())
+                .title(HtmlSanitizer.sanitizeText(request.getTitle()))
+                .content(HtmlSanitizer.sanitize(request.getContent()))
+                .category(HtmlSanitizer.sanitizeText(request.getCategory()))
                 .readTime(request.getReadTime())
                 .images(request.getImages())
                 .tags(request.getTags())
@@ -108,9 +109,9 @@ public class PostService {
         }
 
         // Update post fields
-        post.setTitle(request.getTitle());
-        post.setContent(request.getContent());
-        post.setCategory(request.getCategory());
+        post.setTitle(HtmlSanitizer.sanitizeText(request.getTitle()));
+        post.setContent(HtmlSanitizer.sanitize(request.getContent()));
+        post.setCategory(HtmlSanitizer.sanitizeText(request.getCategory()));
         post.setReadTime(request.getReadTime());
         post.setImages(request.getImages());
         post.setTags(request.getTags());
@@ -182,7 +183,7 @@ public class PostService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Comment comment = Comment.builder()
-                .content(request.getContent())
+                .content(HtmlSanitizer.sanitizeText(request.getContent()))
                 .author(user)
                 .post(post)
                 .build();

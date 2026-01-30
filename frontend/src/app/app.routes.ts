@@ -10,7 +10,6 @@ import { DashboardOverview } from './pages/dashboard/overview/overview';
 import { Posts } from './pages/dashboard/posts/posts';
 import { Users } from './pages/dashboard/users/users';
 import { Reports } from './pages/dashboard/reports/reports';
-import { Analytics } from './pages/dashboard/analytics/analytics';
 import { Network } from './pages/network/network';
 import { Notifications } from './pages/notifications/notifications';
 import { Settings } from './pages/settings/settings';
@@ -38,7 +37,6 @@ export const routes: Routes = [
             { path: 'posts', component: Posts },
             { path: 'users', component: Users },
             { path: 'reports', component: Reports },
-            { path: 'analytics', component: Analytics },
             { path: '', redirectTo: 'overview', pathMatch: 'full' }
         ]
     },

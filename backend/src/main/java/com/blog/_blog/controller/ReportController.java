@@ -9,17 +9,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/reports")
+@RequestMapping("/api/reports")
 @RequiredArgsConstructor
 public class ReportController {
 
     private final ReportService reportService;
 
     @PostMapping
-    public ResponseEntity<ReportDTO> createReport(@RequestBody CreateReportRequest request,
+    public ResponseEntity<ReportDTO> createReport(@Valid @RequestBody CreateReportRequest request,
             Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(reportService.createReport(request, email));

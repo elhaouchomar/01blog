@@ -9,6 +9,7 @@ import com.blog._blog.entity.User;
 import com.blog._blog.repository.PostRepository;
 import com.blog._blog.repository.ReportRepository;
 import com.blog._blog.repository.UserRepository;
+import com.blog._blog.util.HtmlSanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +28,7 @@ public class ReportService {
         User reporter = userRepository.findByEmail(reporterEmail).orElseThrow();
 
         Report report = Report.builder()
-                .reason(request.getReason())
+                .reason(HtmlSanitizer.sanitizeText(request.getReason()))
                 .reporter(reporter)
                 .status(Report.ReportStatus.PENDING)
                 .build();
@@ -75,6 +76,9 @@ public class ReportService {
                 .reportedUser(report.getReportedUser() != null ? mapToUserSummary(report.getReportedUser()) : null)
                 .reportedPostId(report.getReportedPost() != null ? report.getReportedPost().getId() : null)
                 .reportedPostTitle(report.getReportedPost() != null ? report.getReportedPost().getTitle() : null)
+                .reportedPostImage(report.getReportedPost() != null && !report.getReportedPost().getImages().isEmpty()
+                        ? report.getReportedPost().getImages().get(0)
+                        : null)
                 .status(report.getStatus().name())
                 .createdAt(report.getCreatedAt())
                 .build();

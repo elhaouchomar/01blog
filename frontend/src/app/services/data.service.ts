@@ -292,13 +292,21 @@ export class DataService {
 
     markAsRead(id: number): Observable<void> {
         return this.http.put<void>(`${this.API_URL}/notifications/${id}/read`, {}).pipe(
-            tap(() => this.loadNotifications())
+            tap(() => {
+                this._notifications.update(notifs =>
+                    notifs.map(n => n.id === id ? { ...n, isRead: true } : n)
+                );
+            })
         );
     }
 
     markAllAsRead(): Observable<void> {
         return this.http.put<void>(`${this.API_URL}/notifications/read-all`, {}).pipe(
-            tap(() => this.loadNotifications())
+            tap(() => {
+                this._notifications.update(notifs =>
+                    notifs.map(n => ({ ...n, isRead: true }))
+                );
+            })
         );
     }
 
@@ -364,7 +372,7 @@ export class DataService {
             followingCount: dto.followingCount,
             banned: dto.banned,
             stats: {
-                posts: 0,
+                posts: dto.postCount || 0,
                 followers: dto.followersCount || 0,
                 following: dto.followingCount || 0
             }

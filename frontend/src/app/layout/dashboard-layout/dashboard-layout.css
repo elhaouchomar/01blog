@@ -152,6 +152,31 @@
     font-size: 1.25rem;
 }
 
+.nav-item .icon.overview {
+    color: #0d6efd;
+}
+
+.nav-item .icon.users {
+    color: #6f42c1;
+}
+
+.nav-item .icon.posts {
+    color: #198754;
+}
+
+.nav-item .icon.reports {
+    color: #fd7e14;
+}
+
+.nav-item .icon.analytics {
+    color: #0dcaf0;
+}
+
+.nav-item.active .icon {
+    color: inherit !important;
+}
+
+
 .sidebar-footer {
     padding: 1rem;
     border-top: 1px solid var(--gray-100);
@@ -244,8 +269,77 @@
 .dashboard-content {
     flex: 1;
     overflow-y: auto;
-    padding: 2rem;
-    background-color: var(--background-light);
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-header {
+    background: white;
+    padding: 1.25rem 2.5rem;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.breadcrumb .icon {
+    font-size: 1.25rem;
+    color: var(--primary);
+    opacity: 0.8;
+}
+
+.breadcrumb .sep {
+    font-size: 1.1rem;
+    color: var(--gray-300);
+}
+
+.breadcrumb .root {
+    font-weight: 500;
+}
+
+.breadcrumb .current {
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.page-view {
+    padding: 2.5rem;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .content-header {
+        padding: 1rem 1.5rem;
+    }
+
+    .page-view {
+        padding: 1.5rem;
+    }
+}
+
+.dark .dashboard-content {
+    background-color: var(--background-dark);
+}
+
+.dark .content-header {
+    background: var(--surface-dark);
+    border-color: var(--gray-800);
+}
+
+.dark .breadcrumb .current {
+    color: white;
+}
+
+.dark .breadcrumb .icon {
+    color: white;
 }
 
 .dark .dashboard-sidebar,

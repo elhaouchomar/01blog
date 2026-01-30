@@ -22,15 +22,33 @@ public class AuthenticationService {
         private final AuthenticationManager authenticationManager;
 
         public AuthenticationResponse register(RegisterRequest request) {
+                // Validate inputs
+                if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+                        throw new IllegalArgumentException("Email is required");
+                }
+                if (request.getPassword() == null || request.getPassword().isEmpty()) {
+                        throw new IllegalArgumentException("Password is required");
+                }
+                if (request.getFirstname() == null || request.getFirstname().trim().isEmpty()) {
+                        throw new IllegalArgumentException("First name is required");
+                }
+                if (request.getLastname() == null || request.getLastname().trim().isEmpty()) {
+                        throw new IllegalArgumentException("Last name is required");
+                }
+
+                // Normalize email to lowercase
+                String normalizedEmail = request.getEmail().toLowerCase().trim();
+
                 // Check if email already exists
-                if (repository.findByEmail(request.getEmail()).isPresent()) {
-                        throw new RuntimeException("Email already registered. Please use a different email or login.");
+                if (repository.findByEmail(normalizedEmail).isPresent()) {
+                        throw new IllegalArgumentException(
+                                        "Email already registered. Please use a different email or login.");
                 }
 
                 var user = User.builder()
-                                .firstname(request.getFirstname())
-                                .lastname(request.getLastname())
-                                .email(request.getEmail())
+                                .firstname(request.getFirstname().trim())
+                                .lastname(request.getLastname().trim())
+                                .email(normalizedEmail)
                                 .password(passwordEncoder.encode(request.getPassword()))
                                 .role(request.getRole() != null ? Role.valueOf(request.getRole()) : Role.USER)
                                 .build();
@@ -42,12 +60,28 @@ public class AuthenticationService {
         }
 
         public AuthenticationResponse authenticate(AuthenticationRequest request) {
-                authenticationManager.authenticate(
-                                new UsernamePasswordAuthenticationToken(
-                                                request.getEmail(),
-                                                request.getPassword()));
-                var user = repository.findByEmail(request.getEmail())
-                                .orElseThrow();
+                // Validate inputs
+                if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+                        throw new IllegalArgumentException("Email is required");
+                }
+                if (request.getPassword() == null || request.getPassword().isEmpty()) {
+                        throw new IllegalArgumentException("Password is required");
+                }
+
+                // Normalize email to lowercase
+                String normalizedEmail = request.getEmail().toLowerCase().trim();
+
+                try {
+                        authenticationManager.authenticate(
+                                        new UsernamePasswordAuthenticationToken(
+                                                        normalizedEmail,
+                                                        request.getPassword()));
+                } catch (Exception e) {
+                        throw new IllegalArgumentException("Invalid email or password");
+                }
+
+                var user = repository.findByEmail(normalizedEmail)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
                 var jwtToken = jwtService.generateToken(user);
                 return AuthenticationResponse.builder()
                                 .token(jwtToken)

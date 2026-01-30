@@ -7,16 +7,9 @@
 <app-edit-post *ngIf="modalService.activeModal() === 'edit-post'"></app-edit-post>
 <app-post-details *ngIf="modalService.activeModal() === 'post-details'"
     [post]="modalService.modalData()"></app-post-details>
-<app-report-modal *ngIf="modalService.activeModal() === 'report-post'"
-    [type]="modalService.modalData()?.reportType || 'post'"></app-report-modal>
-<!-- <app-success-posted *ngIf="modalService.activeModal() === 'success'"></app-success-posted> -->
-<app-delete-modal *ngIf="modalService.activeModal() === 'delete-v2'"
-    [post]="modalService.modalData()"></app-delete-modal>
-<app-media-viewer *ngIf="modalService.activeModal() === 'media-viewer'"
-    [data]="modalService.modalData()"></app-media-viewer>
 <app-create-user *ngIf="modalService.activeModal() === 'create-user'"></app-create-user>
 <app-edit-profile-modal *ngIf="modalService.activeModal() === 'edit-profile'"></app-edit-profile-modal>
-<app-confirm-ban-user *ngIf="modalService.activeModal() === 'confirm-ban'"></app-confirm-ban-user>
+
 <app-admin-edit-user *ngIf="modalService.activeModal() === 'admin-edit-user'"></app-admin-edit-user>
-<app-report-user *ngIf="modalService.activeModal() === 'report'"></app-report-user>
+
 <app-toast-container></app-toast-container>

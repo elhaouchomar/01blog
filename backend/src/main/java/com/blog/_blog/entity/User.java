@@ -16,7 +16,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(exclude = {"following", "followers"})
+@EqualsAndHashCode(exclude = { "following", "followers" })
 @Entity
 @Table(name = "_user") // Postgres doesn't like tables named "user"
 public class User implements UserDetails {
@@ -26,7 +26,8 @@ public class User implements UserDetails {
     private Integer id;
     private String firstname;
     private String lastname;
-    
+
+    @Column(unique = true, nullable = false)
     private String email;
     @Column(columnDefinition = "TEXT")
     private String avatar;
@@ -41,8 +42,20 @@ public class User implements UserDetails {
     @PrePersist
     protected void onCreate() {
         createdAt = java.time.LocalDateTime.now();
+        normalizeEmail();
     }
-    
+
+    @PreUpdate
+    protected void onUpdate() {
+        normalizeEmail();
+    }
+
+    private void normalizeEmail() {
+        if (email != null) {
+            email = email.toLowerCase().trim();
+        }
+    }
+
     private String password;
 
     @Enumerated(EnumType.STRING)

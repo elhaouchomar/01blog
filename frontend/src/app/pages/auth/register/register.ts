@@ -3,6 +3,7 @@ import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../../services/data.service';
+import Swal from 'sweetalert2';
 
 @Component({
     selector: 'app-register',
@@ -75,7 +76,14 @@ export class Register {
                 console.log('Registration successful:', response);
                 // Navigate to home page
                 this.router.navigate(['/']).then(() => {
-                    alert('Registration successful! Welcome to the blog.');
+                    Swal.fire({
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Registration successful! Welcome.',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        toast: true
+                    });
                 });
             },
             error: (err) => {

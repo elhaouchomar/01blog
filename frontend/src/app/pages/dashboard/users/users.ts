@@ -1,15 +1,19 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { DataService } from '../../../services/data.service';
 import { ModalService } from '../../../services/modal.service';
 import { usePagination } from '../../../utils/pagination.utils';
+import { DbPageHeaderComponent } from '../../../components/dashboard/db-page-header';
+import { DbPaginationComponent } from '../../../components/dashboard/db-pagination';
+import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, DbPageHeaderComponent, DbPaginationComponent, DbFeedbackComponent],
   templateUrl: './users.html',
   styleUrl: './users.css',
 })
@@ -54,7 +58,7 @@ export class Users implements OnInit {
 
   isLoading = computed(() => this.dataService.allUsers().length === 0 && !this.dataService.dashboardStats());
 
-  constructor(public dataService: DataService, public modalService: ModalService) { }
+  constructor(public dataService: DataService, public modalService: ModalService, public router: Router) { }
 
   ngOnInit() {
     if (this.dataService.allUsers().length === 0) {
@@ -73,13 +77,58 @@ export class Users implements OnInit {
   }
 
   toggleBan(user: any) {
-    this.modalService.open('confirm-ban', user);
+    const action = user.banned ? 'Unban' : 'Ban';
+    Swal.fire({
+      title: `${action} User?`,
+      text: `Are you sure you want to ${action.toLowerCase()} ${user.name}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: user.banned ? '#3085d6' : '#d33',
+      cancelButtonColor: '#aaa',
+      confirmButtonText: `Yes, ${action.toLowerCase()}!`
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.dataService.toggleBan(user.id).subscribe({
+          next: () => {
+            Swal.fire(
+              'Updated!',
+              `User has been ${user.banned ? 'unbanned' : 'banned'}.`,
+              'success'
+            );
+          },
+          error: (err: any) => {
+            Swal.fire('Error', 'Failed to update user status.', 'error');
+          }
+        });
+      }
+    });
   }
 
   deleteUser(user: any) {
-    if (confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
-      this.dataService.deleteUserAction(user.id).subscribe();
-    }
+    Swal.fire({
+      title: 'Delete User?',
+      text: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.dataService.deleteUserAction(user.id).subscribe({
+          next: () => {
+            Swal.fire(
+              'Deleted!',
+              'User has been deleted.',
+              'success'
+            );
+          },
+          error: (err) => {
+            Swal.fire('Error', 'Failed to delete user.', 'error');
+          }
+        });
+      }
+    });
   }
 
   editUser(user: any) {

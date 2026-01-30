@@ -1,138 +1,99 @@
-<div class="page-header">
-    <div>
-        <h2 class="section-title">Posts Management</h2>
-        <p class="section-subtitle">Review, moderate and manage all platform content.</p>
-    </div>
-    <div class="header-actions">
-        <button class="btn btn-export" (click)="exportPosts()">
-            <span class="material-symbols-outlined">download</span>
-            Export
-        </button>
-        <button class="btn btn-primary" (click)="modalService.open('create-post')">
-            <span class="material-symbols-outlined">add</span>
-            Create Post
-        </button>
-    </div>
-</div>
+<div class="container-fluid py-4">
+    <app-db-page-header title="Content Moderator"
+        subtitle="Review platform posts, track engagement and manage visibility." titleIcon="article"
+        iconColor="#198754" actionIcon="add" actionLabel="New Post" (onAction)="modalService.open('create-post')">
+    </app-db-page-header>
 
-<div class="filters-bar">
-    <div class="filter-group">
-        <div class="search-box">
-            <span class="material-symbols-outlined">search</span>
-            <input type="text" placeholder="Filter by author or keyword..." [ngModel]="searchQuery()"
+    <!-- Filters -->
+    <div class="d-flex flex-wrap gap-3 mb-4 align-items-center bg-white p-3 rounded-4 shadow-sm border">
+        <div class="position-relative flex-grow-1" style="max-width: 400px;">
+            <span class="material-symbols-outlined position-absolute top-50 start-0 translate-middle-y ms-3"
+                style="color: #198754;">search</span>
+            <input type="text" class="form-control form-control-lg ps-5 fs-6 border-0 bg-light rounded-3"
+                placeholder="Filter by author or keyword..." [ngModel]="searchQuery()"
                 (input)="searchQuery.set($any($event.target).value)">
         </div>
 
-        <div class="select-box">
-            <span class="material-symbols-outlined icon">filter_list</span>
-            <select [ngModel]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+        <div class="d-flex gap-2 ms-auto">
+            <select class="form-select border-0 bg-light rounded-3 fw-bold text-secondary" style="width: 160px;"
+                [ngModel]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
                 <option value="">All Statuses</option>
                 <option value="published">Published</option>
                 <option value="flagged">Flagged</option>
                 <option value="hidden">Hidden</option>
             </select>
-        </div>
-
-        <div class="select-box">
-            <span class="material-symbols-outlined icon">sort</span>
-            <select [ngModel]="sortBy()" (change)="sortBy.set($any($event.target).value)">
+            <select class="form-select border-0 bg-light rounded-3 fw-bold text-secondary" style="width: 160px;"
+                [ngModel]="sortBy()" (change)="sortBy.set($any($event.target).value)">
                 <option value="newest">Newest First</option>
                 <option value="most-liked">Most Liked</option>
                 <option value="most-reported">Most Reported</option>
             </select>
         </div>
     </div>
-</div>
 
-<div class="data-table-container">
-    <div class="table-scroll">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th class="text-center w-media">Media</th>
-                    <th>Content & Author</th>
-                    <th>Stats</th>
-                    <th>Reports</th>
-                    <th>Status</th>
-                    <th class="text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let post of pagination.paginatedData()">
-                    <td class="text-center">
-                        <div class="post-media" (click)="reviewPost(post)" style="cursor: pointer;"
-                            [style.background-image]="'url(' + (post.images?.[0] || 'assets/default-post.png') + ')'">
-                        </div>
-                    </td>
-                    <td>
-                        <div class="content-cell">
-                            <p class="post-title" (click)="reviewPost(post)"
-                                style="cursor: pointer; color: var(--text-main);">{{ post.title }}</p>
-                            <div class="post-meta">
-                                <div class="author-avatar"
-                                    [style.background-image]="'url(' + (post.user.avatar || 'assets/default-avatar.png') + ')'">
-                                </div>
-                                <a [routerLink]="['/profile', post.user.id]" class="author-name"
-                                    style="text-decoration: none; color: var(--text-secondary); transition: color 0.2s;">{{
-                                    post.user.name }}</a>
-                                <span class="dot">•</span>
-                                <span class="date">{{ post.createdAt | date:'shortTime' }} ago</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="stats-cell">
-                            <span class="stat"><span class="material-symbols-outlined">favorite</span> {{
-                                post.likes || 0 }}</span>
-                            <span class="stat"><span class="material-symbols-outlined">chat_bubble</span> {{
-                                post.comments || 0 }}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div *ngIf="(post.reportsCount || 0) > 0" class="reports-badge">
-                            <span class="material-symbols-outlined">warning</span>
-                            {{ post.reportsCount }}
-                        </div>
-                        <span *ngIf="!(post.reportsCount || 0)" class="no-reports">-</span>
-                    </td>
-                    <td>
-                        <span class="status-badge" [class]="'published'">Published</span>
-                    </td>
-                    <td class="text-right">
-                        <div class="action-buttons">
-                            <button class="action-btn" title="Review Content" (click)="reviewPost(post)">
-                                <span class="material-symbols-outlined">visibility</span>
-                            </button>
-                            <button class="action-btn delete" title="Delete Post" (click)="deletePost(post)">
-                                <span class="material-symbols-outlined">delete</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr *ngIf="filteredPosts().length === 0 && !isLoading()">
-                    <td colspan="6" class="empty-cell">No posts found</td>
-                </tr>
-                <tr *ngIf="isLoading()">
-                    <td colspan="6" class="loading-cell">Loading posts...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <!-- Posts Grid -->
+    <div class="vstack gap-3">
+        <div *ngFor="let post of pagination.paginatedData()"
+            class="d-flex align-items-center p-3 bg-white border rounded-4 transition-all hover-shadow">
 
-    <div class="table-footer">
-        <p class="stats">Showing {{ pagination.getPageStart() }} - {{ pagination.getPageEnd() }} of {{
-            filteredPosts().length }} posts</p>
-        <div class="pagination">
-            <button class="btn-pager" [disabled]="pagination.currentPage() === 1" (click)="pagination.previousPage()">
-                <span class="material-symbols-outlined">chevron_left</span>
-                Previous
-            </button>
-            <span class="page-indicator">Page {{ pagination.currentPage() }} of {{ pagination.totalPages() }}</span>
-            <button class="btn-pager" [disabled]="pagination.currentPage() === pagination.totalPages()"
-                (click)="pagination.nextPage()">
-                Next
-                <span class="material-symbols-outlined">chevron_right</span>
-            </button>
+            <div class="d-flex align-items-center gap-3 flex-grow-1">
+                <div class="rounded-3 border overflow-hidden" style="width: 60px; height: 44px; background: #f8f9fa;">
+                    <img *ngIf="post.image" [src]="post.image" class="w-100 h-100 object-fit-cover">
+                    <div *ngIf="!post.image"
+                        class="w-100 h-100 d-flex align-items-center justify-content-center text-success opacity-25 bg-success bg-opacity-10">
+                        <span class="material-symbols-outlined fs-4">image</span>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="h6 mb-0 fw-bold line-clamp-1" title="{{ post.title }}">{{ post.title }}</h4>
+                    <p class="text-secondary small mb-0">by {{ post.user.name }} • {{ post.createdAt | date:'MMM d' }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="px-4 border-start d-none d-md-flex align-items-center gap-4" style="width: 250px;">
+                <div class="text-center">
+                    <p class="text-secondary small mb-0 fw-bold">Likes</p>
+                    <span class="fw-bold">{{ post.likes || 0 }}</span>
+                </div>
+                <div class="text-center">
+                    <p class="text-secondary small mb-0 fw-bold">Comments</p>
+                    <span class="fw-bold">{{ post.comments || 0 }}</span>
+                </div>
+                <div class="ms-auto text-center">
+                    <span class="badge rounded-pill fw-bold py-2 px-3 bg-opacity-10"
+                        [class.bg-success.text-success]="!(post.reportsCount && post.reportsCount > 0)"
+                        [class.bg-warning.text-warning]="post.reportsCount && post.reportsCount > 0">
+                        {{ (post.reportsCount && post.reportsCount > 0) ? 'Flagged' : 'Safe' }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 ms-auto border-start ps-4">
+                <button class="btn btn-light btn-sm text-info hover-primary rounded-3 p-2" (click)="reviewPost(post)"
+                    title="View Details">
+                    <span class="material-symbols-outlined fs-5">visibility</span>
+                </button>
+                <button class="btn btn-light btn-sm text-primary hover-primary rounded-3 p-2" (click)="null"
+                    title="Edit Post">
+                    <span class="material-symbols-outlined fs-5">edit</span>
+                </button>
+                <button class="btn btn-light btn-sm text-danger hover-danger-bg rounded-3 p-2"
+                    (click)="deletePost(post)" title="Remove Post">
+                    <span class="material-symbols-outlined fs-5">delete</span>
+                </button>
+            </div>
         </div>
+
+        <app-db-feedback *ngIf="filteredPosts().length === 0 && !isLoading()" type="empty" icon="article"
+            iconColor="#198754" title="No posts found" message="Try adjusting your search or category filters.">
+        </app-db-feedback>
+
+        <app-db-feedback *ngIf="isLoading()" type="loading"></app-db-feedback>
     </div>
+
+    <!-- Footer & Pagination -->
+    <app-db-pagination *ngIf="filteredPosts().length > 0" [pagination]="pagination"
+        [totalItems]="filteredPosts().length" label="posts">
+    </app-db-pagination>
 </div>

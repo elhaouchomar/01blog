@@ -25,6 +25,12 @@ export class Login {
             return;
         }
 
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(this.email)) {
+            this.error = 'Invalid email format.';
+            return;
+        }
+
         this.dataService.login({ email: this.email, password: this.password })
             .subscribe({
                 next: (response) => {

@@ -23,4 +23,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
         @Query("SELECT CAST(p.createdAt as date), COUNT(p) FROM Post p WHERE p.createdAt >= :startDate GROUP BY CAST(p.createdAt as date) ORDER BY CAST(p.createdAt as date)")
         List<Object[]> findPostActivity(@Param("startDate") java.time.LocalDateTime startDate);
+
+        long countByAuthorId(Integer authorId);
 }

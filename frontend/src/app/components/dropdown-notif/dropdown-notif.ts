@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Notification } from '../../models/data.models';
 import { RouterLink, Router } from '@angular/router';
 import { getInitials } from '../../utils/string.utils';
+import { DataService } from '../../services/data.service';
 
 @Component({
     selector: 'app-dropdown-notif',
@@ -20,7 +21,7 @@ export class DropdownNotifComponent {
     isOpen = false; // Controlled by parent via *ngIf usually, but kept for internal logic if needed? 
     // Navbar uses *ngIf="isNotificationsOpen". So this component is created/destroyed.
 
-    constructor(private router: Router) { }
+    constructor(private router: Router, private dataService: DataService) { }
 
     // Helper to format date
     formatDate(dateStr: string): string {
@@ -31,11 +32,14 @@ export class DropdownNotifComponent {
     // Use shared utility
     getInitials = getInitials;
 
-    handleActorClick(notification: Notification, event: Event) {
+    handleNotificationClick(notification: Notification, event: Event) {
         event.stopPropagation();
-        if (notification.actorId) {
-            this.router.navigate(['/profile', notification.actorId]);
-            this.onClose.emit();
-        }
+        this.onNotificationClick.emit(notification);
+    }
+
+    markAllRead(event: Event) {
+        event.stopPropagation();
+        this.onMarkAllRead.emit();
+        this.notifications.forEach(n => n.isRead = true);
     }
 }

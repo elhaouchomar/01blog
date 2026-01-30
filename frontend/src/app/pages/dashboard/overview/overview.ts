@@ -2,11 +2,13 @@ import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../../services/data.service';
 import { RouterLink } from '@angular/router';
+import { DbPageHeaderComponent } from '../../../components/dashboard/db-page-header';
+import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
 
 @Component({
     selector: 'app-dashboard-overview',
     standalone: true,
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, DbPageHeaderComponent, DbFeedbackComponent],
     templateUrl: './overview.html',
     styleUrl: './overview.css',
 })

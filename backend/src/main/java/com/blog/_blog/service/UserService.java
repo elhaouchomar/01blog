@@ -4,6 +4,7 @@ import com.blog._blog.dto.UserDTO;
 import com.blog._blog.entity.NotificationType;
 import com.blog._blog.entity.User;
 import com.blog._blog.repository.UserRepository;
+import com.blog._blog.util.HtmlSanitizer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final com.blog._blog.repository.PostRepository postRepository;
 
     @Transactional(readOnly = true)
     public List<UserDTO> getAllUsers(String currentUserEmail) {
@@ -32,11 +34,11 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (updateRequest.getFirstname() != null)
-            user.setFirstname(updateRequest.getFirstname());
+            user.setFirstname(HtmlSanitizer.sanitizeText(updateRequest.getFirstname()));
         if (updateRequest.getLastname() != null)
-            user.setLastname(updateRequest.getLastname());
+            user.setLastname(HtmlSanitizer.sanitizeText(updateRequest.getLastname()));
         if (updateRequest.getBio() != null)
-            user.setBio(updateRequest.getBio());
+            user.setBio(HtmlSanitizer.sanitizeText(updateRequest.getBio()));
         if (updateRequest.getAvatar() != null)
             user.setAvatar(updateRequest.getAvatar());
         if (updateRequest.getCover() != null)
@@ -148,11 +150,11 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (updateRequest.getFirstname() != null)
-            userToUpdate.setFirstname(updateRequest.getFirstname());
+            userToUpdate.setFirstname(HtmlSanitizer.sanitizeText(updateRequest.getFirstname()));
         if (updateRequest.getLastname() != null)
-            userToUpdate.setLastname(updateRequest.getLastname());
+            userToUpdate.setLastname(HtmlSanitizer.sanitizeText(updateRequest.getLastname()));
         if (updateRequest.getBio() != null)
-            userToUpdate.setBio(updateRequest.getBio());
+            userToUpdate.setBio(HtmlSanitizer.sanitizeText(updateRequest.getBio()));
         if (updateRequest.getAvatar() != null)
             userToUpdate.setAvatar(updateRequest.getAvatar());
         if (updateRequest.getCover() != null)
@@ -183,6 +185,7 @@ public class UserService {
                 .followersCount(user.getFollowers() != null ? user.getFollowers().size() : 0)
                 .followingCount(user.getFollowing() != null ? user.getFollowing().size() : 0)
                 .banned(Boolean.TRUE.equals(user.getBanned()))
+                .postCount((int) postRepository.countByAuthorId(user.getId()))
                 .build();
     }
 }

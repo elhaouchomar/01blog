@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { DataService } from '../../services/data.service';
@@ -17,7 +17,17 @@ import { NavbarComponent } from '../../components/navbar/navbar';
 export class DashboardLayout {
   isSidebarOpen = false;
 
-  constructor(public modalService: ModalService, private dataService: DataService) { }
+  constructor(public modalService: ModalService, public dataService: DataService, private router: Router) { }
+
+  getPageTitle(): string {
+    const url = this.router.url;
+    if (url.includes('/overview')) return 'Overview';
+    if (url.includes('/users')) return 'User Management';
+    if (url.includes('/posts')) return 'Content Moderator';
+    if (url.includes('/reports')) return 'Safety & Reports';
+    if (url.includes('/analytics')) return 'Platform Insights';
+    return 'Dashboard';
+  }
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;

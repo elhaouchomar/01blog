@@ -27,7 +27,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let user of filteredUsers">
+                <tr *ngFor="let user of paginatedUsers">
                     <td>
                         <div class="admin-user-info">
                             <div class="admin-avatar"
@@ -64,6 +64,24 @@
         </table>
         <div *ngIf="filteredUsers.length === 0" class="p-6 text-center text-text-secondary">
             No users found.
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="table-footer" *ngIf="filteredUsers.length > 0">
+        <p class="stats">Showing {{ (currentPage - 1) * itemsPerPage + 1 }} - {{
+            Math.min(currentPage * itemsPerPage, filteredUsers.length) }} of {{
+            filteredUsers.length }} users</p>
+        <div class="pagination">
+            <button class="btn-pager" [disabled]="currentPage === 1" (click)="prevPage()">
+                <span class="material-symbols-outlined">chevron_left</span>
+                Previous
+            </button>
+            <span class="page-indicator">Page {{ currentPage }} of {{ totalPages }}</span>
+            <button class="btn-pager" [disabled]="currentPage === totalPages" (click)="nextPage()">
+                Next
+                <span class="material-symbols-outlined">chevron_right</span>
+            </button>
         </div>
     </div>
 </div>

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalService } from '../../services/modal.service';
@@ -21,7 +21,12 @@ export class EditPost implements OnInit, OnDestroy {
     post: Post | null = null;
     isLoading = false;
 
-    constructor(protected modalService: ModalService, private dataService: DataService) {
+    constructor(
+        protected modalService: ModalService,
+        private dataService: DataService,
+        private cdr: ChangeDetectorRef,
+        private ngZone: NgZone
+    ) {
         // Get the post data from modal service
         const data = this.modalService.modalData();
         if (data && data.id) {
@@ -56,7 +61,10 @@ export class EditPost implements OnInit, OnDestroy {
                 // Convert file to Base64
                 const reader = new FileReader();
                 reader.onload = (e: any) => {
-                    this.imageUrls.push(e.target.result);
+                    this.ngZone.run(() => {
+                        this.imageUrls.push(e.target.result);
+                        this.cdr.detectChanges();
+                    });
                 };
                 reader.readAsDataURL(file);
             });
@@ -81,6 +89,7 @@ export class EditPost implements OnInit, OnDestroy {
                     console.error('Error uploading files:', err);
                     alert('Failed to upload media.');
                     this.isLoading = false;
+                    this.cdr.detectChanges();
                 }
             });
         } else {
@@ -98,12 +107,14 @@ export class EditPost implements OnInit, OnDestroy {
             next: (updatedPost) => {
                 console.log('Post updated successfully:', updatedPost);
                 this.isLoading = false;
+                this.cdr.detectChanges();
                 this.modalService.close();
             },
             error: (err) => {
                 console.error('Error updating post:', err);
                 alert('Failed to update post.');
                 this.isLoading = false;
+                this.cdr.detectChanges();
             }
         });
     }

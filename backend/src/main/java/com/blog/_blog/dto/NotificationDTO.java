@@ -18,6 +18,7 @@ public class NotificationDTO {
     private Integer actorId; // ID of the user who triggered the notification
     private NotificationType type;
     private Long entityId; // e.g. Post ID
+    @com.fasterxml.jackson.annotation.JsonProperty("isRead")
     private boolean isRead;
     private LocalDateTime createdAt;
     private String message; // Constructed message like "John liked your post"

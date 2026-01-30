@@ -1,8 +1,9 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalService } from '../../services/modal.service';
 import { DataService } from '../../services/data.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-create-post',
@@ -19,7 +20,12 @@ export class CreatePost implements OnInit, OnDestroy {
   selectedFiles: File[] = [];
   isLoading = false;
 
-  constructor(protected modalService: ModalService, private dataService: DataService) {
+  constructor(
+    protected modalService: ModalService,
+    private dataService: DataService,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
+  ) {
     console.log('CreatePost Component Constructor - Modal Service:', modalService);
   }
 
@@ -29,7 +35,7 @@ export class CreatePost implements OnInit, OnDestroy {
       Array.from(input.files).forEach(file => {
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
-          alert(`File ${file.name} is too large (max 10MB)`);
+          Swal.fire('Error', `File ${file.name} is too large (max 10MB)`, 'error');
           return;
         }
 
@@ -39,7 +45,10 @@ export class CreatePost implements OnInit, OnDestroy {
         // Convert file to Base64 only for preview
         const reader = new FileReader();
         reader.onload = (e: any) => {
-          this.imageUrls.push(e.target.result);
+          this.ngZone.run(() => {
+            this.imageUrls.push(e.target.result);
+            this.cdr.detectChanges();
+          });
         };
         reader.readAsDataURL(file);
       });
@@ -49,17 +58,17 @@ export class CreatePost implements OnInit, OnDestroy {
 
   createPost() {
     if (!this.title.trim() || !this.content.trim()) {
-      alert('Title and content are required.');
+      Swal.fire('Validation Error', 'Title and content are required.', 'warning');
       return;
     }
 
     if (this.title.length < 3 || this.title.length > 150) {
-      alert('Title must be between 3 and 150 characters.');
+      Swal.fire('Validation Error', 'Title must be between 3 and 150 characters.', 'warning');
       return;
     }
 
     if (this.content.length < 3) {
-      alert('Content must be at least 3 characters.');
+      Swal.fire('Validation Error', 'Content must be at least 3 characters.', 'warning');
       return;
     }
 
@@ -74,8 +83,9 @@ export class CreatePost implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error uploading files:', err);
-          alert('Failed to upload media. Please try again.');
+          Swal.fire('Error', 'Failed to upload media. Please try again.', 'error');
           this.isLoading = false;
+          this.cdr.detectChanges();
         }
       });
     } else {
@@ -97,17 +107,19 @@ export class CreatePost implements OnInit, OnDestroy {
         this.selectedFileNames = [];
         this.selectedFiles = [];
         this.isLoading = false;
+        this.cdr.detectChanges();
         this.modalService.close();
       },
       error: (err) => {
         console.error('Error creating post:', err);
         this.isLoading = false;
+        this.cdr.detectChanges();
         if (err.status === 403 || err.status === 401) {
-          alert('Session expired. Please log in again.');
+          Swal.fire('Session Expired', 'Please log in again.', 'warning');
           this.modalService.close();
           this.dataService.logout();
         } else {
-          alert('Failed to create post. Please try again.');
+          Swal.fire('Error', 'Failed to create post. Please try again.', 'error');
         }
       }
     });

@@ -18,6 +18,7 @@ public class ReportDTO {
     private UserSummaryDTO reportedUser;
     private Long reportedPostId;
     private String reportedPostTitle;
+    private String reportedPostImage;
     private String status;
     private LocalDateTime createdAt;
 }

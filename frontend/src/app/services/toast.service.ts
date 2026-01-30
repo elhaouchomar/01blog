@@ -1,5 +1,6 @@
 
 import { Injectable, signal } from '@angular/core';
+import Swal from 'sweetalert2';
 
 export interface Toast {
     id: number;
@@ -15,14 +16,16 @@ export class ToastService {
     private counter = 0;
 
     show(message: string, type: 'success' | 'error' | 'info' = 'info', duration = 3000) {
-        const id = this.counter++;
-        const toast: Toast = { id, message, type };
-
-        this.toasts.update(current => [...current, toast]);
-
-        setTimeout(() => {
-            this.remove(id);
-        }, duration);
+        Swal.fire({
+            position: 'top-end',
+            icon: type,
+            title: message,
+            showConfirmButton: false,
+            timer: duration,
+            toast: true,
+            background: type === 'error' ? '#fff1f0' : '#fff',
+            iconColor: type === 'error' ? '#ff4d4f' : (type === 'success' ? '#52c41a' : '#1890ff')
+        });
     }
 
     success(message: string, duration = 3000) {
@@ -38,6 +41,6 @@ export class ToastService {
     }
 
     remove(id: number) {
-        this.toasts.update(current => current.filter(t => t.id !== id));
+        // No longer needed with Swal, but kept for interface compatibility
     }
 }

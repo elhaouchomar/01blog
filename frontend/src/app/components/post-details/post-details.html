@@ -95,26 +95,6 @@
 
                 <!-- Discussion Nodes Timeline -->
                 <div class="sidebar-scroll-zone no-scrollbar">
-                    <!-- Author's Note / Captain -->
-                    <div class="timeline-node author-node">
-                        <div class="node-avatar">
-                            <img [src]="post.user.avatar || 'assets/default-avatar.png'" alt="">
-                        </div>
-                        <div class="node-content">
-                            <div class="node-bubble">
-                                <span class="node-author-name" (click)="goToProfile(post.user.id)"
-                                    style="cursor: pointer;">{{ post.user.name }}</span>
-                                <span class="node-body">{{ post.content | slice:0:200 }}{{ post.content.length > 200 ?
-                                    '...' : '' }}</span>
-                            </div>
-                            <div class="node-meta">
-                                <span>{{ post.createdAt | date:'shortTime' }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="timeline-divider"><span>Perspectives</span></div>
-
                     <!-- Dynamic Comments -->
                     <div class="comments-vortex">
                         <div *ngIf="hasMoreComments" class="load-more-wrapper">
@@ -122,11 +102,6 @@
                                 <span class="material-symbols-outlined">refresh</span>
                                 Load previous comments
                             </button>
-                        </div>
-
-                        <div *ngIf="comments.length === 0" class="vortex-empty-state">
-                            <span class="material-symbols-outlined">bubble_chart</span>
-                            <p>Be the first to share a perspective</p>
                         </div>
 
                         <div *ngFor="let comment of comments; trackBy: trackByComment"

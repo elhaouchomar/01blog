@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, OnDestroy, HostListener, ElementRef, effect } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy, HostListener, ElementRef, effect, Output, EventEmitter } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +20,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     isNotificationRoute = false;
     isSearchOpen = false;
     isMobileSearch = false;
+    isDashboardRoute = false;
+
+    @Output() onToggleSidebar = new EventEmitter<void>();
 
     // Search
     searchQuery = '';
@@ -41,7 +44,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.router.events.pipe(
             filter(event => event instanceof NavigationEnd)
         ).subscribe((event: any) => {
-            this.isNotificationRoute = event.urlAfterRedirects === '/notifications';
+            const url = event.urlAfterRedirects;
+            this.isNotificationRoute = url === '/notifications';
+            this.isDashboardRoute = url.startsWith('/dashboard');
             this.cdr.detectChanges();
         });
 
@@ -56,12 +61,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        // Add click outside listener
-        document.addEventListener('click', this.handleClickOutside.bind(this));
-
-        // Add keyboard listener for Escape key
-        document.addEventListener('keydown', this.handleKeydown.bind(this));
-
         // Setup search debouncing
         this.searchSubject.pipe(
             debounceTime(400),
@@ -80,24 +79,24 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy() {
-        // Remove event listeners
-        document.removeEventListener('click', this.handleClickOutside.bind(this));
-        document.removeEventListener('keydown', this.handleKeydown.bind(this));
         this.destroy$.next();
         this.destroy$.complete();
     }
 
-    private handleClickOutside(event: MouseEvent) {
+    @HostListener('document:click', ['$event'])
+    handleClickOutside(event: MouseEvent) {
         const target = event.target as HTMLElement;
+        const isInsideUserMenu = !!target.closest('.user-menu');
+        const isInsideNotifWrapper = !!target.closest('.notif-wrapper');
 
         // Close profile dropdown if clicked outside
-        if (this.isProfileOpen && !target.closest('.user-menu')) {
+        if (this.isProfileOpen && !isInsideUserMenu) {
             this.isProfileOpen = false;
             this.cdr.detectChanges();
         }
 
         // Close notification dropdown if clicked outside
-        if (this.isNotificationsOpen && !target.closest('.notif-wrapper')) {
+        if (this.isNotificationsOpen && !isInsideNotifWrapper) {
             this.isNotificationsOpen = false;
             this.cdr.detectChanges();
         }
@@ -115,7 +114,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         }
     }
 
-    private handleKeydown(event: KeyboardEvent) {
+    @HostListener('document:keydown', ['$event'])
+    handleKeydown(event: KeyboardEvent) {
         // Close dropdowns on Escape key
         if (event.key === 'Escape') {
             if (this.isProfileOpen) {
@@ -176,7 +176,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.dataService.markAllAsRead().subscribe();
     }
 
-    toggleUserMenu() {
+    toggleUserMenu(event?: Event) {
+        if (event) event.stopPropagation();
         this.isProfileOpen = !this.isProfileOpen;
         this.isNotificationsOpen = false;
         this.isSearchOpen = false;
@@ -184,7 +185,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
     }
 
-    toggleNotifications() {
+    toggleNotifications(event?: Event) {
+        if (event) event.stopPropagation();
         if (window.innerWidth < 1024) {
             this.router.navigate(['/notifications']);
             this.isNotificationsOpen = false;
@@ -296,6 +298,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
         this.isSearching = true;
         this.searchAttempted = true;
+        this.cdr.detectChanges(); // Force UI update to show loading state
         this.dataService.search(this.searchQuery.trim(), this.searchFilter).subscribe({
             next: (response) => {
                 this.searchResults = this.processSearchResults(response);

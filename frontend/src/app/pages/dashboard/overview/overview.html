@@ -1,131 +1,109 @@
-<div class="overview-container">
+<div class="container-fluid py-4">
+    <app-db-page-header title="Platform Overview" subtitle="Quick glimpse into the current state of the application."
+        titleIcon="dashboard" iconColor="#0d6efd">
+    </app-db-page-header>
+
     <!-- Stats Grid -->
-    <div class="stats-grid">
-        <!-- Stat Card 1 -->
-        <div class="stat-card">
-            <div class="stat-main">
-                <div class="stat-info">
-                    <p class="stat-label">Total Users</p>
-                    <h3 class="stat-value">{{ stats.totalUsers | number }}</h3>
+    <div class="row g-4 mb-4" *ngIf="dataService.dashboardStats() as stats">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm p-3 rounded-4 bg-white"
+                style="border-bottom: 4px solid #135bec !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-4 bg-primary bg-opacity-10 text-primary">
+                        <span class="material-symbols-outlined fs-2">group</span>
+                    </div>
+                    <div>
+                        <p class="text-secondary small fw-bold mb-0">Total Users</p>
+                        <h3 class="h4 fw-bolder mb-0">{{ stats.totalUsers | number }}</h3>
+                    </div>
                 </div>
-                <div class="stat-icon users">
-                    <span class="material-symbols-outlined">group</span>
-                </div>
-            </div>
-            <div class="stat-trend positive">
-                <span class="material-symbols-outlined">trending_up</span>
-                <span class="trend-value">1.2%</span>
-                <span class="trend-label">vs last month</span>
             </div>
         </div>
 
-        <!-- Stat Card 2 -->
-        <div class="stat-card">
-            <div class="stat-main">
-                <div class="stat-info">
-                    <p class="stat-label">Total Posts</p>
-                    <h3 class="stat-value">{{ stats.totalPosts | number }}</h3>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm p-3 rounded-4 bg-white"
+                style="border-bottom: 4px solid #52c41a !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-4 bg-success bg-opacity-10 text-success">
+                        <span class="material-symbols-outlined fs-2">article</span>
+                    </div>
+                    <div>
+                        <p class="text-secondary small fw-bold mb-0">Total Posts</p>
+                        <h3 class="h4 fw-bolder mb-0">{{ stats.totalPosts | number }}</h3>
+                    </div>
                 </div>
-                <div class="stat-icon posts">
-                    <span class="material-symbols-outlined">article</span>
-                </div>
-            </div>
-            <div class="stat-trend positive">
-                <span class="material-symbols-outlined">trending_up</span>
-                <span class="trend-value">3.4%</span>
-                <span class="trend-label">vs last month</span>
             </div>
         </div>
 
-        <!-- Stat Card 3 -->
-        <div class="stat-card warning">
-            <div class="stat-main">
-                <div class="stat-info">
-                    <p class="stat-label">Total Reports</p>
-                    <h3 class="stat-value">{{ stats.totalReports | number }}</h3>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm p-3 rounded-4 bg-white"
+                style="border-bottom: 4px solid #faad14 !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-4 bg-warning bg-opacity-10 text-warning">
+                        <span class="material-symbols-outlined fs-2">flag</span>
+                    </div>
+                    <div>
+                        <p class="text-secondary small fw-bold mb-0">Active Reports</p>
+                        <h3 class="h4 fw-bolder mb-0">{{ stats.pendingReports | number }}</h3>
+                    </div>
                 </div>
-                <div class="stat-icon reports">
-                    <span class="material-symbols-outlined">warning</span>
-                </div>
-            </div>
-            <div class="stat-trend negative">
-                <span class="material-symbols-outlined">trending_up</span>
-                <span class="trend-value">{{ stats.pendingReports }}</span>
-                <span class="trend-label">New reports requiring review</span>
             </div>
         </div>
 
-        <!-- Stat Card 4 -->
-        <div class="stat-card danger">
-            <div class="stat-main">
-                <div class="stat-info">
-                    <p class="stat-label">Banned Users</p>
-                    <h3 class="stat-value">{{ stats.bannedUsers | number }}</h3>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm p-3 rounded-4 bg-white"
+                style="border-bottom: 4px solid #f5222d !important;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-3 rounded-4 bg-danger bg-opacity-10 text-danger">
+                        <span class="material-symbols-outlined fs-2">block</span>
+                    </div>
+                    <div>
+                        <p class="text-secondary small fw-bold mb-0">Banned Users</p>
+                        <h3 class="h4 fw-bolder mb-0">{{ stats.bannedUsers | number }}</h3>
+                    </div>
                 </div>
-                <div class="stat-icon banned">
-                    <span class="material-symbols-outlined">block</span>
-                </div>
-            </div>
-            <div class="stat-trend">
-                <span class="material-symbols-outlined">remove</span>
-                <span class="trend-value">0%</span>
-                <span class="trend-label">No change</span>
             </div>
         </div>
     </div>
 
-    <div class="dashboard-grid">
-        <!-- Chart Section -->
-        <div class="grid-card activity-card">
-            <div class="card-header">
-                <div>
-                    <h3 class="card-title">Platform Activity</h3>
-                    <p class="card-subtitle">Posts per Day (Last 30 Days)</p>
-                </div>
-            </div>
-            <div class="activity-chart">
-                <div class="chart-bars">
-                    <div *ngFor="let item of stats.activity" class="chart-bar-wrapper">
-                        <div class="chart-bar" [style.height.%]="getActivityPercentage(item.count)"
-                            [title]="item.date + ': ' + item.count"></div>
-                    </div>
-                </div>
-                <div class="chart-labels">
-                    <span *ngFor="let item of stats.activity.slice(0, 5)">{{ item.date | date:'MMM d' }}</span>
-                </div>
-            </div>
-        </div>
+    <div class="row g-4">
 
         <!-- Reported Users Section -->
-        <div class="grid-card">
-            <div class="card-header">
-                <h3 class="card-title">Most Reported Users</h3>
-                <button class="view-all-btn" routerLink="/dashboard/reports">View All</button>
-            </div>
-            <div class="reported-users-list">
-                <div *ngFor="let user of stats.mostReportedUsers" class="reported-user-item">
-                    <div class="user-main">
-                        <div class="user-avatar"
-                            [style.background-image]="'url(' + (user.avatar || 'assets/default-avatar.png') + ')'">
-                        </div>
-                        <div class="user-info">
-                            <p class="user-name">{{ user.name }}</p>
-                            <p class="user-status" [class.banned]="user.status === 'Banned'">{{ user.status }}</p>
-                        </div>
-                    </div>
-                    <div class="user-stats">
-                        <span class="report-count">{{ user.reportCount }}</span>
-                    </div>
-                    <div class="user-actions">
-                        <button class="action-btn" title="Review Reports" routerLink="/dashboard/reports">
-                            <span class="material-symbols-outlined">visibility</span>
-                        </button>
-                    </div>
+        <div class="col-lg-4" *ngIf="dataService.dashboardStats() as stats">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h3 class="h5 fw-bold mb-0">Alerts</h3>
+                    <button class="btn btn-link text-primary text-decoration-none btn-sm fw-bold p-0"
+                        routerLink="/dashboard/reports">View All</button>
                 </div>
-                <div *ngIf="stats.mostReportedUsers.length === 0" class="empty-state">
-                    <p>No recent reports</p>
+                <div class="card-body p-4 pt-0">
+                    <div class="vstack gap-3 mt-2">
+                        <div *ngFor="let user of stats.mostReportedUsers"
+                            class="d-flex align-items-center gap-3 p-2 bg-light rounded-3 transition-all">
+                            <div class="rounded-circle border border-2 shadow-sm"
+                                style="width: 40px; height: 40px; background-size: cover;"
+                                [style.background-image]="'url(' + (user.avatar || 'assets/default-avatar.png') + ')'">
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="small fw-bold mb-0 line-clamp-1">{{ user.name }}</p>
+                                <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger px-2 py-1"
+                                    style="font-size: 10px;">{{ user.reportCount }} Reports</span>
+                            </div>
+                            <button
+                                class="btn btn-white btn-sm rounded-circle p-1 shadow-sm d-flex align-items-center justify-content-center"
+                                routerLink="/dashboard/reports">
+                                <span class="material-symbols-outlined fs-6 text-primary fw-bold">chevron_right</span>
+                            </button>
+                        </div>
+                        <app-db-feedback *ngIf="stats.mostReportedUsers.length === 0" type="empty"
+                            icon="sentiment_satisfied" iconColor="#52c41a" title="All clear"
+                            message="No critical alerts at the moment.">
+                        </app-db-feedback>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <app-db-feedback *ngIf="isLoading()" type="loading"></app-db-feedback>
 </div>

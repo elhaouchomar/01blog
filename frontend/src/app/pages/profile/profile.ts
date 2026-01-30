@@ -10,6 +10,7 @@ import { RightSidebarComponent } from '../../components/right-sidebar/right-side
 import { ActionMenuComponent, ActionMenuItem } from '../../components/action-menu/action-menu';
 import { getInitials } from '../../utils/string.utils';
 import { PostCardComponent } from '../../components/post-card/post-card';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-profile',
@@ -120,8 +121,32 @@ export class Profile implements OnInit {
   reportUser() {
     this.isMenuOpen = false;
     if (this.user) {
-      const reportData = { ...this.user, reportType: 'user' };
-      this.modalService.open('report', reportData);
+      Swal.fire({
+        title: 'Report User?',
+        text: `Are you sure you want to report ${this.user.name}? This helps our community stay safe.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Report',
+        confirmButtonColor: '#d33',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.dataService.reportContent('General Report', this.user!.id).subscribe({
+            next: () => {
+              Swal.fire({
+                icon: 'success',
+                title: 'Reported',
+                text: 'Thank you. Our team will review this user.',
+                timer: 2000,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false
+              });
+            },
+            error: () => Swal.fire('Error', 'Failed to submit report.', 'error')
+          });
+        }
+      });
     }
   }
 
@@ -159,6 +184,13 @@ export class Profile implements OnInit {
         icon: this.user.banned ? 'gavel' : 'block',
         class: 'delete',
         showIf: this.currentUserIsAdmin
+      },
+      {
+        id: 'delete',
+        label: 'Delete User',
+        icon: 'delete_forever',
+        class: 'delete',
+        showIf: this.currentUserIsAdmin
       }
     ];
   }
@@ -166,15 +198,55 @@ export class Profile implements OnInit {
   handleDropdownAction(actionId: string) {
     if (actionId === 'report') this.reportUser();
     if (actionId === 'ban') this.toggleBan();
+    if (actionId === 'delete') this.deleteUser();
+  }
+
+  deleteUser() {
+    this.isMenuOpen = false;
+    if (this.user && this.user.id) {
+      Swal.fire({
+        title: 'Delete User?',
+        text: `Are you sure you want to permanently delete ${this.user.name}? This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.dataService.deleteUserAction(this.user!.id).subscribe({
+            next: () => {
+              Swal.fire('Deleted!', 'User has been removed.', 'success');
+              this.router.navigate(['/home']);
+            },
+            error: () => Swal.fire('Error', 'Failed to delete user.', 'error')
+          });
+        }
+      });
+    }
   }
 
   toggleBan() {
     this.isMenuOpen = false;
     if (this.user && this.user.id) {
-      this.modalService.open('confirm-ban', {
-        id: this.user.id,
-        name: this.user.name,
-        isBanned: this.user.banned
+      const action = this.user.banned ? 'Unban' : 'Ban';
+      Swal.fire({
+        title: `${action} User?`,
+        text: `Are you sure you want to ${action.toLowerCase()} ${this.user.name}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: this.user.banned ? '#3085d6' : '#d33',
+        confirmButtonText: `Yes, ${action.toLowerCase()}!`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.dataService.toggleBan(this.user!.id).subscribe({
+            next: () => {
+              this.loadUserProfile(this.user!.id);
+              Swal.fire('Updated!', `User has been ${action.toLowerCase()}ned.`, 'success');
+            },
+            error: () => Swal.fire('Error', 'Failed to update user.', 'error')
+          });
+        }
       });
     }
   }

@@ -1,108 +1,39 @@
-<div class="reports-container">
-    <div class="page-header">
-        <div>
-            <h2 class="section-title">Reports Management</h2>
-            <p class="section-subtitle">Review and handle user and post reports.</p>
+<div class="container-fluid py-4">
+    <app-db-page-header title="Safety & Reports" subtitle="Review and handle user and post reports." titleIcon="flag"
+        iconColor="#fd7e14">
+    </app-db-page-header>
+
+    <!-- Filters -->
+    <div class="d-flex flex-wrap gap-3 mb-4 align-items-center bg-white p-3 rounded-4 shadow-sm border">
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-secondary small fw-bold text-uppercase opacity-50 me-2"
+                style="letter-spacing: 0.05em;">Filter Status:</span>
+            <div class="btn-group btn-group-sm p-1 bg-light rounded-pill">
+                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'PENDING'"
+                    (click)="setStatusFilter('PENDING')">Queue</button>
+                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'RESOLVED'"
+                    (click)="setStatusFilter('RESOLVED')">Resolved</button>
+                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'ALL'"
+                    (click)="setStatusFilter('ALL')">All Reports</button>
+            </div>
         </div>
     </div>
 
-    <div class="data-table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Reporter</th>
-                    <th>Reported Content</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th class="text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let report of pagination.paginatedData()"
-                    [class.row-resolved]="report.status === 'RESOLVED'">
-                    <td>
-                        <a [routerLink]="['/profile', report.reporter?.id]" class="user-cell"
-                            style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
-                            <div class="user-avatar"
-                                [style.background-image]="'url(' + (report.reporter?.avatar || 'assets/default-avatar.png') + ')'">
-                            </div>
-                            <div class="user-info">
-                                <p class="user-name" style="color: var(--text-main);">{{ report.reporter?.name ||
-                                    'Unknown User' }}</p>
-                                <p class="user-handle">{{ report.reporter?.handle || '@user' }}</p>
-                            </div>
-                        </a>
-                    </td>
-                    <td>
-                        <div *ngIf="report.reportedUser" class="content-cell">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span class="type-tag user">User</span>
-                                <a [routerLink]="['/profile', report.reportedUser.id]" class="content-text"
-                                    style="text-decoration: none; color: var(--text-main); cursor: pointer;">{{
-                                    report.reportedUser.name }}</a>
-                                <span *ngIf="report.reportedUser.banned" class="status-indicator banned"
-                                    title="Banned User">BANNED</span>
-                            </div>
-                        </div>
-                        <div *ngIf="report.reportedPostId" class="content-cell">
-                            <span class="type-tag post">Post</span>
-                            <span class="content-text line-clamp-1" (click)="viewPost(report.reportedPostId)"
-                                style="cursor: pointer; color: var(--text-main);">{{ report.reportedPostTitle }}</span>
-                        </div>
-                    </td>
-                    <td class="reason-cell">
-                        <p class="reason-text">{{ report.reason }}</p>
-                    </td>
-                    <td>
-                        <span class="status-badge" [class]="getStatusClass(report.status)">
-                            {{ formatStatus(report.status) | titlecase }}
-                        </span>
-                    </td>
-                    <td>
-                        <p class="date-text">{{ report.createdAt | date:'MMM d, yyyy' }}</p>
-                    </td>
-                    <td class="text-right">
-                        <div class="action-buttons">
-                            <button *ngIf="report.status === 'PENDING'" class="action-btn review"
-                                (click)="updateStatus(report, 'UNDER_REVIEW')" title="Mark as Under Review">
-                                <span class="material-symbols-outlined">visibility</span>
-                            </button>
-                            <button *ngIf="report.status !== 'RESOLVED'" class="action-btn resolve"
-                                (click)="updateStatus(report, 'RESOLVED')" title="Resolve Report">
-                                <span class="material-symbols-outlined">check_circle</span>
-                            </button>
-                            <button *ngIf="report.status !== 'DISMISSED'" class="action-btn dismiss"
-                                (click)="updateStatus(report, 'DISMISSED')" title="Dismiss Report">
-                                <span class="material-symbols-outlined">cancel</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr *ngIf="dataService.reports().length === 0 && !isLoading()">
-                    <td colspan="6" class="empty-cell">No reports found</td>
-                </tr>
-                <tr *ngIf="isLoading()">
-                    <td colspan="6" class="loading-cell">Loading reports...</td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- Reports Grid -->
+    <div class="vstack gap-3">
+        <app-report-card *ngFor="let report of pagination.paginatedData()" [report]="report"
+            (onAction)="handleReportAction($event)"
+            (onViewTarget)="report.reportedPostId ? viewPost(report.reportedPostId) : null"></app-report-card>
+
+        <app-db-feedback *ngIf="filteredReports().length === 0 && !isLoading()" type="empty" icon="flag"
+            iconColor="#fd7e14" title="No reports yet" message="Everything is quiet. Communities are behaving well.">
+        </app-db-feedback>
+
+        <app-db-feedback *ngIf="isLoading()" type="loading"></app-db-feedback>
     </div>
 
-    <div class="table-footer">
-        <p class="stats">Showing {{ pagination.getPageStart() }} - {{ pagination.getPageEnd() }} of {{
-            filteredReports().length }} reports</p>
-        <div class="pagination">
-            <button class="btn-pager" [disabled]="pagination.currentPage() === 1" (click)="pagination.previousPage()">
-                <span class="material-symbols-outlined">chevron_left</span>
-                Previous
-            </button>
-            <span class="page-indicator">Page {{ pagination.currentPage() }} of {{ pagination.totalPages() }}</span>
-            <button class="btn-pager" [disabled]="pagination.currentPage() === pagination.totalPages()"
-                (click)="pagination.nextPage()">
-                Next
-                <span class="material-symbols-outlined">chevron_right</span>
-            </button>
-        </div>
-    </div>
+    <!-- Footer & Pagination -->
+    <app-db-pagination *ngIf="filteredReports().length > 0" [pagination]="pagination"
+        [totalItems]="filteredReports().length" label="reports">
+    </app-db-pagination>
 </div>

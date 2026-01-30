@@ -4,7 +4,7 @@
         <div class="dropdown-header">
             <h3 class="dropdown-title">Notifications</h3>
             <div class="header-actions">
-                <button class="mark-read-btn" (click)="onMarkAllRead.emit()">Mark all read</button>
+                <button class="mark-read-btn" (click)="markAllRead($event)">Mark all read</button>
             </div>
         </div>
 
@@ -15,7 +15,7 @@
             </div>
 
             <div *ngFor="let n of notifications" class="notification-item" [class.unread]="!n.isRead"
-                (click)="onNotificationClick.emit(n)">
+                (click)="handleNotificationClick(n, $event)">
 
                 <div class="notif-avatar-container">
                     <div class="avatar" *ngIf="n.actorAvatar" [style.background-image]="'url(' + n.actorAvatar + ')'">
@@ -37,12 +37,10 @@
 
                 <div class="notif-content">
                     <div class="notif-top-row">
-                        <a class="actor-name" 
-                           (click)="handleActorClick(n, $event)"
-                           [routerLink]="['/profile', n.actorId]"
-                           style="cursor: pointer; text-decoration: none; color: inherit; font-weight: 600;">
+                        <span class="actor-name"
+                            style="cursor: pointer; text-decoration: none; color: inherit; font-weight: 600;">
                             {{ n.actorName }}
-                        </a>
+                        </span>
                         <span class="notif-time">{{ formatDate(n.createdAt) }}</span>
                     </div>
                     <p class="notif-text">{{ n.message }}</p>

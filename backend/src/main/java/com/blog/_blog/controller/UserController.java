@@ -7,10 +7,11 @@ import org.springframework.http.ResponseEntity;
 
 import org.springframework.security.core.Authentication;
 
+import javax.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -35,7 +36,7 @@ public class UserController {
     }
 
     @PutMapping("/me")
-    public ResponseEntity<UserDTO> updateAuthenticatedUser(@RequestBody UserDTO userDTO,
+    public ResponseEntity<UserDTO> updateAuthenticatedUser(@Valid @RequestBody UserDTO userDTO,
             Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(userService.updateProfile(email, userDTO));
@@ -68,7 +69,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> adminUpdateUser(@PathVariable Integer id, @RequestBody UserDTO userDTO,
+    public ResponseEntity<UserDTO> adminUpdateUser(@PathVariable Integer id, @Valid @RequestBody UserDTO userDTO,
             Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(userService.adminUpdateUser(id, userDTO, email));

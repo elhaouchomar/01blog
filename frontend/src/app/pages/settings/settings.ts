@@ -1,4 +1,4 @@
-import { Component, OnInit, effect } from '@angular/core';
+import { Component, OnInit, effect, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../components/navbar/navbar';
@@ -24,7 +24,11 @@ export class Settings implements OnInit {
         subscribed: false
     };
 
-    constructor(public dataService: DataService) {
+    constructor(
+        public dataService: DataService,
+        private cdr: ChangeDetectorRef,
+        private ngZone: NgZone
+    ) {
         effect(() => {
             const user = this.dataService.currentUser();
             if (user) {
@@ -83,11 +87,14 @@ export class Settings implements OnInit {
         if (file) {
             const reader = new FileReader();
             reader.onload = (e: any) => {
-                if (type === 'avatar') {
-                    this.editForm.avatar = e.target.result;
-                } else {
-                    this.editForm.cover = e.target.result;
-                }
+                this.ngZone.run(() => {
+                    if (type === 'avatar') {
+                        this.editForm.avatar = e.target.result;
+                    } else {
+                        this.editForm.cover = e.target.result;
+                    }
+                    this.cdr.detectChanges();
+                });
             };
             reader.readAsDataURL(file);
         }

@@ -7,6 +7,7 @@ import { ModalService } from '../../services/modal.service';
 import { DataService } from '../../services/data.service';
 import { ActionMenuComponent, ActionMenuItem } from '../action-menu/action-menu';
 import { getInitials } from '../../utils/string.utils';
+import Swal from 'sweetalert2';
 
 @Component({
     selector: 'app-post-card',
@@ -160,12 +161,61 @@ export class PostCardComponent {
     }
 
     deletePost() {
-        this.modalService.open('delete-v2', this.post);
+        Swal.fire({
+            title: 'Delete Post?',
+            text: `Are you sure you want to permanently delete "${this.post.title}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.dataService.deletePost(this.post.id).subscribe({
+                    next: () => {
+                        this.dataService.loadPosts();
+                        Swal.fire(
+                            'Deleted!',
+                            'Your post has been deleted.',
+                            'success'
+                        );
+                    },
+                    error: (err) => {
+                        console.error('Error deleting post:', err);
+                        Swal.fire('Error', 'Failed to delete post.', 'error');
+                    }
+                });
+            }
+        });
     }
 
     reportPost() {
-        const reportData = { ...this.post, reportType: 'post' };
-        this.modalService.open('report-post', reportData);
+        Swal.fire({
+            title: 'Report Post?',
+            text: 'Are you sure you want to flag this content? Our moderation team will review it.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, Report',
+            confirmButtonColor: '#d33',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.dataService.reportContent('General Report', undefined, this.post.id).subscribe({
+                    next: () => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Report Received',
+                            text: 'Thank you for your feedback.',
+                            timer: 2000,
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false
+                        });
+                    },
+                    error: () => Swal.fire('Error', 'Failed to submit report.', 'error')
+                });
+            }
+        });
     }
 
     openMediaViewer(index: number) {

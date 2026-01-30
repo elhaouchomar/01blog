@@ -23,9 +23,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(org.springframework.web.servlet.config.annotation.InterceptorRegistry registry) {
         registry.addInterceptor(rateLimiterInterceptor)
-                .addPathPatterns("/api/v1/auth/**")
-                .addPathPatterns("/api/v1/posts/**")
-                .addPathPatterns("/api/v1/reports/**");
+                .addPathPatterns("/api/auth/**")
+                .addPathPatterns("/api/posts/**")
+                .addPathPatterns("/api/reports/**");
     }
 
     @Override

@@ -1,120 +1,125 @@
-<div class="page-header">
-    <div>
-        <h2 class="section-title">Users Management</h2>
-        <p class="section-subtitle">Manage user access, roles and status.</p>
-    </div>
-    <div class="header-actions">
-        <button class="btn btn-export">
-            <span class="material-symbols-outlined">download</span>
-            Export CSV
-        </button>
-        <button class="btn btn-primary" (click)="modalService.open('create-user')">
-            <span class="material-symbols-outlined">person_add</span>
-            Add User
-        </button>
-    </div>
-</div>
+<div class="container-fluid py-4">
+    <app-db-page-header title="User Management" subtitle="Monitor and manage user accounts, roles and permissions."
+        titleIcon="group" iconColor="#6f42c1" actionIcon="person_add" actionLabel="Add User"
+        (onAction)="router.navigate(['/register'])">
+    </app-db-page-header>
 
-<!-- Filters -->
-<div class="filters-bar">
-    <div class="search-box">
-        <span class="material-symbols-outlined">search</span>
-        <input type="text" placeholder="Search by name, email or role..." [ngModel]="searchQuery()"
-            (input)="onSearch($event)">
-    </div>
-    <div class="status-chips">
-        <span class="label">Status:</span>
-        <button class="chip" [class.active]="statusFilter() === 'all'" (click)="setStatusFilter('all')">All
-            Users</button>
-        <button class="chip" [class.active]="statusFilter() === 'active'"
-            (click)="setStatusFilter('active')">Active</button>
-        <button class="chip" [class.active]="statusFilter() === 'banned'"
-            (click)="setStatusFilter('banned')">Banned</button>
-        <button class="chip" [class.active]="statusFilter() === 'admins'"
-            (click)="setStatusFilter('admins')">Admins</button>
-    </div>
-</div>
-
-<div class="data-table-container">
-    <div class="table-scroll">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th class="w-checkbox"><input type="checkbox"></th>
-                    <th>User</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th class="text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let user of pagination.paginatedData()" [class.row-banned]="user.banned">
-                    <td><input type="checkbox"></td>
-                    <td>
-                        <a [routerLink]="['/profile', user.id]" class="user-cell"
-                            style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem;">
-                            <div class="user-avatar"
-                                [style.background-image]="'url(' + (user.avatar || 'assets/default-avatar.png') + ')'">
-                            </div>
-                            <div class="user-info">
-                                <p class="user-name" style="color: var(--text-main);">{{ user.name }}</p>
-                                <p class="user-email">{{ user.email }}</p>
-                            </div>
-                        </a>
-                    </td>
-                    <td>
-                        <span class="role-badge" [class]="user.role?.toLowerCase()">
-                            {{ user.role }}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="status-indicator" [class.active]="!user.banned" [class.banned]="user.banned">
-                            {{ user.banned ? 'Banned' : 'Active' }}
-                        </span>
-                    </td>
-                    <td>
-                        <p class="date-text">{{ user.createdAt | date:'MMM d, yyyy' }}</p>
-                    </td>
-                    <td class="text-right">
-                        <div class="action-buttons">
-                            <button class="action-btn" title="Edit User" (click)="editUser(user)">
-                                <span class="material-symbols-outlined">edit</span>
-                            </button>
-                            <button class="action-btn block-btn" [title]="user.banned ? 'Unban User' : 'Ban User'"
-                                [class.active]="user.banned" (click)="toggleBan(user)">
-                                <span class="material-symbols-outlined">block</span>
-                            </button>
-                            <button class="action-btn delete-btn" title="Delete User" (click)="deleteUser(user)">
-                                <span class="material-symbols-outlined">delete</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr *ngIf="filteredUsers().length === 0 && !isLoading()">
-                    <td colspan="6" class="empty-cell">No users found matching your filters</td>
-                </tr>
-                <tr *ngIf="isLoading()">
-                    <td colspan="6" class="loading-cell">Loading users...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="table-footer">
-        <p class="stats">Showing {{ pagination.getPageStart() }} - {{ pagination.getPageEnd() }} of {{
-            filteredUsers().length }} users</p>
-        <div class="pagination">
-            <button class="btn-pager" [disabled]="pagination.currentPage() === 1" (click)="pagination.previousPage()">
-                <span class="material-symbols-outlined">chevron_left</span>
-                Previous
-            </button>
-            <span class="page-indicator">Page {{ pagination.currentPage() }} of {{ pagination.totalPages() }}</span>
-            <button class="btn-pager" [disabled]="pagination.currentPage() === pagination.totalPages()"
-                (click)="pagination.nextPage()">
-                Next
-                <span class="material-symbols-outlined">chevron_right</span>
-            </button>
+    <!-- Filters -->
+    <div class="d-flex flex-wrap gap-3 mb-4 align-items-center bg-white p-3 rounded-4 shadow-sm border">
+        <div class="position-relative flex-grow-1" style="max-width: 400px;">
+            <span class="material-symbols-outlined position-absolute top-50 start-0 translate-middle-y ms-3"
+                style="color: #6f42c1;">search</span>
+            <input type="text" class="form-control form-control-lg ps-5 fs-6 border-0 bg-light rounded-3"
+                placeholder="Search by name, email or role..." [ngModel]="searchQuery()" (input)="onSearch($event)">
+        </div>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            <span class="text-secondary small fw-bold text-uppercase opacity-50 me-2"
+                style="letter-spacing: 0.05em;">Filter:</span>
+            <div class="btn-group btn-group-sm p-1 bg-light rounded-pill">
+                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'all'"
+                    [class.text-secondary]="statusFilter() !== 'all'" (click)="setStatusFilter('all')">
+                    <span [class.text-primary]="statusFilter() === 'all'">All</span>
+                </button>
+                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'active'"
+                    [class.text-secondary]="statusFilter() !== 'active'" (click)="setStatusFilter('active')">
+                    <span [class.text-success]="statusFilter() === 'active'">Active</span>
+                </button>
+                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'banned'"
+                    [class.text-secondary]="statusFilter() !== 'banned'" (click)="setStatusFilter('banned')">
+                    <span [class.text-danger]="statusFilter() === 'banned'">Banned</span>
+                </button>
+                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'admins'"
+                    [class.text-secondary]="statusFilter() !== 'admins'" (click)="setStatusFilter('admins')">
+                    <span [style.color]="statusFilter() === 'admins' ? '#6f42c1' : ''">Admins</span>
+                </button>
+            </div>
         </div>
     </div>
+
+    <!-- Users Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4"
+        *ngIf="filteredUsers().length > 0 && !isLoading()">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light border-bottom text-secondary small fw-bold text-uppercase"
+                    style="letter-spacing: 0.05em;">
+                    <tr>
+                        <th class="ps-4 py-3">User</th>
+                        <th class="py-3">Role</th>
+                        <th class="py-3 text-center">Status</th>
+                        <th class="py-3">Joined</th>
+                        <th class="pe-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let user of pagination.paginatedData()" [class.opacity-50]="user.banned">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle border border-2 shadow-sm"
+                                    style="width: 40px; height: 40px; background-size: cover; cursor: pointer;"
+                                    [style.background-image]="'url(' + (user.avatar || 'assets/default-avatar.png') + ')'"
+                                    (click)="router.navigate(['/profile', user.id])">
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold" style="cursor: pointer;"
+                                        (click)="router.navigate(['/profile', user.id])">
+                                        {{ user.name }}
+                                    </h6>
+                                    <p class="text-secondary small mb-0">{{ user.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge rounded-pill fw-bold py-2 px-3"
+                                [class.bg-primary-subtle.text-primary]="user.role === 'ADMIN'"
+                                [class.bg-secondary-subtle.text-secondary]="user.role !== 'ADMIN'">
+                                {{ user.role }}
+                            </span>
+                        </td>
+                        <td class="py-3 text-center">
+                            <div class="d-inline-flex align-items-center gap-2 bg-light px-2 py-1 rounded-pill border">
+                                <span class="p-1 rounded-circle" [class.bg-success]="!user.banned"
+                                    [class.bg-danger]="user.banned"></span>
+                                <span class="small fw-bold text-uppercase" style="font-size: 10px;">{{ user.banned ?
+                                    'Banned' : 'Active' }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 text-secondary small fw-medium">
+                            {{ user.createdAt | date:'MMM d, yyyy' }}
+                        </td>
+                        <td class="pe-4 py-3 text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-light btn-sm text-primary hover-primary rounded-3 p-2"
+                                    (click)="editUser(user)" title="Edit User">
+                                    <span class="material-symbols-outlined fs-5">edit</span>
+                                </button>
+                                <button class="btn btn-light btn-sm rounded-3 p-2" [class.text-danger]="!user.banned"
+                                    [class.text-success]="user.banned" (click)="toggleBan(user)"
+                                    [title]="user.banned ? 'Unban' : 'Ban'">
+                                    <span class="material-symbols-outlined fs-5">{{ user.banned ? 'check_circle' :
+                                        'block' }}</span>
+                                </button>
+                                <button class="btn btn-light btn-sm text-danger hover-danger-bg rounded-3 p-2"
+                                    (click)="deleteUser(user)" title="Delete Account">
+                                    <span class="material-symbols-outlined fs-5">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Empty/Loading States -->
+    <app-db-feedback *ngIf="filteredUsers().length === 0 && !isLoading()" type="empty" icon="person_search"
+        iconColor="#6f42c1" title="No users found" message="Try adjusting your search or status filters.">
+    </app-db-feedback>
+
+    <app-db-feedback *ngIf="isLoading()" type="loading"></app-db-feedback>
+
+    <!-- Footer & Pagination -->
+    <app-db-pagination *ngIf="filteredUsers().length > 0" [pagination]="pagination"
+        [totalItems]="filteredUsers().length" label="users">
+    </app-db-pagination>
 </div>

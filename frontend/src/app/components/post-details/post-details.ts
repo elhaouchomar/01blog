@@ -6,6 +6,7 @@ import { Post, Comment } from '../../models/data.models';
 import { FormsModule } from '@angular/forms';
 import { ModalService } from '../../services/modal.service';
 import { ActionMenuComponent, ActionMenuItem } from '../action-menu/action-menu';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-post-details',
@@ -351,21 +352,64 @@ export class PostDetails implements OnInit {
 
   deletePost() {
     if (!this.post) return;
-    if (confirm(`Are you sure you want to permanently delete "${this.post.title}"?`)) {
-      this.dataService.deletePost(this.post.id).subscribe({
-        next: () => {
-          this.close();
-          this.dataService.loadPosts();
-        },
-        error: (err) => console.error('Error deleting post:', err)
-      });
-    }
+
+    Swal.fire({
+      title: 'Delete Post?',
+      text: `Are you sure you want to permanently delete "${this.post.title}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.dataService.deletePost(this.post!.id).subscribe({
+          next: () => {
+            this.close();
+            this.dataService.loadPosts();
+            Swal.fire(
+              'Deleted!',
+              'Your post has been deleted.',
+              'success'
+            );
+          },
+          error: (err) => {
+            console.error('Error deleting post:', err);
+            Swal.fire('Error', 'Failed to delete post.', 'error');
+          }
+        });
+      }
+    });
   }
 
   reportPost() {
     if (!this.post) return;
-    const reportData = { ...this.post, reportType: 'post' };
-    this.modalService.open('report-post', reportData);
+    Swal.fire({
+      title: 'Report Content?',
+      text: 'Are you sure you want to flag this post? This helps us maintain a safe community.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Report',
+      confirmButtonColor: '#d33',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.dataService.reportContent('General Report', undefined, this.post!.id).subscribe({
+          next: () => {
+            Swal.fire({
+              icon: 'success',
+              title: 'Reported',
+              text: 'Thank you for your report.',
+              timer: 2000,
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false
+            });
+          },
+          error: () => Swal.fire('Error', 'Failed to submit report.', 'error')
+        });
+      }
+    });
   }
 
   goToProfile(userId: number) {
