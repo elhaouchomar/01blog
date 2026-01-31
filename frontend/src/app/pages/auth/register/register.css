@@ -669,3 +669,33 @@
     left: 2.5rem;
     filter: blur(24px);
 }
+
+.sweet-alert-popup {
+    font-family: 'Lexend', sans-serif;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-light);
+    background-color: var(--surface-light);
+}
+
+.sweet-alert-title {
+    color: var(--text-main);
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.sweet-alert-content {
+    color: var(--text-sub);
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 0.9375rem;
+}
+
+.sweet-alert-confirm-btn {
+    font-weight: 700;
+    border-radius: var(--radius-lg);
+    padding: 0.5rem 1.5rem;
+    font-size: 0.875rem;
+}
+
+.error-message {
+    display: none;
+}

@@ -42,7 +42,7 @@ public class AuthenticationService {
                 // Check if email already exists
                 if (repository.findByEmail(normalizedEmail).isPresent()) {
                         throw new IllegalArgumentException(
-                                        "Email already registered. Please use a different email or login.");
+                                        "Invalid email use a different email");
                 }
 
                 var user = User.builder()

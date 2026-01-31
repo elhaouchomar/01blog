@@ -41,28 +41,31 @@ export class Register {
     }
 
     onRegister() {
+        // Clear any previous error
+        this.error = '';
+
         if (!this.firstname || !this.lastname || !this.email || !this.password) {
-            this.error = 'All fields are required.';
+            this.showErrorAlert('All fields are required.');
             return;
         }
 
         if (!this.validateName(this.firstname)) {
-            this.error = 'First name must contain only letters and be 2-50 characters.';
+            this.showErrorAlert('First name must contain only letters and be 2-50 characters.');
             return;
         }
 
         if (!this.validateName(this.lastname)) {
-            this.error = 'Last name must contain only letters and be 2-50 characters.';
+            this.showErrorAlert('Last name must contain only letters and be 2-50 characters.');
             return;
         }
 
         if (!this.validateEmail(this.email)) {
-            this.error = 'Please enter a valid email address.';
+            this.showErrorAlert('Please enter a valid email address.');
             return;
         }
 
         if (this.password.length < 6) {
-            this.error = 'Password must be at least 6 characters.';
+            this.showErrorAlert('Password must be at least 6 characters.');
             return;
         }
 
@@ -74,21 +77,40 @@ export class Register {
         }).subscribe({
             next: (response) => {
                 console.log('Registration successful:', response);
-                // Navigate to home page
-                this.router.navigate(['/']).then(() => {
-                    Swal.fire({
-                        position: 'top-end',
-                        icon: 'success',
-                        title: 'Registration successful! Welcome.',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        toast: true
-                    });
+                
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Registration Successful!',
+                    text: 'Welcome to 01Blog! Your account has been created.',
+                    confirmButtonColor: '#135bec',
+                    confirmButtonText: 'Get Started'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.router.navigate(['/']);
+                    }
                 });
             },
             error: (err) => {
-                this.error = err.error?.message || 'Registration failed. Please try again.';
+                const errorMessage = err.error?.message || 'Registration failed. Please try again.';
+                this.showErrorAlert(errorMessage);
                 console.error('Register error:', err);
+            }
+        });
+    }
+
+    private showErrorAlert(message: string) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: message,
+            confirmButtonColor: '#135bec',
+            confirmButtonText: 'Try Again',
+            customClass: {
+                popup: 'sweet-alert-popup',
+                title: 'sweet-alert-title',
+                htmlContainer: 'sweet-alert-content',
+                confirmButton: 'sweet-alert-confirm-btn'
             }
         });
     }

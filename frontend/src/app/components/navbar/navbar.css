@@ -887,7 +887,7 @@ app-dropdown-notif {
     .nav-item:hover {
         background: var(--surface);
     }
-
+    .nav-item-text-notifications,
     .nav-item-text {
         display: none;
     }

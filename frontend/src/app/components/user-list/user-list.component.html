@@ -1,14 +1,14 @@
 <!-- User List Section -->
-<div class="flex flex-col gap-6">
+<div class="user-list-section">
     <!-- Actions & Filters -->
     <div class="admin-toolbar">
-        <h2 class="text-xl font-bold text-text-main dark:text-white">User Management</h2>
+        <h2 class="page-title">User Management</h2>
         <div class="admin-search-bar">
-            <span class="material-symbols-outlined text-gray-400">search</span>
+            <span class="material-symbols-outlined search-icon">search</span>
             <input class="admin-search-input" placeholder="Search users..." type="text" [(ngModel)]="searchQuery"
                 (input)="filterUsers()" />
         </div>
-        <div class="flex gap-2">
+        <div class="filter-buttons">
             <button class="btn btn-primary" (click)="filterBy('All')">All</button>
             <button class="btn btn-secondary" (click)="filterBy('Banned')">Banned</button>
         </div>
@@ -33,26 +33,25 @@
                             <div class="admin-avatar"
                                 [style.background-image]="'url(' + (user.avatar || 'assets/default-avatar.png') + ')'">
                             </div>
-                            <div>
-                                <p class="font-bold text-text-main dark:text-white">{{ user.name }}</p>
-                                <p class="text-xs text-text-secondary">{{ user.handle }}</p>
+                            <div class="user-details">
+                                <p class="user-name">{{ user.name }}</p>
+                                <p class="user-handle">{{ user.handle }}</p>
                             </div>
                         </div>
                     </td>
                     <td>
-                        <span class="status-badge" [class.admin]="user.role === 'ADMIN'">{{ user.role }}</span>
+                        <span class="role-badge" [class.role-admin]="user.role === 'ADMIN'">{{ user.role }}</span>
                     </td>
                     <td>
-                        <span class="status-badge" [class.active]="!user.isBanned" [class.banned]="user.isBanned">
+                        <span class="status-badge" [class.status-active]="!user.isBanned" [class.status-banned]="user.isBanned">
                             {{ user.isBanned ? 'Banned' : 'Active' }}
                         </span>
                     </td>
-                    <td>{{ user.email }}</td>
+                    <td class="user-email">{{ user.email }}</td>
                     <td class="text-right">
                         <div class="action-btn-group">
                             <button class="action-btn-sm" (click)="toggleBan(user)" title="Ban/Unban">
-                                <span class="material-symbols-outlined">{{ user.isBanned ? 'check_circle' : 'block'
-                                    }}</span>
+                                <span class="material-symbols-outlined">{{ user.isBanned ? 'check_circle' : 'block' }}</span>
                             </button>
                             <button class="action-btn-sm danger" (click)="deleteUser(user)" title="Delete">
                                 <span class="material-symbols-outlined">delete</span>
@@ -62,7 +61,7 @@
                 </tr>
             </tbody>
         </table>
-        <div *ngIf="filteredUsers.length === 0" class="p-6 text-center text-text-secondary">
+        <div *ngIf="filteredUsers.length === 0" class="no-users-message">
             No users found.
         </div>
     </div>

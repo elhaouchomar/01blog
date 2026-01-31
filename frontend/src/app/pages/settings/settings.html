@@ -45,19 +45,6 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div class="cover-upload-section">
-                                        <h3 class="settings-section-title">Profile Cover</h3>
-                                        <div class="cover-preview-wide"
-                                            [style.background-image]="'url(' + (editForm.cover || 'assets/default-cover.jpg') + ')'">
-                                            <button class="btn-change-cover" (click)="coverInput.click()">
-                                                <span class="material-symbols-outlined">image</span>
-                                                Update Cover
-                                            </button>
-                                        </div>
-                                        <input type="file" #coverInput (change)="onFileSelected($event, 'cover')"
-                                            accept="image/*" style="display: none;">
-                                    </div>
                                 </section>
 
                                 <!-- Personal Information Form -->
@@ -93,38 +80,6 @@
                                     </div>
                                     <div class="form-actions">
                                         <button (click)="saveSettings()" class="btn-save">Save Changes</button>
-                                    </div>
-                                </section>
-
-                                <!-- Notifications Section -->
-                                <section class="settings-section">
-                                    <div class="settings-section-header">
-                                        <h3 class="settings-section-title">Notifications</h3>
-                                    </div>
-                                    <div class="settings-form-grid">
-                                        <div class="form-field form-field-full">
-                                            <label class="form-field-label">Newsletter Subscription</label>
-                                            <div class="toggle-wrapper">
-                                                <input type="checkbox" id="subscribed" [(ngModel)]="editForm.subscribed"
-                                                    class="toggle-input">
-                                                <label for="subscribed" class="toggle-label">
-                                                    <span class="toggle-slider"></span>
-                                                </label>
-                                                <span class="toggle-text">Receive newsletter updates</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <!-- Danger Zone -->
-                                <section class="danger-zone">
-                                    <h3 class="danger-zone-title">Danger Zone</h3>
-                                    <div class="danger-zone-content">
-                                        <div class="danger-zone-info">
-                                            <span class="danger-zone-label">Delete Account</span>
-                                            <span class="danger-zone-sublabel">Permanently remove your data</span>
-                                        </div>
-                                        <button (click)="deleteAccount()" class="btn-danger">Delete Account</button>
                                     </div>
                                 </section>
                             </ng-container>

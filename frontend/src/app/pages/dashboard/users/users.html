@@ -1,7 +1,7 @@
 <div class="container-fluid py-4">
     <app-db-page-header title="User Management" subtitle="Monitor and manage user accounts, roles and permissions."
         titleIcon="group" iconColor="#6f42c1" actionIcon="person_add" actionLabel="Add User"
-        (onAction)="router.navigate(['/register'])">
+        (click)="modalService.open('create-user')">
     </app-db-page-header>
 
     <!-- Filters -->

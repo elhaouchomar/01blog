@@ -9,7 +9,7 @@ import { User, Post, Notification, Comment, AuthenticationRequest, Authenticatio
 export class DataService {
     public injector = inject(Injector);
     private BASE_URL = 'http://localhost:8080';
-    private API_URL = `${this.BASE_URL}/api/v1`;
+    private API_URL = `${this.BASE_URL}/api`;
 
     // Signals state
     private _currentUser = signal<User | null>(null);
