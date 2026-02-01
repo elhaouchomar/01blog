@@ -5,25 +5,38 @@
 
     <!-- Filters -->
     <div class="d-flex flex-wrap gap-3 mb-4 align-items-center bg-white p-3 rounded-4 shadow-sm border">
-        <div class="d-flex align-items-center gap-2">
-            <span class="text-secondary small fw-bold text-uppercase opacity-50 me-2"
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="text-secondary small fw-bold text-uppercase me-2 d-none d-sm-inline"
                 style="letter-spacing: 0.05em;">Filter Status:</span>
-            <div class="btn-group btn-group-sm p-1 bg-light rounded-pill">
-                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'PENDING'"
-                    (click)="setStatusFilter('PENDING')">Queue</button>
-                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'RESOLVED'"
-                    (click)="setStatusFilter('RESOLVED')">Resolved</button>
-                <button class="btn rounded-pill px-3" [class.btn-white.shadow-sm]="statusFilter() === 'ALL'"
-                    (click)="setStatusFilter('ALL')">All Reports</button>
+            <div class="btn-group btn-group-sm p-1 bg-light rounded-pill overflow-hidden border shadow-sm">
+                <button class="btn rounded-pill px-3 transition-all"
+                    [ngClass]="{'btn-pill-active': statusFilter() === 'PENDING', 'text-secondary': statusFilter() !== 'PENDING'}"
+                    (click)="setStatusFilter('PENDING')" title="Queue">
+                    <span class="material-symbols-outlined fs-5 d-block">inbox</span>
+                </button>
+                <button class="btn rounded-pill px-3 transition-all"
+                    [ngClass]="{'btn-pill-active': statusFilter() === 'RESOLVED', 'text-secondary': statusFilter() !== 'RESOLVED'}"
+                    (click)="setStatusFilter('RESOLVED')" title="Resolved">
+                    <span class="material-symbols-outlined fs-5 d-block">check_circle</span>
+                </button>
+                <button class="btn rounded-pill px-3 transition-all"
+                    [ngClass]="{'btn-pill-active': statusFilter() === 'ALL', 'text-secondary': statusFilter() !== 'ALL'}"
+                    (click)="setStatusFilter('ALL')" title="All Reports">
+                    <span class="material-symbols-outlined fs-5 d-block">filter_list</span>
+                </button>
             </div>
+        </div>
+        <div class="ms-auto d-none d-md-block">
+            <span class="badge rounded-pill bg-light border text-secondary px-3 py-2 fw-medium">
+                Total Reports: {{ filteredReports().length }}
+            </span>
         </div>
     </div>
 
     <!-- Reports Grid -->
     <div class="vstack gap-3">
-        <app-report-card *ngFor="let report of pagination.paginatedData()" [report]="report"
-            (onAction)="handleReportAction($event)"
-            (onViewTarget)="report.reportedPostId ? viewPost(report.reportedPostId) : null"></app-report-card>
+        <app-report-card *ngFor="let report of filteredReports()" [report]="report"
+            (onAction)="handleReportAction($event)" (onViewTarget)="handleView(report)"></app-report-card>
 
         <app-db-feedback *ngIf="filteredReports().length === 0 && !isLoading()" type="empty" icon="flag"
             iconColor="#fd7e14" title="No reports yet" message="Everything is quiet. Communities are behaving well.">
@@ -31,9 +44,4 @@
 
         <app-db-feedback *ngIf="isLoading()" type="loading"></app-db-feedback>
     </div>
-
-    <!-- Footer & Pagination -->
-    <app-db-pagination *ngIf="filteredReports().length > 0" [pagination]="pagination"
-        [totalItems]="filteredReports().length" label="reports">
-    </app-db-pagination>
 </div>

@@ -135,6 +135,10 @@
     text-decoration: none;
     margin-bottom: 0.125rem;
     line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .network-user-name:hover {
@@ -207,6 +211,7 @@
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
     height: 2.4em;
@@ -217,26 +222,47 @@
     color: #d1d5db;
 }
 
-/* Dismiss Icon */
-.btn-close-card {
+/* Action Overlay */
+.card-action-overlay {
     position: absolute;
     top: 0.5rem;
     right: 0.5rem;
+    display: flex;
+    gap: 0.25rem;
+}
+
+.btn-action-round {
     background: transparent;
     border: none;
     color: #9ca3af;
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
 }
 
-.btn-close-card:hover {
+.btn-action-round:hover {
     background-color: #f3f4f6;
+}
+
+.btn-action-round.close:hover {
     color: #ef4444;
 }
 
-:host-context(.dark) .btn-close-card:hover {
+.btn-action-round.delete:hover {
+    color: #ef4444;
+    background-color: #fee2e2;
+}
+
+:host-context(.dark) .btn-action-round:hover {
     background-color: #374151;
+}
+
+:host-context(.dark) .btn-action-round.delete:hover {
+    background-color: #451a1a;
 }
 
 /* Actions */

@@ -7,8 +7,19 @@
 
         <!-- Main Feed -->
         <main class="main-feed">
+            <!-- Banned User Banner -->
+            <div class="banned-banner" *ngIf="dataService.currentUser()?.banned">
+                <div class="banner-content">
+                    <span class="material-symbols-outlined">gavel</span>
+                    <div class="banner-text">
+                        <h3>Your account is restricted</h3>
+                        <p>You have been banned by an administrator and cannot create posts or interact with others.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Premium Create Post Widget -->
-            <div class="create-post-card" *ngIf="dataService.currentUser()">
+            <div class="create-post-card" *ngIf="dataService.currentUser() && !dataService.currentUser()?.banned">
                 <div class="widget-main">
                     <div class="user-avatar-premium"
                         [style.background-image]="'url(' + (dataService.currentUser()?.avatar || 'assets/default-avatar.png') + ')'">
@@ -42,19 +53,24 @@
 
             <!-- Posts List -->
             <div class="post-list">
-                <div class="empty-state" *ngIf="!isLoading && posts.length === 0"
+                <div class="empty-state" *ngIf="!isLoading() && posts.length === 0"
                     style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                     No posts yet. Be the first to share something!
                 </div>
 
                 <app-post-card *ngFor="let post of posts" [post]="post"></app-post-card>
 
-                <!-- Load More -->
-                <div class="pagination-footer" *ngIf="posts.length >= 10" style="text-align: center; padding: 2rem;">
-                    <button class="btn-load-more-premium" (click)="loadMore()" [disabled]="!isMoreAvailable()"
-                        style="padding: 0.75rem 2rem; border-radius: 1rem; background: var(--primary); color: white; font-weight: 700; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(19, 19, 236, 0.2);">
-                        {{ isMoreAvailable() ? 'Load More Articles' : 'No More Articles' }}
-                    </button>
+                <!-- Infinite Scroll Loading Indicator -->
+                <div class="infinite-scroll-status" *ngIf="isFetchingMore()" style="text-align: center; padding: 2rem;">
+                    <div class="spinner-border text-primary shadow-sm" role="status">
+                        <span class="visually-hidden">Loading more...</span>
+                    </div>
+                </div>
+
+                <div class="empty-state-premium" *ngIf="!isMoreAvailable() && posts.length > 0"
+                    style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <span class="material-symbols-outlined fs-1 mb-2">auto_awesome</span>
+                    <p class="fw-bold">You're all caught up!</p>
                 </div>
             </div>
         </main>

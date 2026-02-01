@@ -37,6 +37,7 @@ export interface UserSummaryDTO {
     handle: string;
     avatar: string;
     role?: string;
+    banned?: boolean;
 }
 
 export interface Comment {
@@ -77,6 +78,7 @@ export interface Post {
     replies?: Comment[];
     reportsCount?: number;
     createdAt?: string; // ISO date string from backend
+    hidden?: boolean;
 }
 
 export interface Notification {

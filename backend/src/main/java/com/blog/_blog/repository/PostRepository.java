@@ -1,6 +1,7 @@
 package com.blog._blog.repository;
 
 import com.blog._blog.entity.Post;
+import com.blog._blog.entity.User; // Import User entity
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         org.springframework.data.domain.Page<Post> findAllByOrderByCreatedAtDesc(
                         org.springframework.data.domain.Pageable pageable);
 
+        org.springframework.data.domain.Page<Post> findByHiddenFalseOrderByCreatedAtDesc(
+                        org.springframework.data.domain.Pageable pageable);
+
+        org.springframework.data.domain.Page<Post> findByAuthorIdAndHiddenFalseOrderByCreatedAtDesc(Integer authorId,
+                        org.springframework.data.domain.Pageable pageable);
+
         @Query("SELECT p FROM Post p WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.category) LIKE LOWER(CONCAT('%', :query, '%'))")
         List<Post> searchByTitleOrCategory(@Param("query") String query);
 
@@ -25,4 +32,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         List<Object[]> findPostActivity(@Param("startDate") java.time.LocalDateTime startDate);
 
         long countByAuthorId(Integer authorId);
+
+        void deleteByAuthor(User author);
 }

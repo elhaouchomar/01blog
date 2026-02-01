@@ -1300,6 +1300,7 @@ body {
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    line-clamp: 3;
     flex: 1;
 }
 
@@ -1350,6 +1351,7 @@ body {
     margin-top: 0.5rem;
     width: 12rem;
     background-color: var(--surface-light);
+
     border-radius: 0.75rem;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--gray-200);
@@ -1402,7 +1404,6 @@ body {
     background-color: rgba(239, 68, 68, 0.1);
 }
 
-/* ===== DASHBOARD LAYOUT ===== */
 .dashboard-container {
     display: flex;
     height: 100vh;
@@ -3257,4 +3258,102 @@ body {
     .dashboard-main {
         margin-left: 0;
     }
+}
+
+/* ===== UTILITIES ===== */
+.btn-white {
+    background-color: white !important;
+    border: 1px solid var(--gray-200) !important;
+    color: var(--text-main) !important;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-white:hover {
+    background-color: var(--gray-50) !important;
+    border-color: var(--gray-300) !important;
+}
+
+.btn-pill-active {
+    background-color: black !important;
+    color: white !important;
+    border-color: black !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-pill-active span {
+    color: white !important;
+}
+
+.shadow-sm {
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.shadow-md {
+    box-shadow: var(--shadow-md) !important;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.bg-purple {
+    background-color: rgba(111, 66, 193, 0.1) !important;
+}
+
+.transition-all {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.hover-shadow {
+    cursor: pointer;
+}
+
+.hover-shadow:hover {
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-2px);
+    background-color: #fafbfc !important;
+}
+
+.hover-shadow-lg:hover {
+    box-shadow: var(--shadow-lg) !important;
+    transform: translateY(-3px);
+    background-color: #fafbfc !important;
+}
+
+.hover-primary:hover {
+    color: var(--primary) !important;
+}
+
+.hover-primary-bg:hover {
+    background-color: rgba(var(--primary-rgb), 0.05) !important;
+}
+
+.hover-success-bg:hover {
+    background-color: rgba(34, 197, 94, 0.08) !important;
+}
+
+.hover-danger-bg:hover {
+    background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+.hover-warning-bg:hover {
+    background-color: rgba(249, 115, 22, 0.08) !important;
+}
+
+.x-small {
+    font-size: 0.72rem !important;
+    font-weight: 700;
+}
+
+.italicized {
+    font-style: italic !important;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-clamp: 2;
+    /* Compatibility fix */
 }

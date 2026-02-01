@@ -27,5 +27,6 @@ public class PostDTO {
     private Boolean canEdit; // True if current user owns this post
     private Boolean canDelete; // True if owner OR admin
     private Integer reportsCount;
+    private Boolean hidden;
     private LocalDateTime createdAt;
 }

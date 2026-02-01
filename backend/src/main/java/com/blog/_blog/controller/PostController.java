@@ -65,6 +65,12 @@ public class PostController {
         return ResponseEntity.ok(postService.updatePost(id, request, email));
     }
 
+    @PutMapping("/{id}/toggle-hidden")
+    public ResponseEntity<PostDTO> toggleHidden(@PathVariable Long id, Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(postService.toggleHidden(id, email));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id, Authentication authentication) {
         String email = authentication.getName();

@@ -76,6 +76,9 @@
     display: block;
     margin-bottom: 0.125rem;
     transition: color 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .trending-item:hover .item-tag {

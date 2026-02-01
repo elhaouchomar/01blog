@@ -184,3 +184,54 @@
 .dark .widget-actions-grid {
     border-top-color: var(--gray-800);
 }
+
+/* Banned Banner */
+.banned-banner {
+    background-color: #fff1f0;
+    border: 1px solid #ffa39e;
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.banner-content {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+}
+
+.banner-content .material-symbols-outlined {
+    font-size: 2.5rem;
+    color: #f5222d;
+    background: white;
+    padding: 0.75rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(245, 34, 45, 0.1);
+}
+
+.banner-text h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #a8071a;
+}
+
+.banner-text p {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: #cf1322;
+    line-height: 1.5;
+}
+
+.dark .banned-banner {
+    background-color: rgba(245, 34, 45, 0.1);
+    border-color: rgba(245, 34, 45, 0.2);
+}
+
+.dark .banner-text h3 {
+    color: #ffa39e;
+}
+
+.dark .banner-text p {
+    color: #ffccc7;
+}

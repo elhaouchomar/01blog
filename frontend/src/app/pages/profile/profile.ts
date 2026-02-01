@@ -25,6 +25,9 @@ export class Profile implements OnInit {
   posts: Post[] = [];
   isLoading = false;
   activeTab = 'Posts';
+  currentPage = 0;
+  pageSize = 10;
+  isMoreAvailable = true;
 
   constructor(
     public dataService: DataService,
@@ -106,16 +109,31 @@ export class Profile implements OnInit {
     return !!(cu && this.user && cu.id === this.user.id);
   }
 
-  loadPosts() {
+  loadPosts(append: boolean = false) {
     if (!this.user || !this.user.id) return;
 
-    this.dataService.getUserPosts(this.user.id).subscribe({
+    if (!append) {
+      this.currentPage = 0;
+      this.isMoreAvailable = true;
+    }
+
+    this.dataService.getUserPosts(this.user.id, this.currentPage, this.pageSize).subscribe({
       next: (posts) => {
-        this.posts = posts;
+        if (append) {
+          this.posts = [...this.posts, ...posts];
+        } else {
+          this.posts = posts;
+        }
+        this.isMoreAvailable = posts.length >= this.pageSize;
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Error loading user posts:', err)
     });
+  }
+
+  loadMore() {
+    this.currentPage++;
+    this.loadPosts(true);
   }
 
   reportUser() {
@@ -256,6 +274,18 @@ export class Profile implements OnInit {
     if (!this.elementRef.nativeElement.contains(event.target)) {
       this.isMenuOpen = false;
       this.cdr.detectChanges();
+    }
+  }
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    if (this.isLoading || !this.isMoreAvailable || this.activeTab !== 'Posts') return;
+
+    const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
+    const max = document.documentElement.scrollHeight;
+
+    if (pos >= max - 200) {
+      this.loadMore();
     }
   }
 }

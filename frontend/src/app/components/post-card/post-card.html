@@ -1,94 +1,108 @@
-<article class="post-card">
-    <div class="post-header">
-        <div class="post-author">
-            <!-- Changed post.author to post.user to match data model -->
-            <div class="post-avatar" *ngIf="post.user.avatar" [style.background-image]="'url(' + post.user.avatar + ')'"
-                [routerLink]="['/profile', post.user.id]" style="cursor: pointer;">
-            </div>
-            <div class="post-avatar avatar-initials" *ngIf="!post.user.avatar" [routerLink]="['/profile', post.user.id]"
-                style="cursor: pointer;">
-                {{ getInitials(post.user.name) }}
-            </div>
-            <div class="post-author-info">
-                <div class="author-row">
-                    <a [routerLink]="['/profile', post.user.id]" class="post-author-name" style="cursor: pointer;">{{
-                        post.user.name }}</a>
-                    <span class="post-author-handle">{{ post.user.handle }}</span>
-                </div>
-                <p class="post-meta">{{ post.user.role || 'User' }} • {{ (post.createdAt || post.time) | date:'short'
-                    }}</p>
-            </div>
+<!-- Main Post Content - Only show if not hidden OR if user is owner/admin -->
+<ng-container *ngIf="!post.hidden || (post.hidden && (currentUser?.isAdmin || currentUser?.id === post.user.id))">
+    <article class="post-card" [class.is-hidden]="post.hidden">
+        <!-- Hidden Badge -->
+        <div class="hidden-badge" *ngIf="post.hidden">
+            <span class="material-symbols-outlined">visibility_off</span>
+            <span>This post is hidden from public</span>
+            <button class="btn-unhide" *ngIf="isAdmin" (click)="togglePostVisibility($event, post)">Unhide</button>
         </div>
-        <app-action-menu [items]="postActions" (actionSelected)="handleDropdownAction($event)"
-            buttonClass="post-menu-btn"></app-action-menu>
-    </div>
-
-    <div class="post-content">
-        <h3 class="post-title truncated-title" *ngIf="post.title" (click)="openPostDetails($event)"
-            style="cursor: pointer;">{{ post.title }}</h3>
-        <p class="post-text" [class.truncated]="!isExpanded">
-            {{ post.content }}
-        </p>
-        <button type="button" class="read-more-btn"
-            *ngIf="post.content && (post.content.length > 100 || post.content.split('\n').length > 3)"
-            (click)="toggleExpand()">
-            {{ isExpanded ? 'Show less' : 'See more' }}
-        </button>
-    </div>
-
-    <!-- Media Content (Image or Video) -->
-    <!-- Media Content (Image or Video) -->
-    <div class="post-media" *ngIf="hasMedia" (click)="openPostDetails($event)" style="cursor: pointer;">
-        <div class="media-slider" id="slider-{{ post.id }}" (scroll)="onScroll($event)"
-            [class.has-multiple]="mediaItems.length > 1">
-            <div class="media-slide" *ngFor="let media of mediaItems; let i = index; trackBy: trackByMedia">
-                <!-- Video Player -->
-                <div *ngIf="media.isVideo" class="video-container" (click)="openMediaViewer(i)"
+        <div class="post-header">
+            <div class="post-author">
+                <!-- Changed post.author to post.user to match data model -->
+                <div class="post-avatar" *ngIf="post.user.avatar"
+                    [style.background-image]="'url(' + post.user.avatar + ')'" [routerLink]="['/profile', post.user.id]"
                     style="cursor: pointer;">
-                    <video class="post-video">
-                        <source [src]="media.url" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
                 </div>
+                <div class="post-avatar avatar-initials" *ngIf="!post.user.avatar"
+                    [routerLink]="['/profile', post.user.id]" style="cursor: pointer;">
+                    {{ getInitials(post.user.name) }}
+                </div>
+                <div class="post-author-info">
+                    <div class="author-row">
+                        <a [routerLink]="['/profile', post.user.id]" class="post-author-name"
+                            style="cursor: pointer;">{{
+                            post.user.name }}</a>
+                        <span class="post-author-handle">{{ post.user.handle }}</span>
+                    </div>
+                    <p class="post-meta">{{ post.user.role || 'User' }} • {{ (post.createdAt || post.time) |
+                        date:'short'
+                        }}</p>
+                </div>
+            </div>
+            <app-action-menu [items]="postActions" (actionSelected)="handleDropdownAction($event)"
+                buttonClass="post-menu-btn"></app-action-menu>
+        </div>
 
-                <!-- Image Viewer -->
-                <div *ngIf="!media.isVideo" class="post-image" (click)="openMediaViewer(i)" style="cursor: pointer;">
-                    <img [src]="media.url" alt="Post image" class="post-image-content"
-                        style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+        <div class="post-content">
+            <h3 class="post-title truncated-title" *ngIf="post.title" (click)="openPostDetails($event)"
+                style="cursor: pointer;">{{ post.title }}</h3>
+            <p class="post-text" [class.truncated]="!isExpanded">
+                {{ post.content }}
+            </p>
+            <button type="button" class="read-more-btn"
+                *ngIf="post.content && (post.content.length > 100 || post.content.split('\n').length > 3)"
+                (click)="toggleExpand()">
+                {{ isExpanded ? 'Show less' : 'See more' }}
+            </button>
+        </div>
+
+        <!-- Media Content (Image or Video) -->
+        <!-- Media Content (Image or Video) -->
+        <div class="post-media" *ngIf="hasMedia" (click)="openPostDetails($event)" style="cursor: pointer;">
+            <div class="media-slider" id="slider-{{ post.id }}" (scroll)="onScroll($event)"
+                [class.has-multiple]="mediaItems.length > 1">
+                <div class="media-slide" *ngFor="let media of mediaItems; let i = index; trackBy: trackByMedia">
+                    <!-- Video Player -->
+                    <div *ngIf="media.isVideo" class="video-container" (click)="openMediaViewer(i)"
+                        style="cursor: pointer;">
+                        <video class="post-video">
+                            <source [src]="media.url" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+
+                    <!-- Image Viewer -->
+                    <div *ngIf="!media.isVideo" class="post-image" (click)="openMediaViewer(i)"
+                        style="cursor: pointer;">
+                        <img [src]="media.url" alt="Post image" class="post-image-content"
+                            style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="slider-nav" *ngIf="mediaItems.length > 1">
+                <button class="slider-btn prev" (click)="prevSlide($event)" [style.opacity]="currentSlide === 0 ? 0 : 1"
+                    [disabled]="currentSlide === 0">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <button class="slider-btn next" (click)="nextSlide($event)"
+                    [style.opacity]="currentSlide === mediaItems.length - 1 ? 0 : 1"
+                    [disabled]="currentSlide === mediaItems.length - 1">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+
+            <!-- Dots -->
+            <div class="media-dots" *ngIf="mediaItems.length > 1">
+                <div class="dot" *ngFor="let item of mediaItems; let i = index" [class.active]="i === currentSlide">
                 </div>
             </div>
         </div>
 
-        <!-- Navigation Buttons -->
-        <div class="slider-nav" *ngIf="mediaItems.length > 1">
-            <button class="slider-btn prev" (click)="prevSlide($event)" [style.opacity]="currentSlide === 0 ? 0 : 1"
-                [disabled]="currentSlide === 0">
-                <span class="material-symbols-outlined">chevron_left</span>
-            </button>
-            <button class="slider-btn next" (click)="nextSlide($event)"
-                [style.opacity]="currentSlide === mediaItems.length - 1 ? 0 : 1"
-                [disabled]="currentSlide === mediaItems.length - 1">
-                <span class="material-symbols-outlined">chevron_right</span>
-            </button>
+        <div class="post-actions">
+            <div class="post-action-group">
+                <button type="button" class="post-action-btn" [class.liked]="post.isLiked" (click)="toggleLike()"
+                    aria-label="Like post">
+                    <span class="material-symbols-outlined" [class.filled]="post.isLiked">favorite</span>
+                    <span class="action-count">{{ post.likes }}</span>
+                </button>
+                <button class="post-action-btn" (click)="openPostDetails($event)">
+                    <span class="material-symbols-outlined">chat_bubble</span>
+                    <span class="action-count">{{ post.comments }}</span>
+                </button>
+            </div>
         </div>
-
-        <!-- Dots -->
-        <div class="media-dots" *ngIf="mediaItems.length > 1">
-            <div class="dot" *ngFor="let item of mediaItems; let i = index" [class.active]="i === currentSlide"></div>
-        </div>
-    </div>
-
-    <div class="post-actions">
-        <div class="post-action-group">
-            <button type="button" class="post-action-btn" [class.liked]="post.isLiked" (click)="toggleLike()"
-                aria-label="Like post">
-                <span class="material-symbols-outlined" [class.filled]="post.isLiked">favorite</span>
-                <span class="action-count">{{ post.likes }}</span>
-            </button>
-            <button class="post-action-btn" (click)="openPostDetails($event)">
-                <span class="material-symbols-outlined">chat_bubble</span>
-                <span class="action-count">{{ post.comments }}</span>
-            </button>
-        </div>
-    </div>
-</article>
+    </article>
+</ng-container>

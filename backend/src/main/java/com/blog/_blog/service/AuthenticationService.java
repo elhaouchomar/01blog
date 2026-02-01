@@ -82,6 +82,13 @@ public class AuthenticationService {
 
                 var user = repository.findByEmail(normalizedEmail)
                                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+                // Check for banned status AFTER successful credential verification
+                if (Boolean.TRUE.equals(user.getBanned())) {
+                        throw new IllegalArgumentException(
+                                        "Your account has been restricted. Please contact the administrator.");
+                }
+
                 var jwtToken = jwtService.generateToken(user);
                 return AuthenticationResponse.builder()
                                 .token(jwtToken)

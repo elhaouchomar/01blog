@@ -6,6 +6,7 @@ import { DataService } from '../../services/data.service';
 import { ModalService } from '../../services/modal.service';
 import { DropdownNotifComponent } from '../dropdown-notif/dropdown-notif';
 import { filter, debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
+import { getInitials } from '../../utils/string.utils';
 
 @Component({
     selector: 'app-navbar',

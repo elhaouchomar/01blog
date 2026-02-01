@@ -9,6 +9,7 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findByRecipientOrderByCreatedAtDesc(User recipient);
 
-    // Optional: count unread
-    long countByRecipientAndIsReadFalse(User recipient);
+    void deleteByRecipient(User recipient);
+
+    void deleteByActor(User actor);
 }

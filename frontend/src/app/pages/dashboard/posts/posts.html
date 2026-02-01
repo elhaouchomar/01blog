@@ -16,6 +16,12 @@
 
         <div class="d-flex gap-2 ms-auto">
             <select class="form-select border-0 bg-light rounded-3 fw-bold text-secondary" style="width: 160px;"
+                [ngModel]="statusFilter()" (change)="statusFilter.set($any($event.target).value)">
+                <option value="visible">Visible</option>
+                <option value="hidden">Hidden</option>
+                <option value="all">All</option>
+            </select>
+            <select class="form-select border-0 bg-light rounded-3 fw-bold text-secondary" style="width: 160px;"
                 [ngModel]="sortBy()" (change)="sortBy.set($any($event.target).value)">
                 <option value="newest">Newest First</option>
                 <option value="most-liked">Most Liked</option>
@@ -24,57 +30,133 @@
         </div>
     </div>
 
-    <!-- Posts Grid -->
-    <div class="vstack gap-3">
-        <div *ngFor="let post of pagination.paginatedData()"
-            class="d-flex align-items-center p-3 bg-white border rounded-4 transition-all hover-shadow">
+    <!-- Posts List -->
+    <div class="vstack gap-3 mb-4">
+        <div *ngFor="let post of filteredPosts()" class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <!-- Active Post Row -->
+            <div *ngIf="!post.hidden"
+                class="d-flex flex-column flex-md-row align-items-md-center p-4 bg-white border rounded-4 transition-all hover-shadow-lg gap-4">
 
-            <div class="d-flex align-items-center gap-3 flex-grow-1">
-                <div class="rounded-3 border overflow-hidden" style="width: 60px; height: 44px; background: #f8f9fa;">
-                    <img *ngIf="post.image" [src]="post.image" class="w-100 h-100 object-fit-cover">
-                    <div *ngIf="!post.image"
-                        class="w-100 h-100 d-flex align-items-center justify-content-center text-success opacity-25 bg-success bg-opacity-10">
-                        <span class="material-symbols-outlined fs-4">image</span>
+                <div class="d-flex align-items-center gap-4 flex-grow-1 min-w-0">
+                    <div class="rounded-4 border overflow-hidden flex-shrink-0 shadow-sm"
+                        style="width: 72px; height: 50px; background: #f8f9fa; cursor: pointer;"
+                        (click)="reviewPost(post)">
+                        <img *ngIf="post.image" [src]="post.image" class="w-100 h-100 object-fit-cover">
+                        <div *ngIf="!post.image"
+                            class="w-100 h-100 d-flex align-items-center justify-content-center text-success bg-success-subtle">
+                            <span class="material-symbols-outlined fs-2">image</span>
+                        </div>
+                    </div>
+                    <div class="min-w-0">
+                        <h4 class="h6 mb-1 fw-bold text-truncate text-dark hover-primary transition-all"
+                            style="cursor: pointer;" (click)="reviewPost(post)" title="{{ post.title }}">
+                            {{ post.title }}
+                        </h4>
+                        <div class="d-flex align-items-center gap-2">
+                            <p class="text-secondary small mb-0 text-truncate">by <span class="fw-medium text-dark">{{
+                                    post.user.name }}</span> • {{ post.createdAt | date:'MMM d, yyyy' }}</p>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h4 class="h6 mb-0 fw-bold line-clamp-1" title="{{ post.title }}">{{ post.title }}</h4>
-                    <p class="text-secondary small mb-0">by {{ post.user.name }} • {{ post.createdAt | date:'MMM d' }}
-                    </p>
+
+                <!-- Stats Section: Ultra-minimalist -->
+                <div class="d-flex align-items-center gap-4 justify-content-between justify-content-md-start px-md-4 border-md-start border-md-end w-100 w-md-auto"
+                    style="min-width: auto;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-1 px-2 py-1 bg-light rounded-pill border shadow-sm"
+                            title="Likes">
+                            <span class="material-symbols-outlined fs-6 text-danger">favorite</span>
+                            <span class="fw-bold small">{{ post.likes || 0 }}</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 px-2 py-1 bg-light rounded-pill border shadow-sm"
+                            title="Comments">
+                            <span class="material-symbols-outlined fs-6 text-primary">chat_bubble</span>
+                            <span class="fw-bold small">{{ post.comments || 0 }}</span>
+                        </div>
+                    </div>
+
+                    <div class="ms-md-auto">
+                        <div class="badge rounded-pill fw-bold py-2 px-3 border d-flex align-items-center gap-2 shadow-sm"
+                            [style.background-color]="(post.reportsCount ?? 0) > 0 ? 'rgba(253, 126, 20, 0.1)' : 'rgba(25, 135, 84, 0.1)'"
+                            [style.color]="(post.reportsCount ?? 0) > 0 ? '#fd7e14' : '#198754'" title="Reports Signal">
+                            <span class="material-symbols-outlined fs-6">{{ (post.reportsCount ?? 0) > 0 ? 'report' :
+                                'check_circle' }}</span>
+                            <span class="small">{{ post.reportsCount ?? 0 }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Section: Strictly No Eye/Edit Icons -->
+                <div class="d-flex gap-2 justify-content-end pt-3 pt-md-0">
+                    <div class="btn-group p-1 bg-light rounded-3 shadow-sm border">
+                        <!-- Post Visibility Logic: Cancel (Hide) -->
+                        <button class="btn btn-white btn-sm rounded-2 d-flex align-items-center px-2 py-1"
+                            [style.color]="'#fd7e14'" (click)="togglePostVisibility(post)" title="Hide Post">
+                            <span class="material-symbols-outlined fs-5">cancel</span>
+                        </button>
+
+                        <!-- Post Management: Delete -->
+                        <button class="btn btn-white btn-sm rounded-2 d-flex align-items-center px-2 py-1"
+                            [style.color]="'#ef4444'" (click)="deletePost(post)" title="Remove Post">
+                            <span class="material-symbols-outlined fs-5">delete</span>
+                        </button>
+                    </div>
+
+                    <div class="vr mx-2 d-none d-md-block"></div>
+
+                    <div class="btn-group p-1 bg-light rounded-3 shadow-sm border">
+                        <!-- Author Management: Ban/Unban -->
+                        <button class="btn btn-white btn-sm rounded-2 d-flex align-items-center px-2 py-1"
+                            [style.color]="post.user.banned ? '#198754' : '#ef4444'" (click)="toggleBan(post.user)"
+                            [title]="post.user.banned ? 'Unban Author' : 'Ban Author'">
+                            <span class="material-symbols-outlined fs-5">{{ post.user.banned ? 'check_circle' : 'block'
+                                }}</span>
+                        </button>
+
+                        <!-- Author Management: Final Deletion -->
+                        <button class="btn btn-white btn-sm rounded-2 d-flex align-items-center px-2 py-1"
+                            [style.color]="'#ef4444'" *ngIf="dataService.currentUser()?.isAdmin"
+                            (click)="deleteUser(post.user)" title="Purge Author Profile">
+                            <span class="material-symbols-outlined fs-5">person_remove</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div class="px-4 border-start d-none d-md-flex align-items-center gap-4" style="width: 250px;">
-                <div class="text-center">
-                    <p class="text-secondary small mb-0 fw-bold">Likes</p>
-                    <span class="fw-bold">{{ post.likes || 0 }}</span>
+            <!-- Hidden/Archived Post Row -->
+            <div *ngIf="post.hidden"
+                class="d-flex flex-column flex-md-row align-items-md-center p-4 border border-dashed rounded-4 transition-all gap-4"
+                style="background-color: #f8f9fa;">
+                <div class="d-flex align-items-center gap-4 flex-grow-1 min-w-0">
+                    <div class="rounded-4 border overflow-hidden flex-shrink-0 bg-white"
+                        style="width: 72px; height: 50px;">
+                        <div class="w-100 h-100 d-flex align-items-center justify-content-center text-secondary">
+                            <span class="material-symbols-outlined fs-2">archive</span>
+                        </div>
+                    </div>
+                    <div class="min-w-0">
+                        <h4 class="h6 mb-1 fw-bold text-truncate text-secondary italicized" style="cursor: pointer;"
+                            (click)="reviewPost(post)" title="{{ post.title }}">
+                            Hidden: {{ post.title }}
+                        </h4>
+                        <p class="text-secondary small mb-0 text-truncate">by {{ post.user.name }} • {{ post.createdAt |
+                            date:'MMM d' }}</p>
+                    </div>
                 </div>
-                <div class="text-center">
-                    <p class="text-secondary small mb-0 fw-bold">Comments</p>
-                    <span class="fw-bold">{{ post.comments || 0 }}</span>
-                </div>
-                <div class="ms-auto text-center">
-                    <span class="badge rounded-pill fw-bold py-2 px-3 bg-opacity-10"
-                        [class.bg-success.text-success]="!(post.reportsCount && post.reportsCount > 0)"
-                        [class.bg-warning.text-warning]="post.reportsCount && post.reportsCount > 0">
-                        {{ (post.reportsCount && post.reportsCount > 0) ? 'Flagged' : 'Safe' }}
-                    </span>
-                </div>
-            </div>
 
-            <div class="d-flex gap-2 ms-auto border-start ps-4">
-                <button class="btn btn-light btn-sm text-info hover-primary rounded-3 p-2" (click)="reviewPost(post)"
-                    title="View Details">
-                    <span class="material-symbols-outlined fs-5">visibility</span>
-                </button>
-                <button class="btn btn-light btn-sm text-primary hover-primary rounded-3 p-2" (click)="null"
-                    title="Edit Post">
-                    <span class="material-symbols-outlined fs-5">edit</span>
-                </button>
-                <button class="btn btn-light btn-sm text-danger hover-danger-bg rounded-3 p-2"
-                    (click)="deletePost(post)" title="Remove Post">
-                    <span class="material-symbols-outlined fs-5">delete</span>
-                </button>
+                <div class="d-flex gap-2 justify-content-end pt-3 pt-md-0">
+                    <div class="btn-group p-1 bg-white rounded-3 shadow-sm border">
+                        <!-- Restore visibility: Check Circle -->
+                        <button class="btn btn-light btn-sm text-info hover-primary-bg rounded-2 px-2 py-1"
+                            (click)="togglePostVisibility(post)" title="Unhide Post">
+                            <span class="material-symbols-outlined fs-5">check_circle</span>
+                        </button>
+                        <button class="btn btn-light btn-sm text-danger hover-danger-bg rounded-2 px-2 py-1"
+                            (click)="deletePost(post)" title="Remove Post">
+                            <span class="material-symbols-outlined fs-5">delete</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -84,9 +166,4 @@
 
         <app-db-feedback *ngIf="isLoading()" type="loading"></app-db-feedback>
     </div>
-
-    <!-- Footer & Pagination -->
-    <app-db-pagination *ngIf="filteredPosts().length > 0" [pagination]="pagination"
-        [totalItems]="filteredPosts().length" label="posts">
-    </app-db-pagination>
 </div>

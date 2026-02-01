@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
@@ -87,4 +87,43 @@ export class Network implements OnInit {
         const hidden = this.hiddenUserIds();
         return this.users().filter(u => !hidden.includes(u.id));
     });
+
+    isAdmin = computed(() => this.dataService.isAdmin());
+
+    deleteUser(user: User) {
+        import('sweetalert2').then(Swal => {
+            Swal.default.fire({
+                title: 'Delete User Account?',
+                text: `Are you sure you want to permanently delete ${user.name}? This action cannot be undone.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    this.dataService.deleteUserAction(user.id).subscribe({
+                        next: () => {
+                            Swal.default.fire('Deleted!', 'User has been removed.', 'success');
+                        },
+                        error: (err) => {
+                            const errorMsg = err.error?.message || 'Failed to delete user.';
+                            Swal.default.fire('Error', errorMsg, 'error');
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    @HostListener('window:scroll', [])
+    onWindowScroll() {
+        const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
+        const max = document.documentElement.scrollHeight;
+
+        if (pos >= max - 200) {
+            // Load more users if not already loading
+            // DataService.loadUsers currently loads all, but we could implement paging if needed
+            // For now, it's already fetching.
+        }
+    }
 }

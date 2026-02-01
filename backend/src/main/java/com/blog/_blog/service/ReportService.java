@@ -79,6 +79,9 @@ public class ReportService {
                 .reportedPostImage(report.getReportedPost() != null && !report.getReportedPost().getImages().isEmpty()
                         ? report.getReportedPost().getImages().get(0)
                         : null)
+                .reportedPostAuthor(
+                        report.getReportedPost() != null ? mapToUserSummary(report.getReportedPost().getAuthor())
+                                : null)
                 .status(report.getStatus().name())
                 .createdAt(report.getCreatedAt())
                 .build();

@@ -39,7 +39,7 @@ export class Login {
             .subscribe({
                 next: (response) => {
                     console.log('Login successful:', response);
-                    
+
                     // Show success message
                     Swal.fire({
                         icon: 'success',
@@ -53,6 +53,7 @@ export class Login {
                 },
                 error: (err) => {
                     const errorMessage = err.error?.message || 'Login failed. Please check your credentials.';
+                    this.error = errorMessage;
                     this.showErrorAlert(errorMessage);
                     console.error('Login error:', err);
                 }

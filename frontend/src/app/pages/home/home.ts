@@ -8,6 +8,7 @@ import { PostCardComponent } from '../../components/post-card/post-card';
 import { DataService } from '../../services/data.service';
 import { Post, User } from '../../models/data.models';
 import { ModalService } from '../../services/modal.service';
+import { HostListener } from '@angular/core';
 
 @Component({
   selector: 'app-home',
@@ -28,6 +29,7 @@ export class Home implements OnInit {
   currentPage = 0;
   pageSize = 10;
   isMoreAvailable = signal(true);
+  isFetchingMore = signal(false);
 
   constructor(
     public dataService: DataService,
@@ -42,15 +44,40 @@ export class Home implements OnInit {
   }
 
   loadPosts() {
-    this.dataService.loadPosts(this.currentPage, this.pageSize);
+    this.dataService.fetchPosts(this.currentPage, this.pageSize).subscribe(posts => {
+      this.isMoreAvailable.set(posts.length >= this.pageSize);
+    });
+  }
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    if (this.isFetchingMore() || !this.isMoreAvailable()) return;
+
+    const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
+    const max = document.documentElement.scrollHeight;
+
+    // Load more when 200px from bottom
+    if (pos >= max - 200) {
+      this.loadMore();
+    }
   }
 
   loadMore() {
+    this.isFetchingMore.set(true);
     this.currentPage++;
-    this.dataService.loadPosts(this.currentPage, this.pageSize, true);
+    this.dataService.fetchPosts(this.currentPage, this.pageSize, true).subscribe({
+      next: (posts) => {
+        if (posts.length < this.pageSize) {
+          this.isMoreAvailable.set(false);
+        }
+        this.isFetchingMore.set(false);
+      },
+      error: () => this.isFetchingMore.set(false)
+    });
   }
 
   get posts() {
     return this.dataService.posts();
   }
 }
+

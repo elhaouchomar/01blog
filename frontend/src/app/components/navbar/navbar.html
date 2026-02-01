@@ -118,11 +118,9 @@
                 <a class="nav-item" routerLink="/home" routerLinkActive="active"
                     [routerLinkActiveOptions]="{exact: true}">
                     <span class="material-symbols-outlined nav-item-icon">home</span>
-                    <span class="nav-item-text">Home</span>
                 </a>
                 <a class="nav-item" routerLink="/network" routerLinkActive="active">
                     <span class="material-symbols-outlined nav-item-icon">group</span>
-                    <span class="nav-item-text">Network</span>
                 </a>
                 <div class="notif-wrapper">
                     <button class="nav-item" (click)="toggleNotifications($event)"
@@ -135,7 +133,6 @@
                                 dataService.unreadNotificationsCount() }}
                             </span>
                         </div>
-                        <span class="nav-item-text-notifications">Notifications</span>
                     </button>
 
                     <app-dropdown-notif *ngIf="isNotificationsOpen" [notifications]="dataService.notifications()"

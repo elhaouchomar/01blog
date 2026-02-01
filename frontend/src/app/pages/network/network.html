@@ -12,9 +12,16 @@
             <div class="network-grid">
                 <div *ngFor="let user of displayUsers()" class="network-user-card" (click)="navigateToProfile(user.id)"
                     style="cursor: pointer;">
-                    <button class="btn-close-card" (click)="removeFromSuggestions(user); $event.stopPropagation()">
-                        <span class="material-symbols-outlined icon-small">close</span>
-                    </button>
+                    <div class="card-action-overlay">
+                        <button class="btn-action-round delete" *ngIf="isAdmin()"
+                            (click)="deleteUser(user); $event.stopPropagation()">
+                            <span class="material-symbols-outlined icon-small">person_remove</span>
+                        </button>
+                        <button class="btn-action-round close"
+                            (click)="removeFromSuggestions(user); $event.stopPropagation()">
+                            <span class="material-symbols-outlined icon-small">close</span>
+                        </button>
+                    </div>
 
                     <div class="network-avatar" *ngIf="user.avatar"
                         [style.background-image]="'url(' + user.avatar + ')'">

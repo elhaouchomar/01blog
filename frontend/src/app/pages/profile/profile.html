@@ -100,8 +100,17 @@
 
                 <app-post-card *ngFor="let post of posts" [post]="post"></app-post-card>
 
-                <div class="loading-state-premium" *ngIf="isLoading">
-                    <div class="spinner"></div>
+                <!-- Infinite Scroll Loading Indicator -->
+                <div class="infinite-scroll-status" *ngIf="isLoading" style="text-align: center; padding: 2rem;">
+                    <div class="spinner-border text-primary shadow-sm" role="status">
+                        <span class="visually-hidden">Loading more...</span>
+                    </div>
+                </div>
+
+                <div class="empty-state-premium" *ngIf="!isMoreAvailable && posts.length > 0"
+                    style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <span class="material-symbols-outlined fs-1 mb-2">auto_awesome</span>
+                    <p class="fw-bold">No more posts to show.</p>
                 </div>
             </div>
 

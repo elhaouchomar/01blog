@@ -3,9 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DataService } from '../../../services/data.service';
 import { ModalService } from '../../../services/modal.service';
-import { usePagination } from '../../../utils/pagination.utils';
 import { DbPageHeaderComponent } from '../../../components/dashboard/db-page-header';
-import { DbPaginationComponent } from '../../../components/dashboard/db-pagination';
 import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
 import { ReportCardComponent } from '../../../components/report-card/report-card';
 import Swal from 'sweetalert2';
@@ -13,7 +11,7 @@ import Swal from 'sweetalert2';
 @Component({
     selector: 'app-dashboard-reports',
     standalone: true,
-    imports: [CommonModule, RouterModule, ReportCardComponent, DbPageHeaderComponent, DbPaginationComponent, DbFeedbackComponent],
+    imports: [CommonModule, RouterModule, ReportCardComponent, DbPageHeaderComponent, DbFeedbackComponent],
     templateUrl: './reports.html',
     styleUrl: './reports.css',
 })
@@ -28,8 +26,7 @@ export class Reports implements OnInit {
         return reports.filter(r => r.status === filter);
     });
 
-    // Use standardized pagination logic
-    pagination = usePagination(this.filteredReports);
+    // List automatically stays in sync via computed filteredReports
 
     isLoading = computed(() => this.dataService.reports().length === 0 && !this.dataService.dashboardStats());
 
@@ -37,7 +34,6 @@ export class Reports implements OnInit {
 
     setStatusFilter(status: string) {
         this.statusFilter.set(status);
-        this.pagination.goToPage(1);
     }
 
     ngOnInit() {
@@ -82,13 +78,18 @@ export class Reports implements OnInit {
             },
             deleteUser: {
                 title: 'Remove User?',
-                text: 'This will permanently delete the user account and all their data.',
-                exec: () => this.dataService.deleteUserAction(report.reportedUser.id)
+                text: `This will permanently delete the user account and all their data.`,
+                exec: () => this.dataService.deleteUserAction((report.reportedUser || report.reportedPostAuthor).id)
             },
             banUser: {
                 title: 'Ban User?',
-                text: `Are you sure you want to ban ${report.reportedUser.name}?`,
-                exec: () => this.dataService.toggleBan(report.reportedUser.id)
+                text: `Are you sure you want to ban ${(report.reportedUser || report.reportedPostAuthor).name}?`,
+                exec: () => this.dataService.toggleBan((report.reportedUser || report.reportedPostAuthor).id)
+            },
+            toggleVisibility: {
+                title: 'Toggle Visibility?',
+                text: 'Change whether this post is visible to other users.',
+                exec: () => this.dataService.togglePostVisibility(report.reportedPostId)
             }
         };
 
@@ -128,6 +129,14 @@ export class Reports implements OnInit {
                 });
             }
         });
+    }
+
+    handleView(report: any) {
+        if (report.reportedPostId) {
+            this.viewPost(report.reportedPostId);
+        } else if (report.reportedUser) {
+            window.open(`/profile/${report.reportedUser.id}`, '_blank');
+        }
     }
 
     viewPost(postId: number) {

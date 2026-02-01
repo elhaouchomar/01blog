@@ -3,6 +3,10 @@ package com.blog._blog.service;
 import com.blog._blog.dto.UserDTO;
 import com.blog._blog.entity.NotificationType;
 import com.blog._blog.entity.User;
+import com.blog._blog.repository.CommentRepository;
+import com.blog._blog.repository.NotificationRepository;
+import com.blog._blog.repository.PostRepository;
+import com.blog._blog.repository.ReportRepository;
 import com.blog._blog.repository.UserRepository;
 import com.blog._blog.util.HtmlSanitizer;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +22,10 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final NotificationService notificationService;
-    private final com.blog._blog.repository.PostRepository postRepository;
+    private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
+    private final NotificationRepository notificationRepository;
+    private final ReportRepository reportRepository;
 
     @Transactional(readOnly = true)
     public List<UserDTO> getAllUsers(String currentUserEmail) {
@@ -32,6 +39,10 @@ public class UserService {
     public UserDTO updateProfile(String email, UserDTO updateRequest) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (Boolean.TRUE.equals(user.getBanned())) {
+            throw new RuntimeException("You are banned and cannot update your profile");
+        }
 
         if (updateRequest.getFirstname() != null)
             user.setFirstname(HtmlSanitizer.sanitizeText(updateRequest.getFirstname()));
@@ -55,6 +66,10 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (Boolean.TRUE.equals(user.getBanned())) {
+            throw new RuntimeException("You are banned and cannot subscribe");
+        }
+
         user.setSubscribed(!user.getSubscribed());
         User saved = userRepository.save(user);
         return convertToDTO(saved, saved);
@@ -64,6 +79,11 @@ public class UserService {
     public void followUser(String followerEmail, Integer targetUserId) {
         User follower = userRepository.findByEmail(followerEmail)
                 .orElseThrow(() -> new RuntimeException("Follower not found"));
+
+        if (Boolean.TRUE.equals(follower.getBanned())) {
+            throw new RuntimeException("You are banned and cannot follow users");
+        }
+
         User target = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new RuntimeException("Target user not found"));
 
@@ -113,6 +133,42 @@ public class UserService {
         User userToDelete = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // 1. Remove user from followers/following sets
+        for (User following : new java.util.HashSet<>(userToDelete.getFollowing())) {
+            following.getFollowers().remove(userToDelete);
+            userToDelete.getFollowing().remove(following);
+        }
+        for (User follower : new java.util.HashSet<>(userToDelete.getFollowers())) {
+            follower.getFollowing().remove(userToDelete);
+            userToDelete.getFollowers().remove(follower);
+        }
+
+        // 2. Clear likes from posts and comments
+        List<com.blog._blog.entity.Post> allPosts = postRepository.findAll();
+        for (com.blog._blog.entity.Post post : allPosts) {
+            if (post.getLikes().contains(userToDelete)) {
+                post.getLikes().remove(userToDelete);
+                postRepository.save(post);
+            }
+        }
+        List<com.blog._blog.entity.Comment> allComments = commentRepository.findAll();
+        for (com.blog._blog.entity.Comment comment : allComments) {
+            if (comment.getLikes().contains(userToDelete)) {
+                comment.getLikes().remove(userToDelete);
+                commentRepository.save(comment);
+            }
+        }
+
+        // 3. Delete notifications where user is recipient or actor
+        notificationRepository.deleteByRecipient(userToDelete);
+        notificationRepository.deleteByActor(userToDelete);
+
+        // 4. Delete reports by or against user, and reports against user's posts
+        reportRepository.deleteByReporter(userToDelete);
+        reportRepository.deleteByReportedUser(userToDelete);
+        reportRepository.deleteByReportedPostAuthor(userToDelete);
+
+        // 5. Posts and Comments are handled by CascadeType.ALL in User entity
         userRepository.delete(userToDelete);
     }
 

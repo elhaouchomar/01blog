@@ -36,9 +36,16 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostDTO> getAllPosts(String currentUserEmail, int page, int size) {
         User currentUser = currentUserEmail != null ? userRepository.findByEmail(currentUserEmail).orElse(null) : null;
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
 
-        return postRepository.findAllByOrderByCreatedAtDesc(org.springframework.data.domain.PageRequest.of(page, size))
-                .stream()
+        org.springframework.data.domain.Page<Post> postsPage;
+        if (currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN) {
+            postsPage = postRepository.findAllByOrderByCreatedAtDesc(pageable);
+        } else {
+            postsPage = postRepository.findByHiddenFalseOrderByCreatedAtDesc(pageable);
+        }
+
+        return postsPage.getContent().stream()
                 .map(post -> convertToDTO(post, currentUser))
                 .collect(Collectors.toList());
     }
@@ -51,10 +58,19 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostDTO> getUserPosts(Integer userId, String currentUserEmail, int page, int size) {
         User currentUser = currentUserEmail != null ? userRepository.findByEmail(currentUserEmail).orElse(null) : null;
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
 
-        return postRepository
-                .findByAuthorIdOrderByCreatedAtDesc(userId, org.springframework.data.domain.PageRequest.of(page, size))
-                .stream()
+        boolean isOwner = currentUser != null && currentUser.getId().equals(userId);
+        boolean isAdmin = currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN;
+
+        org.springframework.data.domain.Page<Post> postsPage;
+        if (isOwner || isAdmin) {
+            postsPage = postRepository.findByAuthorIdOrderByCreatedAtDesc(userId, pageable);
+        } else {
+            postsPage = postRepository.findByAuthorIdAndHiddenFalseOrderByCreatedAtDesc(userId, pageable);
+        }
+
+        return postsPage.getContent().stream()
                 .map(post -> convertToDTO(post, currentUser))
                 .collect(Collectors.toList());
     }
@@ -72,6 +88,10 @@ public class PostService {
     public PostDTO createPost(CreatePostRequest request, String email) {
         User author = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (Boolean.TRUE.equals(author.getBanned())) {
+            throw new RuntimeException("You are banned and cannot create posts");
+        }
 
         Post post = Post.builder()
                 .title(HtmlSanitizer.sanitizeText(request.getTitle()))
@@ -103,6 +123,10 @@ public class PostService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (Boolean.TRUE.equals(user.getBanned())) {
+            throw new RuntimeException("You are banned and cannot edit posts");
+        }
+
         // Only post owner can edit
         if (!post.getAuthor().getId().equals(user.getId())) {
             throw new RuntimeException("Unauthorized");
@@ -129,11 +153,41 @@ public class PostService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (Boolean.TRUE.equals(user.getBanned()) && user.getRole() != com.blog._blog.entity.Role.ADMIN) {
+            throw new RuntimeException("You are banned and cannot delete posts");
+        }
+
         if (!post.getAuthor().getId().equals(user.getId()) && user.getRole() != com.blog._blog.entity.Role.ADMIN) {
             throw new RuntimeException("Unauthorized");
         }
 
+        // Delete all reports associated with the post
+        reportRepository.deleteByReportedPostId(post.getId());
+
         postRepository.delete(post);
+    }
+
+    @Transactional
+    public PostDTO toggleHidden(Long postId, String email) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (Boolean.TRUE.equals(user.getBanned())) {
+            throw new RuntimeException("You are banned and cannot perform this action");
+        }
+
+        boolean isOwner = post.getAuthor().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == com.blog._blog.entity.Role.ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        post.setHidden(!post.isHidden());
+        Post saved = postRepository.save(post);
+        return convertToDTO(saved, user);
     }
 
     @Transactional
@@ -143,6 +197,10 @@ public class PostService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (Boolean.TRUE.equals(user.getBanned())) {
+            throw new RuntimeException("You are banned and cannot like posts");
+        }
 
         if (post.getLikes().contains(user)) {
             post.getLikes().remove(user);
@@ -163,6 +221,10 @@ public class PostService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (Boolean.TRUE.equals(user.getBanned())) {
+            throw new RuntimeException("You are banned and cannot like comments");
+        }
+
         if (comment.getLikes().contains(user)) {
             comment.getLikes().remove(user);
         } else {
@@ -181,6 +243,10 @@ public class PostService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (Boolean.TRUE.equals(user.getBanned())) {
+            throw new RuntimeException("You are banned and cannot comment");
+        }
 
         Comment comment = Comment.builder()
                 .content(HtmlSanitizer.sanitizeText(request.getContent()))
@@ -222,6 +288,7 @@ public class PostService {
                 .canEdit(isOwner)
                 .canDelete(isOwner || isAdmin)
                 .reportsCount((int) reportRepository.countByReportedPostId(post.getId()))
+                .hidden(post.isHidden())
                 .createdAt(post.getCreatedAt())
                 .build();
     }

@@ -7,9 +7,9 @@
     <div class="row g-4 mb-4" *ngIf="dataService.dashboardStats() as stats">
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm p-3 rounded-4 bg-white"
-                style="border-bottom: 4px solid #135bec !important;">
+                style="border-bottom: 4px solid #6f42c1 !important;">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="p-3 rounded-4 bg-primary bg-opacity-10 text-primary">
+                    <div class="p-3 rounded-4" style="background-color: #f3e8ff; color: #6f42c1;">
                         <span class="material-symbols-outlined fs-2">group</span>
                     </div>
                     <div>
@@ -22,9 +22,9 @@
 
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm p-3 rounded-4 bg-white"
-                style="border-bottom: 4px solid #52c41a !important;">
+                style="border-bottom: 4px solid #198754 !important;">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="p-3 rounded-4 bg-success bg-opacity-10 text-success">
+                    <div class="p-3 rounded-4" style="background-color: #dcfce7; color: #198754;">
                         <span class="material-symbols-outlined fs-2">article</span>
                     </div>
                     <div>
@@ -37,9 +37,9 @@
 
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm p-3 rounded-4 bg-white"
-                style="border-bottom: 4px solid #faad14 !important;">
+                style="border-bottom: 4px solid #fd7e14 !important;">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="p-3 rounded-4 bg-warning bg-opacity-10 text-warning">
+                    <div class="p-3 rounded-4" style="background-color: #fff7ed; color: #fd7e14;">
                         <span class="material-symbols-outlined fs-2">flag</span>
                     </div>
                     <div>
@@ -52,9 +52,9 @@
 
         <div class="col-sm-6 col-xl-3">
             <div class="card border-0 shadow-sm p-3 rounded-4 bg-white"
-                style="border-bottom: 4px solid #f5222d !important;">
+                style="border-bottom: 4px solid #ef4444 !important;">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="p-3 rounded-4 bg-danger bg-opacity-10 text-danger">
+                    <div class="p-3 rounded-4" style="background-color: #fee2e2; color: #ef4444;">
                         <span class="material-symbols-outlined fs-2">block</span>
                     </div>
                     <div>
@@ -86,8 +86,10 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="small fw-bold mb-0 line-clamp-1">{{ user.name }}</p>
-                                <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger px-2 py-1"
-                                    style="font-size: 10px;">{{ user.reportCount }} Reports</span>
+                                <span class="badge rounded-pill px-2 py-1"
+                                    style="font-size: 10px; background-color: #fff7ed; color: #fd7e14;">
+                                    {{ user.reportCount }} Reports
+                                </span>
                             </div>
                             <button
                                 class="btn btn-white btn-sm rounded-circle p-1 shadow-sm d-flex align-items-center justify-content-center"

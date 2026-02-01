@@ -2,8 +2,10 @@ package com.blog._blog.repository;
 
 import com.blog._blog.entity.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying; // Import Modifying
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional; // Import Transactional
 
 import java.util.List;
 
@@ -16,4 +18,18 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     @Query("SELECT r.reportedUser, COUNT(r) as reportCount FROM Report r WHERE r.reportedUser IS NOT NULL GROUP BY r.reportedUser ORDER BY reportCount DESC")
     List<Object[]> findMostReportedUsers();
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Report r WHERE r.reportedPost.id = :reportedPostId") // Explicit DELETE query
+    void deleteByReportedPostId(Long reportedPostId); // New method to delete reports by reportedPostId
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Report r WHERE r.reportedPost.id IN (SELECT p.id FROM Post p WHERE p.author = :author)")
+    void deleteByReportedPostAuthor(com.blog._blog.entity.User author);
+
+    void deleteByReporter(com.blog._blog.entity.User reporter);
+
+    void deleteByReportedUser(com.blog._blog.entity.User reportedUser);
 }

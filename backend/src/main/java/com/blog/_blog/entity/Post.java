@@ -58,6 +58,10 @@ public class Post {
     @Builder.Default
     private Set<User> likes = new HashSet<>();
 
+    @Builder.Default
+    @Column(columnDefinition = "boolean default false")
+    private boolean hidden = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

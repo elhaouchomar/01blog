@@ -4,16 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { DataService } from '../../../services/data.service';
 import { ModalService } from '../../../services/modal.service';
-import { usePagination } from '../../../utils/pagination.utils';
 import { DbPageHeaderComponent } from '../../../components/dashboard/db-page-header';
-import { DbPaginationComponent } from '../../../components/dashboard/db-pagination';
 import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, DbPageHeaderComponent, DbPaginationComponent, DbFeedbackComponent],
+  imports: [CommonModule, FormsModule, RouterModule, DbPageHeaderComponent, DbFeedbackComponent],
   templateUrl: './users.html',
   styleUrl: './users.css',
 })
@@ -53,8 +51,7 @@ export class Users implements OnInit {
     return filtered;
   });
 
-  // Use standardized pagination logic
-  pagination = usePagination(this.filteredUsers);
+  // Removed local pagination utility as we now use full-list scrolling
 
   isLoading = computed(() => this.dataService.allUsers().length === 0 && !this.dataService.dashboardStats());
 
@@ -68,12 +65,10 @@ export class Users implements OnInit {
 
   onSearch(event: any) {
     this.searchQuery.set(event.target.value);
-    this.pagination.goToPage(1); // Reset to page 1 using utility
   }
 
   setStatusFilter(status: string) {
     this.statusFilter.set(status);
-    this.pagination.goToPage(1); // Reset to page 1 using utility
   }
 
   toggleBan(user: any) {
@@ -97,7 +92,8 @@ export class Users implements OnInit {
             );
           },
           error: (err: any) => {
-            Swal.fire('Error', 'Failed to update user status.', 'error');
+            const errorMessage = err.error?.message || 'Failed to update user status.';
+            Swal.fire('Error', errorMessage, 'error');
           }
         });
       }
@@ -124,7 +120,8 @@ export class Users implements OnInit {
             );
           },
           error: (err) => {
-            Swal.fire('Error', 'Failed to delete user.', 'error');
+            const errorMessage = err.error?.message || 'Failed to delete user.';
+            Swal.fire('Error', errorMessage, 'error');
           }
         });
       }

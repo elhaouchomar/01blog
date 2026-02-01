@@ -52,6 +52,10 @@
     font-weight: 700;
     color: var(--text-main);
     text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
 }
 
 .post-author-name:hover {
@@ -75,6 +79,11 @@
     color: var(--text-main);
     margin-bottom: 0.5rem;
     line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .post-text {
@@ -255,6 +264,120 @@
     }
 }
 
+/* Hidden Post Card Styles */
+.hidden-post-card {
+    background-color: var(--surface-light);
+    border-radius: 0.75rem;
+    border: 1px solid var(--gray-200);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.hidden-post-thumbnail {
+    width: 60px;
+    height: 44px;
+    border-radius: 0.5rem;
+    background-color: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+}
+
+.hidden-post-thumbnail-icon {
+    color: var(--gray-500);
+    font-size: 1.5rem;
+}
+
+.hidden-post-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.hidden-post-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hidden-post-meta {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.hidden-post-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+    border-left: 1px solid var(--gray-200);
+    padding-left: 1rem;
+}
+
+.hidden-post-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.hidden-post-btn:hover {
+    background-color: var(--gray-50);
+}
+
+.hidden-post-btn.unhide {
+    color: var(--warning);
+}
+
+.hidden-post-btn.delete {
+    color: var(--danger);
+}
+
+/* Read More Button */
+.read-more-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 0.25rem;
+}
+
+.read-more-btn:hover {
+    text-decoration: underline;
+}
+
+/* Avatar initials fallback */
+.avatar-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary);
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
 /* Dark Mode Overrides */
 :host-context(.dark) .post-card {
     background-color: var(--surface-dark);
@@ -265,8 +388,77 @@
     color: var(--gray-300);
 }
 
+:host-context(.dark) .hidden-post-card {
+    background-color: var(--surface-dark);
+    border-color: var(--gray-700);
+}
+
+:host-context(.dark) .hidden-post-thumbnail {
+    background-color: var(--gray-800);
+    border-color: var(--gray-700);
+}
+
+:host-context(.dark) .hidden-post-thumbnail-icon {
+    color: var(--gray-400);
+}
+
+:host-context(.dark) .hidden-post-btn:hover {
+    background-color: var(--gray-800);
+}
+
+:host-context(.dark) .post-action-btn:hover {
+    background-color: var(--gray-800);
+}
+
 /* reusable Action Menu styling */
 ::ng-deep .post-menu-btn {
     padding: 0.25rem !important;
     color: var(--text-secondary) !important;
+}
+
+/* Hidden Post Styles */
+.post-card.is-hidden {
+    opacity: 0.85;
+    background-color: var(--gray-50);
+    border: 1px dashed var(--gray-300);
+}
+
+.hidden-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--warning-bg, #fff3cd);
+    color: var(--warning-text, #856404);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.hidden-badge span.material-symbols-outlined {
+    font-size: 1.25rem;
+}
+
+.btn-unhide {
+    margin-left: auto;
+    padding: 0.25rem 0.75rem;
+    background-color: white;
+    border: 1px solid var(--warning-text, #856404);
+    border-radius: 0.375rem;
+    color: var(--warning-text, #856404);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-unhide:hover {
+    background-color: var(--warning-text, #856404);
+    color: white;
+}
+
+:host-context(.dark) .post-card.is-hidden {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-color: var(--gray-700);
 }

@@ -74,7 +74,18 @@ public class User implements UserDetails {
 
     @ManyToMany(mappedBy = "following")
     @Builder.Default
+    @ToString.Exclude
     private java.util.Set<User> followers = new java.util.HashSet<>();
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @ToString.Exclude
+    private List<Post> posts = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @ToString.Exclude
+    private List<Comment> comments = new java.util.ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -108,6 +119,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return !banned;
+        return true;
     }
 }

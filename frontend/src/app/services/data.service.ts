@@ -1,7 +1,8 @@
 import { Injectable, signal, computed, WritableSignal, effect, Injector, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, map, finalize } from 'rxjs';
+import { Observable, tap, map, finalize, switchMap } from 'rxjs'; // Added switchMap
 import { User, Post, Notification, Comment, AuthenticationRequest, AuthenticationResponse, RegisterRequest, CreatePostRequest } from '../models/data.models';
+import Swal from 'sweetalert2';
 
 @Injectable({
     providedIn: 'root'
@@ -14,6 +15,7 @@ export class DataService {
     // Signals state
     private _currentUser = signal<User | null>(null);
     private _posts = signal<Post[]>([]);
+    private _managementPosts = signal<Post[]>([]); // Dedicated signal for dashboard/admin
     private _users = signal<User[]>([]);
     private _notifications = signal<Notification[]>([]);
     private _dashboardStats = signal<any>(null);
@@ -24,6 +26,7 @@ export class DataService {
     readonly currentUser = this._currentUser.asReadonly();
     readonly authChecked = this._authChecked.asReadonly();
     readonly posts = this._posts.asReadonly();
+    readonly managementPosts = this._managementPosts.asReadonly();
     readonly allUsers = this._users.asReadonly();
     readonly notifications = this._notifications.asReadonly();
     readonly dashboardStats = this._dashboardStats.asReadonly();
@@ -95,6 +98,7 @@ export class DataService {
             this.loadUsers();
             this.loadDashboardStats();
             this.loadReports();
+            this.loadManagementPosts();
         }
     }
 
@@ -104,6 +108,23 @@ export class DataService {
         window.location.href = '/login';
     }
 
+    private checkBanned(): boolean {
+        const user = this._currentUser();
+        if (user && user.banned) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Account Banned',
+                text: 'Your account has been restricted. You have been logged out.',
+                confirmButtonText: 'OK',
+                allowOutsideClick: false
+            }).then(() => {
+                this.logout();
+            });
+            return true;
+        }
+        return false;
+    }
+
     // --- Auth Methods ---
 
     login(request: AuthenticationRequest): Observable<AuthenticationResponse> {
@@ -111,8 +132,27 @@ export class DataService {
             .pipe(
                 tap(response => {
                     localStorage.setItem('auth_token', response.token);
-                    this.getProfile().subscribe(() => this.refreshAllData());
-                })
+                }),
+                switchMap(response => // Use switchMap to chain the getProfile observable
+                    this.getProfile().pipe(
+                        tap(user => {
+                            if (user.banned) {
+                                this.handleTokenExpiration(); // Clear token
+                                this.logout(); // Redirect to login
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Account Banned',
+                                    text: 'Your account has been banned. Please contact support for more information.',
+                                    confirmButtonText: 'OK'
+                                });
+                                // Throw an error to stop the observable chain and prevent refreshAllData
+                                throw new Error('User is banned');
+                            }
+                        }),
+                        tap(() => this.refreshAllData()), // Only refresh if not banned
+                        map(() => response) // Map back to the original AuthenticationResponse
+                    )
+                )
             );
     }
 
@@ -135,7 +175,22 @@ export class DataService {
         return this.http.get<any>(`${this.API_URL}/users/me`)
             .pipe(
                 map(dto => this.mapDTOToUser(dto)),
-                tap(user => this._currentUser.set(user))
+                tap(user => {
+                    this._currentUser.set(user);
+                    if (user.banned) { // Check banned status when profile is fetched
+                        this.handleTokenExpiration(); // Clear token
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Account Banned',
+                            text: 'Your account has been banned. You have been logged out.',
+                            confirmButtonText: 'OK',
+                            allowOutsideClick: false
+                        }).then(() => {
+                            this.logout(); // Redirect to login
+                        });
+                        throw new Error('User is banned'); // Stop further processing
+                    }
+                })
             );
     }
 
@@ -153,16 +208,35 @@ export class DataService {
     // --- Data Loading Methods (Update Signals) ---
 
     loadPosts(page: number = 0, size: number = 10, append: boolean = false) {
+        this.fetchPosts(page, size, append).subscribe();
+    }
+
+    private refreshPosts() {
+        this.loadPosts();
+        if (this.isAdmin()) {
+            this.loadManagementPosts();
+        }
+    }
+
+    loadManagementPosts(page: number = 0, size: number = 200) {
+        if (!this.isAdmin()) return;
         this.http.get<Post[]>(`${this.API_URL}/posts`, { params: { page: page.toString(), size: size.toString() } }).subscribe({
-            next: (posts) => {
+            next: (posts) => this._managementPosts.set(posts),
+            error: (err) => console.error('Failed to load management posts:', err)
+        });
+    }
+
+    fetchPosts(page: number = 0, size: number = 10, append: boolean = false): Observable<Post[]> {
+        if (this.checkBanned()) return new Observable(o => o.error('Banned'));
+        return this.http.get<Post[]>(`${this.API_URL}/posts`, { params: { page: page.toString(), size: size.toString() } }).pipe(
+            tap(posts => {
                 if (append) {
                     this._posts.update(current => [...current, ...posts]);
                 } else {
                     this._posts.set(posts);
                 }
-            },
-            error: (err) => console.error('Failed to load posts:', err)
-        });
+            })
+        );
     }
 
     loadUsers() {
@@ -202,32 +276,44 @@ export class DataService {
     // --- Action Methods (Mutation + Refresh) ---
 
     addPost(post: CreatePostRequest): Observable<Post> {
+        if (this.checkBanned()) return new Observable(o => o.error('Banned'));
         return this.http.post<Post>(`${this.API_URL}/posts`, post).pipe(
             tap(() => this.loadPosts())
         );
     }
 
     updatePost(id: number, post: CreatePostRequest): Observable<Post> {
+        if (this.checkBanned()) return new Observable(o => o.error('Banned'));
         return this.http.put<Post>(`${this.API_URL}/posts/${id}`, post).pipe(
-            tap(() => this.loadPosts())
+            tap(() => this.refreshPosts())
         );
     }
 
     deletePost(id: number): Observable<void> {
+        if (this.checkBanned()) return new Observable(o => o.error('Banned'));
         return this.http.delete<void>(`${this.API_URL}/posts/${id}`).pipe(
-            tap(() => this.loadPosts())
+            tap(() => this.refreshPosts())
+        );
+    }
+
+    togglePostVisibility(id: number): Observable<Post> {
+        if (this.checkBanned()) return new Observable(o => o.error('Banned'));
+        return this.http.put<Post>(`${this.API_URL}/posts/${id}/toggle-hidden`, {}).pipe(
+            tap(() => this.refreshPosts())
         );
     }
 
     toggleLike(postId: number): Observable<Post> {
+        if (this.checkBanned()) return new Observable(observer => observer.error('User is banned'));
         return this.http.post<Post>(`${this.API_URL}/posts/${postId}/like`, {}).pipe(
-            tap(() => this.loadPosts())
+            tap(() => this.refreshPosts())
         );
     }
 
     addComment(postId: number, content: string): Observable<Comment> {
+        if (this.checkBanned()) return new Observable(observer => observer.error('User is banned'));
         return this.http.post<Comment>(`${this.API_URL}/posts/${postId}/comment`, { content }).pipe(
-            tap(() => this.loadPosts())
+            tap(() => this.refreshPosts())
         );
     }
 
@@ -236,6 +322,7 @@ export class DataService {
     }
 
     toggleCommentLike(commentId: number): Observable<Comment> {
+        if (this.checkBanned()) return new Observable(observer => observer.error('User is banned'));
         return this.http.post<Comment>(`${this.API_URL}/posts/comment/${commentId}/like`, {});
     }
 
@@ -245,6 +332,7 @@ export class DataService {
         return this.http.delete<void>(`${this.API_URL}/users/${id}`).pipe(
             tap(() => {
                 this.loadUsers();
+                this.loadPosts();
                 this.loadDashboardStats();
             })
         );
@@ -311,6 +399,7 @@ export class DataService {
     }
 
     updateProfile(user: Partial<User>): Observable<User> {
+        if (this.checkBanned()) return new Observable(o => o.error('Banned'));
         return this.http.put<any>(`${this.API_URL}/users/me`, user).pipe(
             tap((userDTO: any) => {
                 const refreshed = this.mapDTOToUser(userDTO);
@@ -321,6 +410,7 @@ export class DataService {
     }
 
     toggleSubscribe(): Observable<User> {
+        if (this.checkBanned()) return new Observable(o => o.error('Banned'));
         return this.http.put<any>(`${this.API_URL}/users/me/subscribe`, {}).pipe(
             tap((userDTO: any) => {
                 const refreshed = this.mapDTOToUser(userDTO);
@@ -330,20 +420,24 @@ export class DataService {
     }
 
     followUser(userId: number): Observable<void> {
+        if (this.checkBanned()) return new Observable(o => o.error('Banned'));
         return this.http.post<void>(`${this.API_URL}/users/${userId}/follow`, {}).pipe(
             tap(() => this.getProfile().subscribe())
         );
     }
 
     search(query: string, filter: string = 'all', limit: number = 10): Observable<any> {
+        if (this.checkBanned()) return new Observable(o => o.error('Banned'));
         const params = { q: query, filter, limit: limit.toString() };
         return this.http.get<any>(`${this.API_URL}/search`, { params });
     }
 
     // --- Getters (for non-signal based data or specific fetches) ---
 
-    getUserPosts(userId: number): Observable<Post[]> {
-        return this.http.get<Post[]>(`${this.API_URL}/posts/user/${userId}`);
+    getUserPosts(userId: number, page: number = 0, size: number = 10): Observable<Post[]> {
+        return this.http.get<Post[]>(`${this.API_URL}/posts/user/${userId}`, {
+            params: { page: page.toString(), size: size.toString() }
+        });
     }
 
     getPost(id: number): Observable<Post> {
@@ -368,8 +462,8 @@ export class DataService {
             subscribed: dto.subscribed,
             isSubscribed: dto.subscribed,
             isFollowing: dto.isFollowing,
-            followersCount: dto.followersCount,
-            followingCount: dto.followingCount,
+            followersCount: dto.followersCount || 0,
+            followingCount: dto.followingCount || 0,
             banned: dto.banned,
             stats: {
                 posts: dto.postCount || 0,

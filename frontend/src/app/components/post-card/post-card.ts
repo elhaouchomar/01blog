@@ -1,5 +1,5 @@
 import { Component, Input, ChangeDetectorRef, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Post } from '../../models/data.models';
@@ -12,7 +12,7 @@ import Swal from 'sweetalert2';
 @Component({
     selector: 'app-post-card',
     standalone: true,
-    imports: [CommonModule, RouterModule, ActionMenuComponent],
+    imports: [CommonModule, RouterModule, ActionMenuComponent, DatePipe],
     templateUrl: './post-card.html',
     styleUrl: './post-card.css'
 })
@@ -37,6 +37,16 @@ export class PostCardComponent {
     ) {
         effect(() => {
             this.currentUser = this.dataService.currentUser();
+            // Debugging log for post visibility conditions
+            if (this.post) {
+                console.log(`Post ID: ${this.post.id}`);
+                console.log(`  post.hidden: ${this.post.hidden}`);
+                console.log(`  currentUser?.isAdmin: ${this.currentUser?.isAdmin}`);
+                console.log(`  currentUser?.id: ${this.currentUser?.id}`);
+                console.log(`  post.user.id: ${this.post.user.id}`);
+                console.log(`  Is current user owner?: ${this.currentUser?.id === this.post.user.id}`);
+                console.log(`  Show hidden UI condition: ${this.post.hidden && (this.currentUser?.isAdmin || this.currentUser?.id === this.post.user.id)}`);
+            }
         });
     }
 
@@ -127,14 +137,26 @@ export class PostCardComponent {
         return isOwner || isAdmin;
     }
 
+    get isAdmin(): boolean {
+        return !!(this.currentUser && (this.currentUser.isAdmin || this.currentUser.role === 'ADMIN'));
+    }
+
     get canReport(): boolean {
-        return this.currentUser && this.post.user && this.currentUser.id !== this.post.user.id;
+        return !!(this.currentUser && this.post.user && this.currentUser.id !== this.post.user.id);
     }
 
     get postActions(): ActionMenuItem[] {
+        const isAdmin = this.isAdmin;
         return [
             { id: 'edit', label: 'Edit Post', icon: 'edit', showIf: this.canEdit },
             { id: 'delete', label: 'Delete Post', icon: 'delete', class: 'delete', showIf: this.canDelete },
+            {
+                id: 'toggle-visibility',
+                label: this.post.hidden ? 'Unhide Post' : 'Hide Post',
+                icon: this.post.hidden ? 'visibility' : 'visibility_off',
+                showIf: isAdmin || this.canEdit
+            },
+            { id: 'delete-user', label: 'Delete User', icon: 'person_remove', class: 'delete', showIf: isAdmin && !this.canEdit },
             { id: 'report', label: 'Report Post', icon: 'flag', class: 'warning', showIf: this.canReport }
         ];
     }
@@ -143,6 +165,8 @@ export class PostCardComponent {
         if (actionId === 'edit') this.editPost();
         if (actionId === 'delete') this.deletePost();
         if (actionId === 'report') this.reportPost();
+        if (actionId === 'toggle-visibility') this.togglePostVisibility(null as any, this.post);
+        if (actionId === 'delete-user') this.deleteUserAccount();
     }
 
     toggleLike() {
@@ -152,7 +176,40 @@ export class PostCardComponent {
                 this.post = updatedPost;
                 this.cdr.detectChanges();
             },
-            error: (err) => console.error('Error liking post:', err)
+            error: (err) => this.handleError(err, 'like post')
+        });
+    }
+
+    togglePostVisibility(event: Event, post: any) {
+        if (event) event.stopPropagation();
+        const action = post.hidden ? 'unhide' : 'hide';
+        Swal.fire({
+            title: `${action.charAt(0).toUpperCase() + action.slice(1)} Post?`,
+            text: `Are you sure you want to ${action} "${post.title}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: `Yes, ${action} it!`
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.dataService.togglePostVisibility(post.id).subscribe({
+                    next: (updatedPost: Post) => {
+                        // Update the post's hidden status locally using the response if possible, or toggle
+                        this.post.hidden = updatedPost ? updatedPost.hidden : !this.post.hidden;
+                        this.cdr.detectChanges();
+                        Swal.fire({
+                            position: 'top-end',
+                            icon: 'success',
+                            title: `Post ${action}d`,
+                            showConfirmButton: false,
+                            timer: 1500,
+                            toast: true
+                        });
+                    },
+                    error: (err) => this.handleError(err, `${action} post`)
+                });
+            }
         });
     }
 
@@ -180,10 +237,7 @@ export class PostCardComponent {
                             'success'
                         );
                     },
-                    error: (err) => {
-                        console.error('Error deleting post:', err);
-                        Swal.fire('Error', 'Failed to delete post.', 'error');
-                    }
+                    error: (err) => this.handleError(err, 'delete post')
                 });
             }
         });
@@ -212,7 +266,7 @@ export class PostCardComponent {
                             showConfirmButton: false
                         });
                     },
-                    error: () => Swal.fire('Error', 'Failed to submit report.', 'error')
+                    error: (err) => this.handleError(err, 'submit report')
                 });
             }
         });
@@ -230,5 +284,47 @@ export class PostCardComponent {
             event.stopPropagation();
         }
         this.modalService.open('post-details', this.post);
+    }
+
+    deleteUserAccount() {
+        if (!this.post.user) return;
+        Swal.fire({
+            title: 'Delete User Account?',
+            text: `Are you sure you want to permanently delete ${this.post.user.name}? This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.dataService.deleteUserAction(this.post.user.id).subscribe({
+                    next: () => {
+                        Swal.fire('Deleted!', 'User has been removed.', 'success');
+                        // DataService.loadPosts will be called by deleteUserAction, which refreshes feed
+                    },
+                    error: (err) => this.handleError(err, 'delete user')
+                });
+            }
+        });
+    }
+
+    private handleError(err: any, action: string) {
+        console.error(`Error during ${action}:`, err);
+        const errorMessage = err.error?.message || err.message || `Failed to ${action}.`;
+
+        if (errorMessage.toLowerCase().includes('banned')) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Account Restricted',
+                text: 'You are banned and cannot perform this action.',
+                confirmButtonColor: '#d33'
+            }).then(() => {
+                if (this.currentUser?.banned) {
+                    this.dataService.logout();
+                }
+            });
+        } else {
+            Swal.fire('Error', errorMessage, 'error');
+        }
     }
 }

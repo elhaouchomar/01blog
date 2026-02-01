@@ -80,7 +80,12 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.25rem !important;
-    /* Override inline style */
+}
+
+@media (max-width: 480px) {
+    .name-grid-premium {
+        grid-template-columns: 1fr;
+    }
 }
 
 .form-group-premium {
