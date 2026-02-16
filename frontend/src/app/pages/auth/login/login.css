@@ -6,18 +6,14 @@
     width: 100%;
     min-height: 100vh;
     font-family: 'Lexend', sans-serif;
-    color: #111318;
-    background-color: #f6f6f8;
+    color: var(--text-main);
+    background-color: var(--background-light);
 }
 
 .login-page {
-    --primary: #135bec;
-    --primary-rgb: 19, 91, 236;
-    --background-light: #f6f6f8;
     --surface-light: #ffffff;
-    --border-light: #dbdfe6;
-    --text-main: #111318;
-    --text-sub: #616f89;
+    --border-light: var(--gray-200);
+    --text-sub: var(--text-secondary);
     --radius-lg: 0.5rem;
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
@@ -111,17 +107,19 @@
 .signup-btn-header {
     font-size: 0.875rem;
     font-weight: 700;
-    color: var(--primary);
-    background-color: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary, #0f766e);
+    background: linear-gradient(135deg, rgba(var(--primary-rgb, 15, 118, 110), 0.14), rgba(var(--primary-rgb, 15, 118, 110), 0.22));
+    border: 1px solid rgba(var(--primary-rgb, 15, 118, 110), 0.28);
     padding: 0.5rem 1rem;
     border-radius: var(--radius-lg);
     text-decoration: none;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.2s;
     cursor: pointer;
 }
 
 .signup-btn-header:hover {
-    background-color: rgba(var(--primary-rgb), 0.2);
+    background: linear-gradient(135deg, rgba(var(--primary-rgb, 15, 118, 110), 0.22), rgba(var(--primary-rgb, 15, 118, 110), 0.3));
+    transform: translateY(-1px);
 }
 
 /* --- Main Container (Card) --- */
@@ -179,7 +177,7 @@
 .overlay-gradient {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(19, 91, 236, 0.2), transparent);
+    background: linear-gradient(to top, rgba(var(--primary-rgb), 0.2), transparent);
     mix-blend-mode: overlay;
 }
 
@@ -451,20 +449,21 @@ label {
 .login-btn {
     width: 100%;
     height: 2.75rem;
-    background-color: var(--primary);
-    color: white;
-    border: none;
+    background: linear-gradient(135deg, var(--primary, #0f766e) 0%, var(--primary-dark, #115e59) 100%);
+    color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: var(--radius-lg);
     font-weight: 700;
     font-size: 0.9375rem;
     cursor: pointer;
     margin-top: 0.25rem;
     transition: all 0.2s;
-    box-shadow: 0 10px 15px -3px rgba(19, 91, 236, 0.2);
+    box-shadow: 0 10px 15px -3px rgba(var(--primary-rgb, 15, 118, 110), 0.2);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
 }
 
 .login-btn:hover {
-    background-color: #1150d4;
+    filter: brightness(1.04);
     transform: translateY(-1px);
 }
 
@@ -472,13 +471,16 @@ label {
     transform: translateY(0);
 }
 
-.error-message {
-    color: #dc2626;
-    background-color: #fef2f2;
-    border: 1px solid #fca5a5;
-    padding: 0.5rem;
-    border-radius: var(--radius-lg);
-    font-size: 0.8125rem;
+.login-btn:focus-visible {
+    outline: 3px solid rgba(var(--primary-rgb, 15, 118, 110), 0.35);
+    outline-offset: 2px;
+}
+
+.login-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Footer (Mobile only) */
@@ -495,33 +497,4 @@ label {
 .mobile-footer a {
     text-decoration: underline;
     color: inherit;
-}
-
-
-/* Add this to the end of login.css */
-.sweet-alert-popup {
-    font-family: 'Lexend', sans-serif;
-    border-radius: var(--radius-xl);
-    border: 1px solid var(--border-light);
-}
-
-.sweet-alert-title {
-    color: var(--text-main);
-    font-weight: 700;
-}
-
-.sweet-alert-content {
-    color: var(--text-sub);
-    font-family: 'Noto Sans', sans-serif;
-}
-
-.sweet-alert-confirm-btn {
-    font-weight: 700;
-    border-radius: var(--radius-lg);
-    padding: 0.5rem 1.5rem;
-}
-
-/* Remove the old error message styles since we're using SweetAlert */
-.error-message {
-    display: none; /* Hide the old error div since we're using SweetAlert */
 }

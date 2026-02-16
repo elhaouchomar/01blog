@@ -1,65 +1,128 @@
-/* Posts Management Specific Styles */
+.db-page-shell {
+    --db-card-space: clamp(0.85rem, 1.2vw, 1.1rem);
+}
 
-.select-box select {
-    padding: 0.6rem 2.5rem 0.6rem 1rem;
-    border-radius: 10px;
+.db-toolbar {
+    background: #fff;
     border: 1px solid var(--gray-200);
-    background: white;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 -960 960 960' width='24'%3E%3Cpath d='M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-}
-
-.dark .select-box select {
-    background-color: var(--gray-800);
-    border-color: var(--gray-700);
-    color: white;
-    filter: invert(1);
-}
-
-.preview-box:hover {
-    filter: brightness(0.9);
-}
-
-.content-text h4:hover {
-    color: var(--primary);
-    text-decoration: underline;
-}
-
-.empty-state {
+    border-radius: 1rem;
+    box-shadow: var(--shadow-sm);
+    padding: clamp(0.7rem, 1.5vw, 0.95rem);
+    margin-bottom: 1rem;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding: 4rem;
-    text-align: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
-.table-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 0;
+.db-toolbar--posts {
+    border-top: 3px solid #198754;
 }
 
-.pagination {
+.db-search-wrap {
+    position: relative;
+    flex: 1 1 280px;
+    max-width: 430px;
+}
+
+.db-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    transform: translateY(-50%);
+    color: #198754;
+}
+
+.db-toolbar-actions {
+    margin-left: auto;
     display: flex;
     gap: 0.5rem;
+    align-items: center;
 }
 
-.btn-pager {
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    border: 1px solid var(--gray-200);
-    background: white;
+.db-toolbar-select {
+    min-width: 160px;
+}
+
+.post-thumb {
+    width: clamp(52px, 6vw, 64px);
+    height: clamp(40px, 5vw, 48px);
+    background: #f8f9fa;
     cursor: pointer;
 }
 
-.dark .btn-pager {
-    background: var(--gray-800);
-    border-color: var(--gray-700);
-    color: white;
+.post-title {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+}
+
+.post-meta {
+    overflow-wrap: anywhere;
+}
+
+.db-table-card {
+    overflow: hidden;
+}
+
+.db-table-card .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.db-data-table {
+    table-layout: fixed;
+}
+
+.db-data-table th:nth-child(1) {
+    width: 34%;
+}
+
+.db-data-table th:nth-child(2) {
+    width: 15%;
+}
+
+.db-data-table th:nth-child(3) {
+    width: 18%;
+}
+
+.db-data-table th:nth-child(4) {
+    width: 12%;
+}
+
+.db-data-table th:nth-child(5) {
+    width: 11%;
+}
+
+.db-data-table th:nth-child(6) {
+    width: 20%;
+}
+
+@media (max-width: 768px) {
+    .db-toolbar-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .db-toolbar-select {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .db-data-table {
+        table-layout: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .db-data-table th,
+    .db-data-table td {
+        padding: 0.6rem 0.55rem !important;
+    }
+
+    .db-data-table .btn {
+        padding: 0.35rem !important;
+    }
 }

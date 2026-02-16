@@ -7,5 +7,6 @@ import { CommonModule } from '@angular/common';
     standalone: true,
     imports: [RouterLink, CommonModule],
     templateUrl: './not-found.html',
+    styleUrl: './not-found.css',
 })
 export class NotFound { }

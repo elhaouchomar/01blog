@@ -1,11 +1,15 @@
 package com.blog._blog.exception;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,6 +24,7 @@ import com.blog._blog.util.ApiResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+        private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
         @ExceptionHandler(HttpMessageNotReadableException.class)
         public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
@@ -116,6 +121,25 @@ public class GlobalExceptionHandler {
                                 .body(ApiResponse.error(ex.getMessage(), null));
         }
 
+        @ExceptionHandler(DataIntegrityViolationException.class)
+        public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+                String message = ex.getMostSpecificCause() != null
+                                ? ex.getMostSpecificCause().getMessage()
+                                : ex.getMessage();
+                String normalized = message == null ? "" : message.toLowerCase(Locale.ROOT);
+
+                if (normalized.contains("uk_reports_reporter_reported_user")
+                                || normalized.contains("uk_reports_reporter_reported_post")) {
+                        return ResponseEntity.status(HttpStatus.CONFLICT)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .body(ApiResponse.error("You have already submitted this report", null));
+                }
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(ApiResponse.error("Request violates data integrity constraints", null));
+        }
+
         @ExceptionHandler(FileValidationException.class)
         public ResponseEntity<ApiResponse<Void>> handleFileValidation(FileValidationException ex) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -181,11 +205,49 @@ public class GlobalExceptionHandler {
                                 .body(ApiResponse.error("Invalid parameter type", null));
         }
 
+        @ExceptionHandler(RuntimeException.class)
+        public ResponseEntity<ApiResponse<Void>> handleRuntime(RuntimeException ex) {
+                String message = sanitizeRuntimeMessage(ex.getMessage());
+                HttpStatus status = resolveRuntimeStatus(message);
+                log.warn("Runtime error handled with status {}: {}", status.value(), message);
+                return ResponseEntity.status(status)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(ApiResponse.error(message, null));
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiResponse<Void>> handleGeneric(Exception ex) {
-                System.out.println(ex.getMessage());
+                log.error("Unhandled exception", ex);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .body(ApiResponse.error(ex.getMessage(), null));
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(ApiResponse.error("An unexpected error occurred", null));
+        }
+
+        private HttpStatus resolveRuntimeStatus(String message) {
+                String normalized = message == null ? "" : message.toLowerCase(Locale.ROOT);
+                if (normalized.contains("unauthorized") || normalized.contains("access denied")) {
+                        return HttpStatus.FORBIDDEN;
+                }
+                if (normalized.contains("not found")) {
+                        return HttpStatus.NOT_FOUND;
+                }
+                return HttpStatus.BAD_REQUEST;
+        }
+
+        private String sanitizeRuntimeMessage(String message) {
+                if (message == null) {
+                        return "Request could not be processed";
+                }
+                String trimmed = message.trim();
+                String lowered = trimmed.toLowerCase(Locale.ROOT);
+                if (trimmed.isEmpty()
+                                || trimmed.length() > 180
+                                || trimmed.contains("\n")
+                                || lowered.contains("exception")
+                                || lowered.contains("trace")) {
+                        return "Request could not be processed";
+                }
+                return trimmed;
         }
 
 }

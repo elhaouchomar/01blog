@@ -500,8 +500,8 @@ app-dropdown-notif {
     background: white;
     border: 1px solid var(--gray-200);
     border-radius: 2rem;
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
+    padding: 0.38rem 0.72rem;
+    font-size: 0.78rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -509,7 +509,8 @@ app-dropdown-notif {
 }
 
 .filter-btn .material-symbols-outlined {
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 1;
 }
 
 .filter-btn:hover {
@@ -856,6 +857,17 @@ app-dropdown-notif {
         scrollbar-width: none;
     }
 
+    .mobile-search-bar .filter-btn {
+        padding: 0.35rem 0.65rem;
+        font-size: 0.75rem;
+        border-radius: 999px;
+        gap: 0.3rem;
+    }
+
+    .mobile-search-bar .filter-btn .material-symbols-outlined {
+        font-size: 14px;
+    }
+
     .mobile-search-bar .search-filters::-webkit-scrollbar {
         display: none;
     }
@@ -867,10 +879,13 @@ app-dropdown-notif {
 
     .navbar-right {
         gap: 0.5rem;
+        min-width: 0;
+        flex-shrink: 0;
     }
 
     .nav-links {
         gap: 0.25rem;
+        min-width: 0;
     }
 
     .nav-item {
@@ -912,6 +927,36 @@ app-dropdown-notif {
         min-width: 2.75rem;
         min-height: 2.75rem;
         cursor: pointer;
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 640px) {
+    .navbar-right {
+        gap: 0.15rem;
+    }
+
+    .nav-links {
+        gap: 0.1rem;
+    }
+
+    .nav-item {
+        min-width: 2.05rem;
+        min-height: 2.05rem;
+        padding: 0.2rem;
+    }
+
+    .nav-item .nav-item-icon,
+    .nav-item .nav-item-icon-notifications {
+        font-size: 1.2rem;
+        margin-bottom: 0;
+    }
+
+    .user-avatar {
+        width: 2.15rem;
+        height: 2.15rem;
+        min-width: 2.15rem;
+        min-height: 2.15rem;
     }
 }
 

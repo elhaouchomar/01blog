@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../services/data.service';
-import Swal from 'sweetalert2';
+import { MaterialAlertService } from '../../services/material-alert.service';
 
 @Component({
     selector: 'app-report-button',
@@ -55,40 +55,39 @@ export class ReportButtonComponent {
     @Input() targetName?: string;
     @Input() iconOnly: boolean = false;
 
-    constructor(private dataService: DataService) { }
+    constructor(
+        private dataService: DataService,
+        private alert: MaterialAlertService
+    ) { }
 
     handleReport(event: Event) {
         event.stopPropagation();
 
         const title = this.targetType.charAt(0).toUpperCase() + this.targetType.slice(1);
-        Swal.fire({
-            title: `Report ${title}?`,
-            text: `Are you sure you want to flag this ${this.targetType}? Our team will review it.`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Report',
-            confirmButtonColor: '#d33',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const reportedUserId = this.targetType === 'user' ? this.targetId : undefined;
-                const reportedPostId = this.targetType === 'post' ? this.targetId : undefined;
+        this.alert.promptReason({
+            title: `Report ${title}`,
+            subtitle: `Tell us why this ${this.targetType} should be reviewed.`,
+            placeholder: 'Describe the issue in detail (required)'
+        }).then((reason) => {
+            if (!reason) return;
 
-                this.dataService.reportContent('General Report', reportedUserId, reportedPostId).subscribe({
-                    next: () => {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Reported',
-                            text: 'Thank you for your report.',
-                            timer: 2000,
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false
-                        });
-                    },
-                    error: () => Swal.fire('Error', 'Failed to submit report.', 'error')
-                });
-            }
+            const reportedUserId = this.targetType === 'user' ? this.targetId : undefined;
+            const reportedPostId = this.targetType === 'post' ? this.targetId : undefined;
+
+            this.dataService.reportContent(reason, reportedUserId, reportedPostId).subscribe({
+                next: () => {
+                    this.alert.fire({
+                        icon: 'success',
+                        title: 'Reported',
+                        text: 'Thank you for your report.',
+                        timer: 2000,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
+                },
+                error: (err) => this.alert.fire('Error', err.error?.message || 'Failed to submit report.', 'error')
+            });
         });
     }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, HostListener } from '@angular/core';
+import { Component, OnInit, signal, computed, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
@@ -8,6 +8,7 @@ import { DataService } from '../../services/data.service';
 import { User } from '../../models/data.models';
 import { ModalService } from '../../services/modal.service';
 import { getInitials } from '../../utils/string.utils';
+import { MaterialAlertService } from '../../services/material-alert.service';
 
 @Component({
     selector: 'app-network',
@@ -17,6 +18,10 @@ import { getInitials } from '../../utils/string.utils';
     styleUrl: './network.css'
 })
 export class Network implements OnInit {
+    readonly pageSize = 12;
+    visibleCount = signal(this.pageSize);
+    private readonly scrollThreshold = 220;
+
     // 1. Use computed signal from DataService state instead of local array
     users = computed(() => {
         const allUsers = this.dataService.allUsers();
@@ -28,8 +33,22 @@ export class Network implements OnInit {
     constructor(
         private dataService: DataService,
         protected modalService: ModalService,
-        private router: Router
-    ) { }
+        private router: Router,
+        private alert: MaterialAlertService
+    ) {
+        effect(() => {
+            const total = this.users().length;
+            if (total === 0) {
+                this.visibleCount.set(this.pageSize);
+                return;
+            }
+
+            // Keep current visible count bounded to available users.
+            if (this.visibleCount() > total) {
+                this.visibleCount.set(total);
+            }
+        });
+    }
 
     ngOnInit() {
         // 2. Only fetch if cache is empty
@@ -57,15 +76,20 @@ export class Network implements OnInit {
 
         this.dataService.followUser(user.id).subscribe({
             next: () => {
-                // Success - DataService.followUser refreshes profile, maybe users too? 
-                // DataService.followUser calls getProfile().subscribe(). 
-                // It doesn't explicitly call loadUsers().
-                // I might need to trigger loadUsers() to sync the list or accept that we mutated the object.
+                this.alert.fire({
+                    icon: 'success',
+                    title: `Subscribed to ${user.name}`,
+                    toast: true,
+                    position: 'top-end',
+                    timer: 1600,
+                    showConfirmButton: false
+                });
             },
             error: (err) => {
                 console.error('Error subscribing to user:', err);
                 // Revert on error
                 user.isFollowing = false;
+                this.alert.fire('Error', err.error?.message || 'Failed to subscribe.', 'error');
             }
         });
     }
@@ -85,45 +109,52 @@ export class Network implements OnInit {
     // Updated computed to include hidden IDs check
     displayUsers = computed(() => {
         const hidden = this.hiddenUserIds();
-        return this.users().filter(u => !hidden.includes(u.id));
+        const filtered = this.users().filter(u => !hidden.includes(u.id));
+        return filtered.slice(0, this.visibleCount());
+    });
+
+    hasMoreUsers = computed(() => {
+        const hidden = this.hiddenUserIds();
+        const total = this.users().filter(u => !hidden.includes(u.id)).length;
+        return this.visibleCount() < total;
     });
 
     isAdmin = computed(() => this.dataService.isAdmin());
 
     deleteUser(user: User) {
-        import('sweetalert2').then(Swal => {
-            Swal.default.fire({
-                title: 'Delete User Account?',
-                text: `Are you sure you want to permanently delete ${user.name}? This action cannot be undone.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.dataService.deleteUserAction(user.id).subscribe({
-                        next: () => {
-                            Swal.default.fire('Deleted!', 'User has been removed.', 'success');
-                        },
-                        error: (err) => {
-                            const errorMsg = err.error?.message || 'Failed to delete user.';
-                            Swal.default.fire('Error', errorMsg, 'error');
-                        }
-                    });
-                }
-            });
+        this.alert.fire({
+            title: 'Delete User Account?',
+            text: `Are you sure you want to permanently delete ${user.name}? This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.dataService.deleteUserAction(user.id).subscribe({
+                    next: () => {
+                        this.alert.fire('Deleted!', 'User has been removed.', 'success');
+                    },
+                    error: (err) => {
+                        const errorMsg = err.error?.message || 'Failed to delete user.';
+                        this.alert.fire('Error', errorMsg, 'error');
+                    }
+                });
+            }
         });
     }
 
     @HostListener('window:scroll', [])
     onWindowScroll() {
-        const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
-        const max = document.documentElement.scrollHeight;
+        if (!this.hasMoreUsers()) return;
 
-        if (pos >= max - 200) {
-            // Load more users if not already loading
-            // DataService.loadUsers currently loads all, but we could implement paging if needed
-            // For now, it's already fetching.
+        const viewportBottom = window.innerHeight + window.scrollY;
+        const pageHeight = Math.max(
+            document.documentElement.scrollHeight,
+            document.body.scrollHeight
+        );
+
+        if (viewportBottom >= pageHeight - this.scrollThreshold) {
+            this.visibleCount.update(current => current + this.pageSize);
         }
     }
 }

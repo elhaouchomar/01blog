@@ -1,7 +1,32 @@
 /* Main Page Layout */
 .page-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 1rem;
     min-height: 100vh;
-    background-color: var(--background-light);
+    --home-accent: #0ea5e9;
+    --home-accent-2: #22c55e;
+    background:
+        radial-gradient(1100px 380px at 8% -8%, rgba(14, 165, 233, 0.16) 0%, transparent 60%),
+        radial-gradient(900px 320px at 95% -15%, rgba(34, 197, 94, 0.12) 0%, transparent 55%),
+        linear-gradient(180deg, #f8fbff 0%, #f5f9f8 100%);
+}
+
+.content-wrapper {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    align-items: start;
+    padding: 1rem 0;
+}
+
+@media (min-width: 1024px) {
+    .content-wrapper {
+        grid-template-columns: 280px minmax(0, 1fr) 320px;
+        gap: 1.5rem;
+        padding: 1.5rem 0;
+    }
 }
 
 /* Sidebar Columns */
@@ -27,6 +52,7 @@
 /* Main Feed Column */
 .main-feed {
     min-width: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -34,10 +60,10 @@
 
 /* --- Premium Create Post Card --- */
 .create-post-card {
-    background-color: var(--surface-light);
+    background: linear-gradient(160deg, #ffffff 0%, #f8fbff 100%);
     border-radius: 1.25rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--gray-100);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    border: 1px solid #e0eef8;
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
@@ -46,7 +72,7 @@
 }
 
 .create-post-card:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 16px 30px rgba(14, 165, 233, 0.16);
 }
 
 .widget-main {
@@ -82,8 +108,8 @@
 
 .widget-trigger-btn:hover {
     background-color: white;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(19, 91, 236, 0.1);
+    border-color: var(--home-accent);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
 }
 
 .placeholder-text {
@@ -93,7 +119,7 @@
 }
 
 .widget-trigger-btn .material-symbols-outlined {
-    color: var(--primary);
+    color: var(--home-accent);
     font-size: 1.5rem;
 }
 
@@ -119,7 +145,7 @@
 }
 
 .action-item:hover {
-    background-color: var(--gray-50);
+    background-color: #f0f8ff;
 }
 
 .action-icon-bg {

@@ -22,12 +22,12 @@
                     <div class="superior-category-tag" *ngIf="post.category">{{ post.category }}</div>
                     <h1 class="superior-title">{{ post.title }}</h1>
                     <div class="superior-meta-strip">
-                        <span class="meta-icon-group">
+                        <span class="meta-icon-group" *ngIf="post.readTime">
                             <span class="material-symbols-outlined">schedule</span>
-                            {{ post.readTime || '5 min read' }}
+                            {{ post.readTime }}
                         </span>
-                        <span class="meta-divider"></span>
-                        <span class="meta-icon-group">
+                        <span class="meta-divider" *ngIf="post.readTime && post.createdAt"></span>
+                        <span class="meta-icon-group" *ngIf="post.createdAt">
                             <span class="material-symbols-outlined">calendar_today</span>
                             {{ post.createdAt | date:'longDate' }}
                         </span>
@@ -40,11 +40,12 @@
                         <div class="media-filmstrip" [style.transform]="'translateX(-' + (currentSlide * 100) + '%)'">
                             <div class="media-frame" *ngFor="let media of mediaItems; trackBy: trackByMedia">
                                 <div *ngIf="media.isVideo" class="video-stage">
-                                    <video controls playsinline>
+                                    <video class="detail-video" controls playsinline>
                                         <source [src]="media.url" type="video/mp4">
                                     </video>
                                 </div>
-                                <img *ngIf="!media.isVideo" [src]="media.url" alt="Post content" loading="eager">
+                                <img *ngIf="!media.isVideo" [src]="media.url" alt="Post content" loading="eager"
+                                    class="detail-image">
                             </div>
                         </div>
                     </div>
@@ -60,8 +61,21 @@
                         </button>
 
                         <div class="arena-indicators">
-                            <span class="indicator-dot" *ngFor="let dot of mediaItems; let i = index"
-                                [class.active]="i === currentSlide" (click)="currentSlide = i"></span>
+                            <button type="button" class="indicator-dot" *ngFor="let dot of mediaItems; let i = index"
+                                [class.active]="i === currentSlide" (click)="goToSlide(i)"
+                                [attr.aria-label]="'Go to media ' + (i + 1)"></button>
+                        </div>
+
+                        <div class="media-pagination">
+                            <button type="button" class="pagination-btn" (click)="prevSlide()"
+                                [disabled]="currentSlide === 0">
+                                Previous
+                            </button>
+                            <span class="pagination-counter">{{ currentSlide + 1 }} / {{ mediaItems.length }}</span>
+                            <button type="button" class="pagination-btn" (click)="nextSlide()"
+                                [disabled]="currentSlide === mediaItems.length - 1">
+                                Next
+                            </button>
                         </div>
                     </ng-container>
                 </div>
@@ -84,7 +98,10 @@
                 <div class="sidebar-top-bar">
                     <div class="author-capsule" (click)="goToProfile(post.user.id)">
                         <div class="avatar-aura">
-                            <img [src]="post.user.avatar || 'assets/default-avatar.png'" alt="Author">
+                            <img *ngIf="post.user.avatar; else authorInitials" [src]="post.user.avatar" alt="Author">
+                            <ng-template #authorInitials>
+                                <div class="avatar-fallback">{{ getNameInitials(post.user.name) }}</div>
+                            </ng-template>
                         </div>
                         <div class="author-info">
                             <span class="author-name">{{ post.user.name }}</span>
@@ -107,7 +124,10 @@
                         <div *ngFor="let comment of comments; trackBy: trackByComment"
                             class="timeline-node comment-node">
                             <div class="node-avatar" (click)="goToProfile(comment.user.id)" style="cursor: pointer;">
-                                <img [src]="comment.user.avatar || 'assets/default-avatar.png'" alt="">
+                                <img *ngIf="comment.user.avatar; else commentInitials" [src]="comment.user.avatar" alt="">
+                                <ng-template #commentInitials>
+                                    <div class="node-avatar-fallback">{{ getNameInitials(comment.user.name) }}</div>
+                                </ng-template>
                             </div>
                             <div class="node-content">
                                 <div class="node-bubble">
@@ -116,13 +136,17 @@
                                     <span class="node-body">{{ comment.content }}</span>
                                 </div>
                                 <div class="node-meta">
-                                    <span>{{ comment.time || 'now' }}</span>
-                                    <span class="node-likes">{{ comment.likes || 0 }} likes</span>
+                                    <span *ngIf="comment.time">{{ comment.time }}</span>
+                                    <span class="node-likes">{{ comment.likes }} likes</span>
                                 </div>
                             </div>
                             <button class="node-heart" [class.active]="comment.isLiked"
                                 (click)="toggleCommentLike(comment)">
                                 <span class="material-symbols-outlined">favorite</span>
+                            </button>
+                            <button class="node-heart danger" *ngIf="canDeleteComment(comment)"
+                                (click)="deleteComment(comment)" title="Delete comment">
+                                <span class="material-symbols-outlined">delete</span>
                             </button>
                         </div>
                     </div>

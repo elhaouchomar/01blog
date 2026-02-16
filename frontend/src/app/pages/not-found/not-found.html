@@ -1,31 +1,27 @@
 <div class="error-page">
     <div class="error-content">
-        <!-- 404 Icon -->
         <div class="error-icon">
-            <span class="material-symbols-outlined text-red-500 dark:text-red-400" style="font-size: 80px;">error</span>
+            <span class="material-symbols-outlined error-icon-symbol">error</span>
         </div>
 
-        <!-- Error Message -->
         <h1 class="error-code">404</h1>
         <h2 class="error-title">Page Not Found</h2>
         <p class="error-message">
             Sorry, the page you're looking for doesn't exist or you don't have permission to access it.
         </p>
 
-        <!-- Action Buttons -->
         <div class="error-actions">
             <a routerLink="/home" class="btn btn-primary">
-                <span class="material-symbols-outlined" style="font-size: 20px;">home</span>
+                <span class="material-symbols-outlined error-action-icon">home</span>
                 Go Home
             </a>
             <button onclick="history.back()" class="btn btn-secondary">
-                <span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span>
+                <span class="material-symbols-outlined error-action-icon">arrow_back</span>
                 Go Back
             </button>
         </div>
 
-        <!-- Additional Help -->
-        <div style="margin-top: 3rem; font-size: 0.875rem; color: var(--gray-500);">
+        <div class="error-help">
             <p>If you believe this is an error, please contact support.</p>
         </div>
     </div>

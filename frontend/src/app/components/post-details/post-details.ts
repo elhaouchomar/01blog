@@ -6,7 +6,8 @@ import { Post, Comment } from '../../models/data.models';
 import { FormsModule } from '@angular/forms';
 import { ModalService } from '../../services/modal.service';
 import { ActionMenuComponent, ActionMenuItem } from '../action-menu/action-menu';
-import Swal from 'sweetalert2';
+import { getInitials } from '../../utils/string.utils';
+import { MaterialAlertService } from '../../services/material-alert.service';
 
 @Component({
   selector: 'app-post-details',
@@ -29,6 +30,7 @@ export class PostDetails implements OnInit {
   currentSlide = 0;
   isSubmitting = false;
   cachedMediaItems: { url: string, isVideo: boolean }[] = [];
+  private requestedMediaIndex = 0;
 
   // Pagination
   commentPageSize = 10;
@@ -39,14 +41,14 @@ export class PostDetails implements OnInit {
     public dataService: DataService,
     private router: Router,
     protected modalService: ModalService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alert: MaterialAlertService
   ) { }
 
   ngOnInit() {
-    this.currentSlide = 0;
-
     // If opened via modal service
     const modalData = this.modalService.modalData();
+    this.setRequestedMediaIndex(modalData?.initialMediaIndex);
     if (modalData) {
       if (modalData.id) {
         // 1. Try to find in cache first for immediate display
@@ -94,6 +96,21 @@ export class PostDetails implements OnInit {
     }
   }
 
+  private setRequestedMediaIndex(index: number | undefined) {
+    const parsed = Number(index);
+    this.requestedMediaIndex = Number.isInteger(parsed) && parsed >= 0 ? parsed : 0;
+    this.currentSlide = this.requestedMediaIndex;
+  }
+
+  private applySlideBounds() {
+    if (this.cachedMediaItems.length === 0) {
+      this.currentSlide = 0;
+      return;
+    }
+    const maxIndex = this.cachedMediaItems.length - 1;
+    this.currentSlide = Math.min(Math.max(this.currentSlide, 0), maxIndex);
+  }
+
   private computeMediaItems() {
     if (!this._post) {
       this.cachedMediaItems = [];
@@ -112,6 +129,7 @@ export class PostDetails implements OnInit {
     }
 
     this.cachedMediaItems = items;
+    this.applySlideBounds();
   }
 
   get mediaItems() { return this.cachedMediaItems; }
@@ -228,6 +246,13 @@ export class PostDetails implements OnInit {
     }
   }
 
+  goToSlide(index: number) {
+    this.currentSlide = index;
+    this.applySlideBounds();
+  }
+
+  getNameInitials = getInitials;
+
   toggleLike() {
     if (!this.post) return;
 
@@ -284,6 +309,60 @@ export class PostDetails implements OnInit {
     });
   }
 
+  canDeleteComment(comment: any): boolean {
+    if (!comment) return false;
+    if (comment.canDelete === true) return true;
+
+    const currentUser = this.dataService.currentUser();
+    if (!currentUser) return false;
+
+    const isCommentOwner = String(comment.user?.id) === String(currentUser.id);
+    const isPostOwner = this.post ? String(this.post.user?.id) === String(currentUser.id) : false;
+    const isAdmin = currentUser.isAdmin || currentUser.role === 'ADMIN';
+    return isCommentOwner || isPostOwner || isAdmin;
+  }
+
+  deleteComment(comment: any) {
+    if (!comment?.id || this.isSubmitting) return;
+    this.alert.fire({
+      title: 'Delete Comment?',
+      text: 'This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Delete'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      this.isSubmitting = true;
+      this.dataService.deleteComment(comment.id).subscribe({
+        next: () => {
+          this.allComments = this.allComments.filter(c => c.id !== comment.id);
+          this.updateDisplayedComments();
+          if (this.post) {
+            this.post.comments = Math.max(0, this.post.comments - 1);
+          }
+          this.alert.fire({
+            icon: 'success',
+            title: 'Comment deleted',
+            toast: true,
+            position: 'top-end',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          this.isSubmitting = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error deleting comment:', err);
+          this.alert.fire('Error', err.error?.message || 'Failed to delete comment.', 'error');
+          this.isSubmitting = false;
+        }
+      });
+    });
+  }
+
   toggleSubscribe() {
     if (!this.post || !this.post.user) return;
 
@@ -299,13 +378,20 @@ export class PostDetails implements OnInit {
 
     this.dataService.followUser(this.post.user.id).subscribe({
       next: () => {
-        // Refresh post to get new following state if any, or just local update
-        if (this.post && this.post.user) {
-          // Note: Post.user is UserSummaryDTO which doesn't have isFollowing.
-          // This is a model limitation. I'll just show success toast if I had one.
-        }
+        this.alert.fire({
+          icon: 'success',
+          title: 'Subscribed',
+          text: `You will now get updates from ${this.post?.user?.name || 'this user'}.`,
+          toast: true,
+          position: 'top-end',
+          timer: 1800,
+          showConfirmButton: false
+        });
       },
-      error: (err) => console.error('Error subscribing:', err)
+      error: (err) => {
+        console.error('Error subscribing:', err);
+        this.alert.fire('Error', err.error?.message || 'Failed to subscribe.', 'error');
+      }
     });
   }
 
@@ -353,7 +439,7 @@ export class PostDetails implements OnInit {
   deletePost() {
     if (!this.post) return;
 
-    Swal.fire({
+    this.alert.fire({
       title: 'Delete Post?',
       text: `Are you sure you want to permanently delete "${this.post.title}"?`,
       icon: 'warning',
@@ -367,7 +453,7 @@ export class PostDetails implements OnInit {
           next: () => {
             this.close();
             this.dataService.loadPosts();
-            Swal.fire(
+            this.alert.fire(
               'Deleted!',
               'Your post has been deleted.',
               'success'
@@ -375,7 +461,7 @@ export class PostDetails implements OnInit {
           },
           error: (err) => {
             console.error('Error deleting post:', err);
-            Swal.fire('Error', 'Failed to delete post.', 'error');
+            this.alert.fire('Error', 'Failed to delete post.', 'error');
           }
         });
       }
@@ -384,31 +470,27 @@ export class PostDetails implements OnInit {
 
   reportPost() {
     if (!this.post) return;
-    Swal.fire({
-      title: 'Report Content?',
-      text: 'Are you sure you want to flag this post? This helps us maintain a safe community.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, Report',
-      confirmButtonColor: '#d33',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.dataService.reportContent('General Report', undefined, this.post!.id).subscribe({
-          next: () => {
-            Swal.fire({
-              icon: 'success',
-              title: 'Reported',
-              text: 'Thank you for your report.',
-              timer: 2000,
-              toast: true,
-              position: 'top-end',
-              showConfirmButton: false
-            });
-          },
-          error: () => Swal.fire('Error', 'Failed to submit report.', 'error')
-        });
-      }
+    this.alert.promptReason({
+      title: 'Report Post',
+      subtitle: 'Describe why this post should be reviewed.',
+      placeholder: 'Enter report reason'
+    }).then((reason) => {
+      if (!reason) return;
+
+      this.dataService.reportContent(reason, undefined, this.post!.id).subscribe({
+        next: () => {
+          this.alert.fire({
+            icon: 'success',
+            title: 'Reported',
+            text: 'Thank you for your report.',
+            timer: 2000,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false
+          });
+        },
+        error: (err) => this.alert.fire('Error', err.error?.message || 'Failed to submit report.', 'error')
+      });
     });
   }
 

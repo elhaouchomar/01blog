@@ -47,6 +47,7 @@ export interface Comment {
     time: string;
     likes: number;
     isLiked?: boolean;
+    canDelete?: boolean;
 }
 
 export interface Post {
@@ -94,7 +95,7 @@ export interface Notification {
 }
 
 export interface AuthenticationResponse {
-    token: string;
+    token?: string;
 }
 
 export interface AuthenticationRequest {

@@ -1,17 +1,18 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { DataService } from '../../../services/data.service';
 import { ModalService } from '../../../services/modal.service';
 import { DbPageHeaderComponent } from '../../../components/dashboard/db-page-header';
 import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
-import { ReportCardComponent } from '../../../components/report-card/report-card';
-import Swal from 'sweetalert2';
+import { DbPaginationComponent } from '../../../components/dashboard/db-pagination';
+import { usePagination } from '../../../utils/pagination.utils';
+import { MaterialAlertService } from '../../../services/material-alert.service';
 
 @Component({
     selector: 'app-dashboard-reports',
     standalone: true,
-    imports: [CommonModule, RouterModule, ReportCardComponent, DbPageHeaderComponent, DbFeedbackComponent],
+    imports: [CommonModule, RouterModule, DbPageHeaderComponent, DbFeedbackComponent, DbPaginationComponent],
     templateUrl: './reports.html',
     styleUrl: './reports.css',
 })
@@ -26,25 +27,60 @@ export class Reports implements OnInit {
         return reports.filter(r => r.status === filter);
     });
 
-    // List automatically stays in sync via computed filteredReports
+    pagination = usePagination(() => this.filteredReports(), 6);
+    paginatedReports = computed(() => this.pagination.paginatedData());
+    emptyStateMessage = computed(() => {
+        const stats = this.dataService.dashboardStats();
+        if (!stats) return 'Everything is quiet. Communities are behaving well.';
+        if (stats.totalUsers === 0 && stats.totalPosts === 0) return 'No users and no posts yet.';
+        if (stats.totalUsers === 0) return 'No users yet.';
+        if (stats.totalPosts === 0) return 'No posts yet.';
+        return 'Everything is quiet. Communities are behaving well.';
+    });
 
     isLoading = computed(() => this.dataService.reports().length === 0 && !this.dataService.dashboardStats());
 
-    constructor(public dataService: DataService, private modalService: ModalService) { }
+    constructor(
+        public dataService: DataService,
+        private modalService: ModalService,
+        private alert: MaterialAlertService
+    ) {
+        effect(() => {
+            const totalPages = this.pagination.totalPages();
+            if (this.pagination.currentPage() > totalPages) {
+                this.pagination.goToPage(totalPages);
+            }
+        });
+    }
 
     setStatusFilter(status: string) {
         this.statusFilter.set(status);
+        this.pagination.goToPage(1);
     }
 
     ngOnInit() {
         if (this.dataService.reports().length === 0) {
             this.dataService.loadReports();
         }
+        if (!this.dataService.dashboardStats()) {
+            this.dataService.loadDashboardStats();
+        }
+    }
+
+    getTargetLabel(report: any): string {
+        if (report.reportedPostId) {
+            return report.reportedPostTitle || 'No post';
+        }
+        return report.reportedUser?.name || 'No user';
+    }
+
+    getReporterLabel(report: any): string {
+        return report.reporter?.name || 'No user';
     }
 
     updateStatus(report: any, status: string) {
         if (status === 'RESOLVED' || status === 'DISMISSED') {
-            Swal.fire({
+            this.alert.fire({
                 title: `${status === 'RESOLVED' ? 'Resolve' : 'Dismiss'} Report?`,
                 text: `Are you sure you want to mark this report as ${status.toLowerCase()}?`,
                 icon: 'question',
@@ -96,7 +132,7 @@ export class Reports implements OnInit {
         const config = actionConfigs[action];
         if (!config) return;
 
-        Swal.fire({
+        this.alert.fire({
             title: config.title,
             text: config.text,
             icon: 'warning',
@@ -108,9 +144,9 @@ export class Reports implements OnInit {
                 config.exec().subscribe({
                     next: () => {
                         this.performUpdate(report.id, 'RESOLVED');
-                        Swal.fire('Action Complete', 'The entity was managed and the report resolved.', 'success');
+                        this.alert.fire('Action Complete', 'The entity was managed and the report resolved.', 'success');
                     },
-                    error: (err: any) => Swal.fire('Error', 'Failed to complete action: ' + (err.error?.message || 'Server error'), 'error')
+                    error: (err: any) => this.alert.fire('Error', 'Failed to complete action: ' + (err.error?.message || 'Server error'), 'error')
                 });
             }
         });
@@ -119,7 +155,7 @@ export class Reports implements OnInit {
     private performUpdate(id: number, status: string) {
         this.dataService.updateReportStatus(id, status).subscribe({
             next: () => {
-                Swal.fire({
+                this.alert.fire({
                     position: 'top-end',
                     icon: 'success',
                     title: `Report ${status.toLowerCase()}`,

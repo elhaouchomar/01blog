@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { Component, HostListener } from '@angular/core';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs';
 
 import { DataService } from '../../services/data.service';
 import { ModalService } from '../../services/modal.service';
@@ -17,7 +18,13 @@ import { NavbarComponent } from '../../components/navbar/navbar';
 export class DashboardLayout {
   isSidebarOpen = false;
 
-  constructor(public modalService: ModalService, public dataService: DataService, private router: Router) { }
+  constructor(public modalService: ModalService, public dataService: DataService, private router: Router) {
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.isSidebarOpen = false;
+      });
+  }
 
   getPageTitle(): string {
     const url = this.router.url;
@@ -31,6 +38,19 @@ export class DashboardLayout {
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
+    if (this.isSidebarOpen) {
+      setTimeout(() => {
+        const nav = document.querySelector('.dashboard-sidebar .sidebar-nav') as HTMLElement | null;
+        if (nav) nav.scrollTop = 0;
+      }, 0);
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize() {
+    if (window.innerWidth > 1024 && this.isSidebarOpen) {
+      this.isSidebarOpen = false;
+    }
   }
 
   logout() {

@@ -13,12 +13,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
+    private static final Pattern NAME_PATTERN = Pattern.compile("^[A-Za-z\\-']{2,50}$");
+
 
     private final UserRepository userRepository;
     private final NotificationService notificationService;
@@ -45,15 +51,15 @@ public class UserService {
         }
 
         if (updateRequest.getFirstname() != null)
-            user.setFirstname(HtmlSanitizer.sanitizeText(updateRequest.getFirstname()));
+            user.setFirstname(sanitizeAndValidateName(updateRequest.getFirstname(), "First name"));
         if (updateRequest.getLastname() != null)
-            user.setLastname(HtmlSanitizer.sanitizeText(updateRequest.getLastname()));
+            user.setLastname(sanitizeAndValidateName(updateRequest.getLastname(), "Last name"));
         if (updateRequest.getBio() != null)
-            user.setBio(HtmlSanitizer.sanitizeText(updateRequest.getBio()));
+            user.setBio(sanitizeBio(updateRequest.getBio()));
         if (updateRequest.getAvatar() != null)
-            user.setAvatar(updateRequest.getAvatar());
+            user.setAvatar(sanitizeOptionalMediaUrl(updateRequest.getAvatar(), "Avatar"));
         if (updateRequest.getCover() != null)
-            user.setCover(updateRequest.getCover());
+            user.setCover(sanitizeOptionalMediaUrl(updateRequest.getCover(), "Cover"));
         if (updateRequest.getSubscribed() != null)
             user.setSubscribed(updateRequest.getSubscribed());
 
@@ -206,20 +212,71 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (updateRequest.getFirstname() != null)
-            userToUpdate.setFirstname(HtmlSanitizer.sanitizeText(updateRequest.getFirstname()));
+            userToUpdate.setFirstname(sanitizeAndValidateName(updateRequest.getFirstname(), "First name"));
         if (updateRequest.getLastname() != null)
-            userToUpdate.setLastname(HtmlSanitizer.sanitizeText(updateRequest.getLastname()));
+            userToUpdate.setLastname(sanitizeAndValidateName(updateRequest.getLastname(), "Last name"));
         if (updateRequest.getBio() != null)
-            userToUpdate.setBio(HtmlSanitizer.sanitizeText(updateRequest.getBio()));
+            userToUpdate.setBio(sanitizeBio(updateRequest.getBio()));
         if (updateRequest.getAvatar() != null)
-            userToUpdate.setAvatar(updateRequest.getAvatar());
+            userToUpdate.setAvatar(sanitizeOptionalMediaUrl(updateRequest.getAvatar(), "Avatar"));
         if (updateRequest.getCover() != null)
-            userToUpdate.setCover(updateRequest.getCover());
+            userToUpdate.setCover(sanitizeOptionalMediaUrl(updateRequest.getCover(), "Cover"));
         if (updateRequest.getRole() != null)
             userToUpdate.setRole(com.blog._blog.entity.Role.valueOf(updateRequest.getRole()));
 
         User saved = userRepository.save(userToUpdate);
         return convertToDTO(saved, requester);
+    }
+
+    private String sanitizeAndValidateName(String value, String fieldName) {
+        String sanitized = HtmlSanitizer.sanitizeAndTrimText(value);
+        if (sanitized == null || sanitized.isEmpty()) {
+            throw new IllegalArgumentException(fieldName + " is required");
+        }
+        if (!NAME_PATTERN.matcher(sanitized).matches()) {
+            throw new IllegalArgumentException(
+                    fieldName + " must contain only letters and be 2-50 characters");
+        }
+        return sanitized;
+    }
+
+    private String sanitizeBio(String value) {
+        String sanitized = HtmlSanitizer.sanitizeAndTrimText(value);
+        if (sanitized == null || sanitized.isEmpty()) {
+            return null;
+        }
+        if (sanitized.length() > 500) {
+            throw new IllegalArgumentException("Bio must be less than 500 characters");
+        }
+        return sanitized;
+    }
+
+    private String sanitizeOptionalMediaUrl(String value, String fieldName) {
+        String sanitized = HtmlSanitizer.sanitizeAndTrimText(value);
+        if (sanitized == null || sanitized.isEmpty()) {
+            return null;
+        }
+        if (sanitized.length() > 2048) {
+            throw new IllegalArgumentException(fieldName + " URL must be less than 2048 characters");
+        }
+        if (!isAllowedMediaUrl(sanitized)) {
+            throw new IllegalArgumentException(fieldName + " URL must be an http(s) URL or base64 image/video data URL");
+        }
+        return sanitized;
+    }
+
+    private boolean isAllowedMediaUrl(String value) {
+        String lowered = value.toLowerCase(Locale.ROOT);
+        if (lowered.startsWith("data:image/") || lowered.startsWith("data:video/")) {
+            return true;
+        }
+        try {
+            URI uri = new URI(value);
+            String scheme = uri.getScheme();
+            return "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
+        } catch (URISyntaxException ignored) {
+            return false;
+        }
     }
 
     public UserDTO convertToDTO(User user, User currentUser) {

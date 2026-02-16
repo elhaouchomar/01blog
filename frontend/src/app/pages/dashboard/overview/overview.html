@@ -66,6 +66,19 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-4" *ngIf="dataService.dashboardStats() as stats">
+        <div class="col-md-6" *ngIf="stats.totalUsers === 0">
+            <app-db-feedback type="empty" icon="group_off" iconColor="#0d6efd" title="No users"
+                message="No users found yet.">
+            </app-db-feedback>
+        </div>
+        <div class="col-md-6" *ngIf="stats.totalPosts === 0">
+            <app-db-feedback type="empty" icon="article" iconColor="#198754" title="No posts"
+                message="No posts found yet.">
+            </app-db-feedback>
+        </div>
+    </div>
+
     <div class="row g-4">
 
         <!-- Reported Users Section -->

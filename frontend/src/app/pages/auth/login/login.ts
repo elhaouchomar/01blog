@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../../services/data.service';
 import { CommonModule } from '@angular/common';
-import Swal from 'sweetalert2';
+import { MaterialAlertService } from '../../../services/material-alert.service';
 
 @Component({
     selector: 'app-login',
@@ -15,12 +15,17 @@ import Swal from 'sweetalert2';
 export class Login {
     email = '';
     password = '';
-    error = '';
     showPassword = false;
 
-    constructor(private dataService: DataService, private router: Router) { }
+    constructor(
+        private dataService: DataService,
+        private alert: MaterialAlertService
+    ) { }
 
     onLogin() {
+        this.email = this.sanitizeInput(this.email).toLowerCase();
+        this.password = this.password.trim();
+
         if (!this.email || !this.password) {
             this.showErrorAlert('Email and password are required.');
             return;
@@ -32,16 +37,13 @@ export class Login {
             return;
         }
 
-        // Clear any previous error
-        this.error = '';
-
         this.dataService.login({ email: this.email, password: this.password })
             .subscribe({
                 next: (response) => {
                     console.log('Login successful:', response);
 
                     // Show success message
-                    Swal.fire({
+                    this.alert.fire({
                         icon: 'success',
                         title: 'Login Successful!',
                         text: 'Welcome back to 01Blog!',
@@ -53,7 +55,6 @@ export class Login {
                 },
                 error: (err) => {
                     const errorMessage = err.error?.message || 'Login failed. Please check your credentials.';
-                    this.error = errorMessage;
                     this.showErrorAlert(errorMessage);
                     console.error('Login error:', err);
                 }
@@ -61,18 +62,21 @@ export class Login {
     }
 
     private showErrorAlert(message: string) {
-        Swal.fire({
+        this.alert.fire({
             icon: 'error',
             title: 'Oops...',
             text: message,
-            confirmButtonColor: '#135bec',
-            confirmButtonText: 'Try Again',
-            customClass: {
-                popup: 'sweet-alert-popup',
-                title: 'sweet-alert-title',
-                htmlContainer: 'sweet-alert-content',
-                confirmButton: 'sweet-alert-confirm-btn'
-            }
+            confirmButtonColor: '#0f766e',
+            confirmButtonText: 'Try Again'
         });
+    }
+
+    private sanitizeInput(value: string): string {
+        if (typeof document === 'undefined') {
+            return value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        }
+        const div = document.createElement('div');
+        div.innerHTML = value;
+        return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
     }
 }

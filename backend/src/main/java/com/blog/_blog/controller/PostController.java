@@ -16,10 +16,22 @@ public class PostController {
 
     private final PostService postService;
     private final com.blog._blog.service.FileStorageService fileStorageService;
+    private final com.blog._blog.repository.UserRepository userRepository;
 
     @PostMapping("/upload")
     public ResponseEntity<List<String>> uploadFiles(
-            @RequestParam("files") org.springframework.web.multipart.MultipartFile[] files) {
+            @RequestParam("files") org.springframework.web.multipart.MultipartFile[] files,
+            Authentication authentication) {
+        if (files == null || files.length == 0) {
+            throw new IllegalArgumentException("At least one file is required");
+        }
+
+        com.blog._blog.entity.User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (Boolean.TRUE.equals(user.getBanned())) {
+            throw new RuntimeException("You are banned and cannot upload media");
+        }
+
         List<String> fileNames = java.util.Arrays.stream(files)
                 .map(fileStorageService::storeFile)
                 .collect(java.util.stream.Collectors.toList());
@@ -102,5 +114,12 @@ public class PostController {
     public ResponseEntity<CommentDTO> toggleCommentLike(@PathVariable Long id, Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(postService.toggleCommentLike(id, email));
+    }
+
+    @DeleteMapping("/comment/{id}")
+    public ResponseEntity<Void> deleteComment(@PathVariable Long id, Authentication authentication) {
+        String email = authentication.getName();
+        postService.deleteComment(id, email);
+        return ResponseEntity.ok().build();
     }
 }

@@ -8,7 +8,6 @@ import { EditPost } from './components/edit-post/edit-post';
 import { PostDetails } from './components/post-details/post-details';
 import { CreateUser } from './components/create-user/create-user';
 import { EditProfileModal } from './components/edit-profile/edit-profile';
-import { ToastContainer } from './components/toast-container/toast-container';
 import { AdminEditUser } from './components/admin-edit-user/admin-edit-user';
 
 import { DataService } from './services/data.service';
@@ -23,7 +22,6 @@ import { DataService } from './services/data.service';
     PostDetails,
     CreateUser,
     EditProfileModal,
-    ToastContainer,
     AdminEditUser
   ],
   templateUrl: './app.html'
@@ -31,12 +29,6 @@ import { DataService } from './services/data.service';
 export class App {
   protected readonly title = signal('angular-app');
   constructor(protected modalService: ModalService, private dataService: DataService, private router: Router) {
-    if (localStorage.getItem('auth_token')) {
-      this.dataService.getProfile().subscribe({
-        error: () => localStorage.removeItem('auth_token') // Clear invalid tokens
-      });
-    }
-
     // Handle deep links for posts (unify modal experience)
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)

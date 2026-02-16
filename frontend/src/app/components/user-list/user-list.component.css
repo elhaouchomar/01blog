@@ -73,7 +73,7 @@
 }
 
 .btn-primary {
-    background-color: #135bec;
+    background-color: var(--primary);
     color: white;
 }
 

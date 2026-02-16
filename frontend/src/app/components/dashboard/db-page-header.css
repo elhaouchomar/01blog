@@ -1,0 +1,93 @@
+.db-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: clamp(0.7rem, 1.5vw, 0.9rem) clamp(0.75rem, 1.8vw, 1.15rem);
+    border-bottom: 1px solid var(--gray-200);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.92));
+    border-radius: 1rem;
+}
+
+.db-page-header__main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.db-page-header__icon {
+    width: 42px;
+    height: 42px;
+    border: 1px solid;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.db-page-header__icon .material-symbols-outlined {
+    font-size: 1.7rem;
+}
+
+.db-page-header__title {
+    margin: 0;
+    font-size: clamp(1.1rem, 2.1vw, 1.35rem);
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--text-main);
+    overflow-wrap: anywhere;
+}
+
+.db-page-header__subtitle {
+    margin: 0.25rem 0 0;
+    font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+    color: var(--text-secondary);
+    max-width: 72ch;
+    overflow-wrap: anywhere;
+}
+
+.db-page-header__actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.db-page-header__action-btn {
+    border: 0;
+    border-radius: 0.75rem;
+    background: var(--primary);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: clamp(0.45rem, 1vw, 0.55rem) clamp(0.75rem, 1.3vw, 0.9rem);
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.db-page-header__action-btn:hover {
+    background: var(--primary-hover);
+}
+
+@media (max-width: 576px) {
+    .db-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .db-page-header__icon {
+        display: none;
+    }
+
+    .db-page-header__actions,
+    .db-page-header__action-btn {
+        width: 100%;
+    }
+
+    .db-page-header__action-btn {
+        justify-content: center;
+    }
+}

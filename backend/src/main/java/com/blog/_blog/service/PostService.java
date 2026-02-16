@@ -11,9 +11,12 @@ import com.blog._blog.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import com.blog._blog.entity.NotificationType;
@@ -81,6 +84,13 @@ public class PostService {
 
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        boolean isOwner = currentUser != null && post.getAuthor().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN;
+        if (post.isHidden() && !isOwner && !isAdmin) {
+            throw new RuntimeException("Post not found");
+        }
+
         return convertToDTO(post, currentUser);
     }
 
@@ -93,13 +103,20 @@ public class PostService {
             throw new RuntimeException("You are banned and cannot create posts");
         }
 
+        String sanitizedTitle = sanitizeRequiredText(request.getTitle(), "Title", 3, 150);
+        String sanitizedContent = sanitizeRequiredContent(request.getContent(), 3);
+        String sanitizedCategory = sanitizeOptionalText(request.getCategory(), 100);
+        String sanitizedReadTime = sanitizeOptionalText(request.getReadTime(), 50);
+        List<String> sanitizedImages = sanitizeMediaUrlList(request.getImages(), 2048);
+        List<String> sanitizedTags = sanitizeStringList(request.getTags(), 60);
+
         Post post = Post.builder()
-                .title(HtmlSanitizer.sanitizeText(request.getTitle()))
-                .content(HtmlSanitizer.sanitize(request.getContent()))
-                .category(HtmlSanitizer.sanitizeText(request.getCategory()))
-                .readTime(request.getReadTime())
-                .images(request.getImages())
-                .tags(request.getTags())
+                .title(sanitizedTitle)
+                .content(sanitizedContent)
+                .category(sanitizedCategory)
+                .readTime(sanitizedReadTime)
+                .images(sanitizedImages)
+                .tags(sanitizedTags)
                 .author(author)
                 .build();
 
@@ -107,9 +124,13 @@ public class PostService {
 
         // Notify followers
         if (author.getFollowers() != null) {
-            author.getFollowers().forEach(follower -> {
-                notificationService.createNotification(follower, author, NotificationType.NEW_POST, saved.getId());
-            });
+            author.getFollowers().stream()
+                    .filter(follower -> Boolean.TRUE.equals(follower.getSubscribed()))
+                    .forEach(follower -> notificationService.createNotification(
+                            follower,
+                            author,
+                            NotificationType.NEW_POST,
+                            saved.getId()));
         }
 
         return convertToDTO(saved, author);
@@ -132,13 +153,20 @@ public class PostService {
             throw new RuntimeException("Unauthorized");
         }
 
+        String sanitizedTitle = sanitizeRequiredText(request.getTitle(), "Title", 3, 150);
+        String sanitizedContent = sanitizeRequiredContent(request.getContent(), 3);
+        String sanitizedCategory = sanitizeOptionalText(request.getCategory(), 100);
+        String sanitizedReadTime = sanitizeOptionalText(request.getReadTime(), 50);
+        List<String> sanitizedImages = sanitizeMediaUrlList(request.getImages(), 2048);
+        List<String> sanitizedTags = sanitizeStringList(request.getTags(), 60);
+
         // Update post fields
-        post.setTitle(HtmlSanitizer.sanitizeText(request.getTitle()));
-        post.setContent(HtmlSanitizer.sanitize(request.getContent()));
-        post.setCategory(HtmlSanitizer.sanitizeText(request.getCategory()));
-        post.setReadTime(request.getReadTime());
-        post.setImages(request.getImages());
-        post.setTags(request.getTags());
+        post.setTitle(sanitizedTitle);
+        post.setContent(sanitizedContent);
+        post.setCategory(sanitizedCategory);
+        post.setReadTime(sanitizedReadTime);
+        post.setImages(sanitizedImages);
+        post.setTags(sanitizedTags);
         post.setUpdatedAt(LocalDateTime.now());
 
         Post saved = postRepository.save(post);
@@ -237,6 +265,29 @@ public class PostService {
     }
 
     @Transactional
+    public void deleteComment(Long commentId, String email) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (Boolean.TRUE.equals(user.getBanned()) && user.getRole() != com.blog._blog.entity.Role.ADMIN) {
+            throw new RuntimeException("You are banned and cannot delete comments");
+        }
+
+        boolean isCommentOwner = comment.getAuthor().getId().equals(user.getId());
+        boolean isPostOwner = comment.getPost() != null && comment.getPost().getAuthor().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == com.blog._blog.entity.Role.ADMIN;
+
+        if (!isCommentOwner && !isPostOwner && !isAdmin) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        commentRepository.delete(comment);
+    }
+
+    @Transactional
     public CommentDTO addComment(Long postId, CreateCommentRequest request, String email) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
@@ -248,8 +299,10 @@ public class PostService {
             throw new RuntimeException("You are banned and cannot comment");
         }
 
+        String sanitizedComment = sanitizeRequiredText(request.getContent(), "Comment", 1, 1000);
+
         Comment comment = Comment.builder()
-                .content(HtmlSanitizer.sanitizeText(request.getContent()))
+                .content(sanitizedComment)
                 .author(user)
                 .post(post)
                 .build();
@@ -262,6 +315,14 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<CommentDTO> getComments(Long postId, String currentUserEmail) {
         User currentUser = currentUserEmail != null ? userRepository.findByEmail(currentUserEmail).orElse(null) : null;
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        boolean isOwner = currentUser != null && post.getAuthor().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN;
+        if (post.isHidden() && !isOwner && !isAdmin) {
+            throw new RuntimeException("Post not found");
+        }
 
         return commentRepository.findByPostIdOrderByCreatedAtDesc(postId).stream()
                 .map(comment -> convertToCommentDTO(comment, currentUser))
@@ -294,6 +355,11 @@ public class PostService {
     }
 
     private CommentDTO convertToCommentDTO(Comment comment, User currentUser) {
+        boolean isOwner = currentUser != null && comment.getAuthor().getId().equals(currentUser.getId());
+        boolean isPostOwner = currentUser != null && comment.getPost() != null
+                && comment.getPost().getAuthor().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN;
+
         return CommentDTO.builder()
                 .id(comment.getId())
                 .user(convertToUserSummary(comment.getAuthor()))
@@ -301,6 +367,7 @@ public class PostService {
                 .time(formatTimeAgo(comment.getCreatedAt()))
                 .likes(comment.getLikes().size())
                 .isLiked(currentUser != null && comment.getLikes().contains(currentUser))
+                .canDelete(isOwner || isPostOwner || isAdmin)
                 .createdAt(comment.getCreatedAt())
                 .build();
     }
@@ -313,6 +380,82 @@ public class PostService {
                 .avatar(user.getAvatar())
                 .role(user.getRole().name())
                 .build();
+    }
+
+    private String sanitizeRequiredText(String value, String fieldName, int minLen, int maxLen) {
+        String sanitized = HtmlSanitizer.sanitizeAndTrimText(value);
+        if (sanitized == null || sanitized.isEmpty()) {
+            throw new IllegalArgumentException(fieldName + " is required");
+        }
+        if (sanitized.length() < minLen || sanitized.length() > maxLen) {
+            throw new IllegalArgumentException(
+                    fieldName + " must be between " + minLen + " and " + maxLen + " characters");
+        }
+        return sanitized;
+    }
+
+    private String sanitizeRequiredContent(String value, int minLen) {
+        String sanitizedHtml = HtmlSanitizer.sanitize(value);
+        String plainText = HtmlSanitizer.sanitizeAndTrimText(value);
+        if (plainText == null || plainText.isEmpty()) {
+            throw new IllegalArgumentException("Content is required");
+        }
+        if (plainText.length() < minLen) {
+            throw new IllegalArgumentException("Content must be at least " + minLen + " characters");
+        }
+        return sanitizedHtml != null ? sanitizedHtml.trim() : null;
+    }
+
+    private String sanitizeOptionalText(String value, int maxLen) {
+        String sanitized = HtmlSanitizer.sanitizeAndTrimText(value);
+        if (sanitized == null || sanitized.isEmpty()) {
+            return null;
+        }
+        return sanitized.length() > maxLen ? sanitized.substring(0, maxLen) : sanitized;
+    }
+
+    private List<String> sanitizeStringList(List<String> values, int maxLen) {
+        if (values == null) {
+            return null;
+        }
+        return values.stream()
+                .map(HtmlSanitizer::sanitizeAndTrimText)
+                .filter(value -> value != null && !value.isEmpty())
+                .map(value -> value.length() > maxLen ? value.substring(0, maxLen) : value)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> sanitizeMediaUrlList(List<String> values, int maxLen) {
+        List<String> sanitized = sanitizeStringList(values, maxLen);
+        if (sanitized == null) {
+            return null;
+        }
+
+        for (String value : sanitized) {
+            if (!isAllowedMediaUrl(value)) {
+                throw new IllegalArgumentException("Invalid media URL detected");
+            }
+        }
+        return sanitized;
+    }
+
+    private boolean isAllowedMediaUrl(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+
+        String lowered = value.toLowerCase(Locale.ROOT);
+        if (lowered.startsWith("data:image/") || lowered.startsWith("data:video/")) {
+            return true;
+        }
+
+        try {
+            URI uri = new URI(value);
+            String scheme = uri.getScheme();
+            return "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
+        } catch (URISyntaxException ignored) {
+            return false;
+        }
     }
 
     private String formatTimeAgo(LocalDateTime dateTime) {

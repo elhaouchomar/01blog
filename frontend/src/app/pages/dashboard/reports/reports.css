@@ -1,104 +1,161 @@
-/* Reports page specific styles if any (mostly handled by db- utility classes) */
-
-.loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 4rem;
-    gap: 1rem;
-    color: var(--text-secondary);
+.db-page-shell {
+    --db-toolbar-space: clamp(0.7rem, 1.5vw, 0.95rem);
 }
 
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--gray-100);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 5rem 2rem;
-    text-align: center;
-    background: white;
-    border-radius: 1.5rem;
-    border: 1px solid var(--gray-100);
-}
-
-.dark .empty-state {
-    background: var(--surface-dark);
-    border-color: var(--gray-800);
-}
-
-.empty-state .material-symbols-outlined {
-    font-size: 3.5rem;
-    color: var(--gray-200);
+.db-toolbar {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-sm);
+    padding: var(--db-toolbar-space);
     margin-bottom: 1rem;
-}
-
-.empty-state h3 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.empty-state p {
-    color: var(--text-secondary);
-    max-width: 300px;
-}
-
-/* Pagination handled by global table or footer styles if present */
-.table-footer {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 0;
-    margin-top: 1rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
-.stats {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    font-weight: 500;
+.db-toolbar--reports {
+    border-top: 3px solid #fd7e14;
 }
 
-.pagination {
-    display: flex;
-    gap: 1rem;
-}
-
-.btn-pager {
+.db-toolbar-actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    border: 1px solid var(--gray-200);
-    background: white;
+}
+
+.db-toolbar-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.db-pill-group .btn-pill-active {
+    background: #fd7e14;
+    color: #fff !important;
+}
+
+.db-toolbar-badge {
+    margin-left: auto;
+}
+
+.db-table-card {
+    overflow: hidden;
+}
+
+.db-table-card .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.db-data-table {
+    table-layout: fixed;
+    width: 100%;
+    min-width: 980px;
+}
+
+.db-data-table th:nth-child(1) {
+    width: 30%;
+}
+
+.db-data-table th:nth-child(2) {
+    width: 18%;
+}
+
+.db-data-table th:nth-child(3) {
+    width: 14%;
+}
+
+.db-data-table th:nth-child(4) {
+    width: 10%;
+}
+
+.db-data-table th:nth-child(5) {
+    width: 10%;
+}
+
+.db-data-table th:nth-child(6) {
+    width: 18%;
+}
+
+.db-data-table th,
+.db-data-table td {
+    overflow: hidden;
+    vertical-align: middle;
+}
+
+.report-thumb {
+    width: 46px;
+    height: 46px;
     cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 600;
 }
 
-.dark .btn-pager {
-    background: var(--gray-800);
-    border-color: var(--gray-700);
-    color: white;
+.report-target-wrap {
+    min-width: 0;
+    width: 100%;
 }
 
-.btn-pager:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.report-target-cell {
+    overflow: hidden;
+}
+
+.report-target-text {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.report-target-title,
+.report-reason-text,
+.report-reporter-text {
+    max-width: 100%;
+}
+
+.report-actions-cell {
+    white-space: nowrap;
+}
+
+.db-actions-group {
+    max-width: 100%;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .db-toolbar-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .db-toolbar-badge {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .db-toolbar-badge .badge {
+        width: 100%;
+        text-align: center;
+    }
+
+    .db-toolbar-label {
+        display: none;
+    }
+
+    .db-data-table {
+        table-layout: auto;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .db-data-table th,
+    .db-data-table td {
+        padding: 0.6rem 0.55rem !important;
+    }
+
+    .db-data-table .btn {
+        padding: 0.35rem !important;
+    }
 }

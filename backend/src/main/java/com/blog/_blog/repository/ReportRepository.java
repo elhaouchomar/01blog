@@ -16,7 +16,7 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     long countByReportedPostId(Long reportedPostId);
 
-    @Query("SELECT r.reportedUser, COUNT(r) as reportCount FROM Report r WHERE r.reportedUser IS NOT NULL GROUP BY r.reportedUser ORDER BY reportCount DESC")
+    @Query("SELECT r.reportedUser.id, COUNT(r) FROM Report r WHERE r.reportedUser IS NOT NULL GROUP BY r.reportedUser.id ORDER BY COUNT(r) DESC")
     List<Object[]> findMostReportedUsers();
 
     @Modifying
@@ -28,6 +28,14 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     @Transactional
     @Query("DELETE FROM Report r WHERE r.reportedPost.id IN (SELECT p.id FROM Post p WHERE p.author = :author)")
     void deleteByReportedPostAuthor(com.blog._blog.entity.User author);
+
+    boolean existsByReporterAndReportedUser(com.blog._blog.entity.User reporter, com.blog._blog.entity.User reportedUser);
+
+    boolean existsByReporterAndReportedPost(com.blog._blog.entity.User reporter, com.blog._blog.entity.Post reportedPost);
+
+    boolean existsByReporterIdAndReportedUserId(Integer reporterId, Integer reportedUserId);
+
+    boolean existsByReporterIdAndReportedPostId(Integer reporterId, Long reportedPostId);
 
     void deleteByReporter(com.blog._blog.entity.User reporter);
 

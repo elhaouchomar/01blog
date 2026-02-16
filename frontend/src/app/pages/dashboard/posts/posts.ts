@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -6,12 +6,14 @@ import { DataService } from '../../../services/data.service';
 import { ModalService } from '../../../services/modal.service';
 import { DbPageHeaderComponent } from '../../../components/dashboard/db-page-header';
 import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
-import Swal from 'sweetalert2';
+import { DbPaginationComponent } from '../../../components/dashboard/db-pagination';
+import { usePagination } from '../../../utils/pagination.utils';
+import { MaterialAlertService } from '../../../services/material-alert.service';
 
 @Component({
   selector: 'app-posts',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, DbPageHeaderComponent, DbFeedbackComponent],
+  imports: [CommonModule, FormsModule, RouterModule, DbPageHeaderComponent, DbFeedbackComponent, DbPaginationComponent],
   templateUrl: './posts.html',
   styleUrl: './posts.css',
 })
@@ -56,11 +58,23 @@ export class Posts implements OnInit {
     return filtered;
   });
 
-  // No pagination needed for scrolling feed
+  pagination = usePagination(() => this.filteredPosts(), 6);
+  paginatedPosts = computed(() => this.pagination.paginatedData());
 
   isLoading = computed(() => this.dataService.managementPosts().length === 0 && !this.dataService.dashboardStats());
 
-  constructor(public dataService: DataService, public modalService: ModalService) { }
+  constructor(
+    public dataService: DataService,
+    public modalService: ModalService,
+    private alert: MaterialAlertService
+  ) {
+    effect(() => {
+      const totalPages = this.pagination.totalPages();
+      if (this.pagination.currentPage() > totalPages) {
+        this.pagination.goToPage(totalPages);
+      }
+    });
+  }
 
   ngOnInit() {
     if (this.dataService.managementPosts().length === 0) {
@@ -69,7 +83,22 @@ export class Posts implements OnInit {
   }
 
   onFilterChange() {
-    // Scroll list automatically updates via signal
+    this.pagination.goToPage(1);
+  }
+
+  setSearchQuery(value: string) {
+    this.searchQuery.set(value);
+    this.pagination.goToPage(1);
+  }
+
+  setStatusFilter(value: string) {
+    this.statusFilter.set(value);
+    this.pagination.goToPage(1);
+  }
+
+  setSortBy(value: string) {
+    this.sortBy.set(value);
+    this.pagination.goToPage(1);
   }
 
   reviewPost(post: any) {
@@ -78,7 +107,7 @@ export class Posts implements OnInit {
 
   togglePostVisibility(post: any) {
     const action = post.hidden ? 'unhide' : 'hide';
-    Swal.fire({
+    this.alert.fire({
       title: `${action.charAt(0).toUpperCase() + action.slice(1)} Post?`,
       text: `Are you sure you want to ${action} "${post.title}"?`,
       icon: 'warning',
@@ -90,7 +119,7 @@ export class Posts implements OnInit {
       if (result.isConfirmed) {
         this.dataService.togglePostVisibility(post.id).subscribe({
           next: () => {
-            Swal.fire({
+            this.alert.fire({
               position: 'top-end',
               icon: 'success',
               title: `Post ${action}d`,
@@ -100,7 +129,7 @@ export class Posts implements OnInit {
             });
           },
           error: (err) => {
-            Swal.fire('Error', `Failed to ${action} post.`, 'error');
+            this.alert.fire('Error', `Failed to ${action} post.`, 'error');
           }
         });
       }
@@ -108,7 +137,7 @@ export class Posts implements OnInit {
   }
 
   deletePost(post: any) {
-    Swal.fire({
+    this.alert.fire({
       title: 'Delete Post?',
       text: `Are you sure you want to delete "${post.title}"?`,
       icon: 'warning',
@@ -120,7 +149,7 @@ export class Posts implements OnInit {
       if (result.isConfirmed) {
         this.dataService.deletePost(post.id).subscribe({
           next: () => {
-            Swal.fire({
+            this.alert.fire({
               position: 'top-end',
               icon: 'success',
               title: 'Post deleted',
@@ -130,7 +159,7 @@ export class Posts implements OnInit {
             });
           },
           error: (err) => {
-            Swal.fire('Error', 'Failed to delete post.', 'error');
+            this.alert.fire('Error', 'Failed to delete post.', 'error');
           }
         });
       }
@@ -139,7 +168,7 @@ export class Posts implements OnInit {
 
   toggleBan(user: any) {
     const action = user.banned ? 'Unban' : 'Ban';
-    Swal.fire({
+    this.alert.fire({
       title: `${action} Author?`,
       text: `Are you sure you want to ${action.toLowerCase()} ${user.name}?`,
       icon: 'warning',
@@ -151,10 +180,10 @@ export class Posts implements OnInit {
       if (result.isConfirmed) {
         this.dataService.toggleBan(user.id).subscribe({
           next: () => {
-            Swal.fire('Updated!', `Author status has been updated.`, 'success');
+            this.alert.fire('Updated!', `Author status has been updated.`, 'success');
           },
           error: (err: any) => {
-            Swal.fire('Error', err.error?.message || 'Failed to update user.', 'error');
+            this.alert.fire('Error', err.error?.message || 'Failed to update user.', 'error');
           }
         });
       }
@@ -162,7 +191,7 @@ export class Posts implements OnInit {
   }
 
   deleteUser(user: any) {
-    Swal.fire({
+    this.alert.fire({
       title: 'Delete Author Account?',
       text: `Are you sure you want to delete ${user.name}? This cannot be undone.`,
       icon: 'warning',
@@ -173,10 +202,10 @@ export class Posts implements OnInit {
       if (result.isConfirmed) {
         this.dataService.deleteUserAction(user.id).subscribe({
           next: () => {
-            Swal.fire('Deleted!', 'User account has been removed.', 'success');
+            this.alert.fire('Deleted!', 'User account has been removed.', 'success');
           },
           error: (err: any) => {
-            Swal.fire('Error', err.error?.message || 'Failed to delete user.', 'error');
+            this.alert.fire('Error', err.error?.message || 'Failed to delete user.', 'error');
           }
         });
       }

@@ -18,4 +18,12 @@ public class HtmlSanitizer {
         }
         return Jsoup.clean(input, Safelist.none());
     }
+
+    public static String sanitizeAndTrimText(String input) {
+        if (input == null) {
+            return null;
+        }
+        String sanitized = sanitizeText(input).trim();
+        return sanitized.replaceAll("\\s+", " ");
+    }
 }

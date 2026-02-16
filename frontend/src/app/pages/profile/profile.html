@@ -30,7 +30,7 @@
                             <ng-container *ngIf="!isOwnProfile; else ownActions">
                                 <button class="insta-btn-follow" [class.following]="user.isFollowing"
                                     (click)="toggleSubscribe()">
-                                    {{ user.isFollowing ? 'Following' : 'Subscribe' }}
+                                    {{ user.isFollowing ? 'Subscribed' : 'Subscribe' }}
                                 </button>
                                 <app-action-menu [items]="profileActions"
                                     (actionSelected)="handleDropdownAction($event)"></app-action-menu>
@@ -47,8 +47,8 @@
                     <!-- Desktop Stats Row -->
                     <div class="info-stats-row" *ngIf="user.stats">
                         <span class="stat-item"><strong>{{ user.stats.posts }}</strong> posts</span>
-                        <span class="stat-item"><strong>{{ user.stats.followers }}</strong> followers</span>
-                        <span class="stat-item"><strong>{{ user.stats.following }}</strong> following</span>
+                        <span class="stat-item"><strong>{{ user.stats.followers }}</strong> subscribers</span>
+                        <span class="stat-item"><strong>{{ user.stats.following }}</strong> subscriptions</span>
                     </div>
 
                     <!-- Bio Section (Desktop) -->
@@ -70,9 +70,9 @@
                 <div class="mobile-stat"><span class="val">{{ user.stats.posts }}</span><span class="lab">posts</span>
                 </div>
                 <div class="mobile-stat"><span class="val">{{ user.stats.followers }}</span><span
-                        class="lab">followers</span></div>
+                        class="lab">subscribers</span></div>
                 <div class="mobile-stat"><span class="val">{{ user.stats.following }}</span><span
-                        class="lab">following</span></div>
+                        class="lab">subscriptions</span></div>
             </div>
 
             <!-- Profile Navigation Tabs -->
@@ -152,14 +152,37 @@
                 <p>This user hasn't shared any images or videos yet.</p>
             </div>
 
-            <!-- Likes Section Placeholder -->
-            <div class="empty-state-premium" style="margin-top: 1rem;" *ngIf="activeTab === 'Likes'">
-                <div class="empty-icon-box">
-                    <span class="material-symbols-outlined">favorite_border</span>
-                </div>
-                <h3>Nothing liked yet</h3>
-                <p>Private liked posts or no likes recorded.</p>
+            <!-- Likes Section -->
+            <div class="post-list" *ngIf="activeTab === 'Likes'">
+                <ng-container *ngIf="isOwnProfile; else likesPrivateState">
+                    <div class="infinite-scroll-status" *ngIf="isLikesLoading" style="text-align: center; padding: 2rem;">
+                        <div class="spinner-border text-primary shadow-sm" role="status">
+                            <span class="visually-hidden">Loading liked posts...</span>
+                        </div>
+                    </div>
+
+                    <div class="empty-state-premium" *ngIf="!isLikesLoading && likedPosts.length === 0"
+                        style="margin-top: 1rem;">
+                        <div class="empty-icon-box">
+                            <span class="material-symbols-outlined">favorite_border</span>
+                        </div>
+                        <h3>No liked posts yet</h3>
+                        <p>Posts you like will appear here.</p>
+                    </div>
+
+                    <app-post-card *ngFor="let post of likedPosts" [post]="post"></app-post-card>
+                </ng-container>
             </div>
+
+            <ng-template #likesPrivateState>
+                <div class="empty-state-premium" style="margin-top: 1rem;">
+                    <div class="empty-icon-box">
+                        <span class="material-symbols-outlined">lock</span>
+                    </div>
+                    <h3>Liked posts are private</h3>
+                    <p>You can only view liked posts on your own profile.</p>
+                </div>
+            </ng-template>
         </main>
 
         <!-- Right Sidebar -->

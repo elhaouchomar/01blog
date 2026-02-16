@@ -6,6 +6,7 @@ import com.blog._blog.entity.Report;
 import com.blog._blog.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,11 +28,13 @@ public class ReportController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<ReportDTO>> getAllReports(Authentication authentication) {
         return ResponseEntity.ok(reportService.getAllReports(authentication.getName()));
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ReportDTO> updateStatus(@PathVariable Long id, @RequestParam Report.ReportStatus status,
             Authentication authentication) {
         return ResponseEntity.ok(reportService.updateStatus(id, status, authentication.getName()));

@@ -39,9 +39,8 @@ public class Post {
     @Builder.Default
     private List<String> images = new ArrayList<>();
 
-    @ElementCollection
-    @CollectionTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"))
-    @Column(name = "tag")
+    // Kept for API compatibility, intentionally not persisted.
+    @Transient
     @Builder.Default
     private List<String> tags = new ArrayList<>();
 

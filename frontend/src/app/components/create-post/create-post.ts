@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ModalService } from '../../services/modal.service';
 import { DataService } from '../../services/data.service';
-import Swal from 'sweetalert2';
+import { MaterialAlertService } from '../../services/material-alert.service';
 
 @Component({
   selector: 'app-create-post',
@@ -24,7 +24,8 @@ export class CreatePost implements OnInit, OnDestroy {
     protected modalService: ModalService,
     private dataService: DataService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private alert: MaterialAlertService
   ) {
     console.log('CreatePost Component Constructor - Modal Service:', modalService);
   }
@@ -35,7 +36,7 @@ export class CreatePost implements OnInit, OnDestroy {
       Array.from(input.files).forEach(file => {
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
-          Swal.fire('Error', `File ${file.name} is too large (max 10MB)`, 'error');
+          this.alert.fire('Error', `File ${file.name} is too large (max 10MB)`, 'error');
           return;
         }
 
@@ -57,18 +58,21 @@ export class CreatePost implements OnInit, OnDestroy {
   }
 
   createPost() {
+    this.title = this.sanitizeInput(this.title);
+    this.content = this.sanitizeInput(this.content);
+
     if (!this.title.trim() || !this.content.trim()) {
-      Swal.fire('Validation Error', 'Title and content are required.', 'warning');
+      this.alert.fire('Validation Error', 'Title and content are required.', 'warning');
       return;
     }
 
     if (this.title.length < 3 || this.title.length > 150) {
-      Swal.fire('Validation Error', 'Title must be between 3 and 150 characters.', 'warning');
+      this.alert.fire('Validation Error', 'Title must be between 3 and 150 characters.', 'warning');
       return;
     }
 
     if (this.content.length < 3) {
-      Swal.fire('Validation Error', 'Content must be at least 3 characters.', 'warning');
+      this.alert.fire('Validation Error', 'Content must be at least 3 characters.', 'warning');
       return;
     }
 
@@ -83,7 +87,7 @@ export class CreatePost implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error uploading files:', err);
-          Swal.fire('Error', 'Failed to upload media. Please try again.', 'error');
+          this.alert.fire('Error', 'Failed to upload media. Please try again.', 'error');
           this.isLoading = false;
           this.cdr.detectChanges();
         }
@@ -115,11 +119,11 @@ export class CreatePost implements OnInit, OnDestroy {
         this.isLoading = false;
         this.cdr.detectChanges();
         if (err.status === 403 || err.status === 401) {
-          Swal.fire('Session Expired', 'Please log in again.', 'warning');
+          this.alert.fire('Session Expired', 'Please log in again.', 'warning');
           this.modalService.close();
           this.dataService.logout();
         } else {
-          Swal.fire('Error', 'Failed to create post. Please try again.', 'error');
+          this.alert.fire('Error', 'Failed to create post. Please try again.', 'error');
         }
       }
     });
@@ -162,5 +166,14 @@ export class CreatePost implements OnInit, OnDestroy {
     console.log('CreatePost Component Destroyed');
     // Restore scrolling when modal is destroyed
     document.body.style.overflow = '';
+  }
+
+  private sanitizeInput(value: string): string {
+    if (typeof document === 'undefined') {
+      return value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    }
+    const div = document.createElement('div');
+    div.innerHTML = value;
+    return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
   }
 }

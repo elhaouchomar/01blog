@@ -6,6 +6,7 @@ import com.blog._blog.dto.UserSummaryDTO;
 import com.blog._blog.entity.Post;
 import com.blog._blog.entity.Report;
 import com.blog._blog.entity.User;
+import com.blog._blog.exception.DuplicateReportException;
 import com.blog._blog.repository.PostRepository;
 import com.blog._blog.repository.ReportRepository;
 import com.blog._blog.repository.UserRepository;
@@ -26,20 +27,48 @@ public class ReportService {
 
     public ReportDTO createReport(CreateReportRequest request, String reporterEmail) {
         User reporter = userRepository.findByEmail(reporterEmail).orElseThrow();
+        if (Boolean.TRUE.equals(reporter.getBanned())) {
+            throw new IllegalArgumentException("Banned users cannot create reports");
+        }
+
+        String sanitizedReason = HtmlSanitizer.sanitizeAndTrimText(request.getReason());
+        if (sanitizedReason == null || sanitizedReason.length() < 10 || sanitizedReason.length() > 500) {
+            throw new IllegalArgumentException("Reason must be between 10 and 500 characters");
+        }
+        if (request.getReportedUserId() == null && request.getReportedPostId() == null) {
+            throw new IllegalArgumentException("A reported user or post is required");
+        }
+        if (request.getReportedUserId() != null && request.getReportedPostId() != null) {
+            throw new IllegalArgumentException("Report must target either a user profile or a post");
+        }
 
         Report report = Report.builder()
-                .reason(HtmlSanitizer.sanitizeText(request.getReason()))
+                .reason(sanitizedReason)
                 .reporter(reporter)
                 .status(Report.ReportStatus.PENDING)
                 .build();
 
         if (request.getReportedUserId() != null) {
-            User reportedUser = userRepository.findById(request.getReportedUserId()).orElse(null);
+            User reportedUser = userRepository.findById(request.getReportedUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("Reported user not found"));
+            if (reportedUser.getId().equals(reporter.getId())) {
+                throw new IllegalArgumentException("You cannot report your own profile");
+            }
+            if (reportRepository.existsByReporterIdAndReportedUserId(reporter.getId(), reportedUser.getId())) {
+                throw new DuplicateReportException("You have already reported this user");
+            }
             report.setReportedUser(reportedUser);
         }
 
         if (request.getReportedPostId() != null) {
-            Post reportedPost = postRepository.findById(request.getReportedPostId()).orElse(null);
+            Post reportedPost = postRepository.findById(request.getReportedPostId())
+                    .orElseThrow(() -> new IllegalArgumentException("Reported post not found"));
+            if (reportedPost.getAuthor() != null && reportedPost.getAuthor().getId().equals(reporter.getId())) {
+                throw new IllegalArgumentException("You cannot report your own post");
+            }
+            if (reportRepository.existsByReporterIdAndReportedPostId(reporter.getId(), reportedPost.getId())) {
+                throw new DuplicateReportException("You have already reported this post");
+            }
             report.setReportedPost(reportedPost);
         }
 

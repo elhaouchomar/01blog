@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, OnDestroy, HostListener, ElementRef, effect, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy, HostListener, ElementRef, effect, Output, EventEmitter, Input } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +16,8 @@ import { getInitials } from '../../utils/string.utils';
     styleUrl: './navbar.css'
 })
 export class NavbarComponent implements OnInit, OnDestroy {
+    @Input() isSidebarOpen = false;
+
     isNotificationsOpen = false;
     isProfileOpen = false;
     isNotificationRoute = false;
@@ -41,13 +43,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
         private cdr: ChangeDetectorRef,
         private elementRef: ElementRef
     ) {
+        this.updateRouteFlags(this.router.url);
+
         // Track current route to highlight notification icon correctly
         this.router.events.pipe(
             filter(event => event instanceof NavigationEnd)
         ).subscribe((event: any) => {
-            const url = event.urlAfterRedirects;
-            this.isNotificationRoute = url === '/notifications';
-            this.isDashboardRoute = url.startsWith('/dashboard');
+            this.updateRouteFlags(event.urlAfterRedirects);
             this.cdr.detectChanges();
         });
 
@@ -62,6 +64,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        this.updateRouteFlags(this.router.url);
+
         // Setup search debouncing
         this.searchSubject.pipe(
             debounceTime(400),
@@ -82,6 +86,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
     ngOnDestroy() {
         this.destroy$.next();
         this.destroy$.complete();
+    }
+
+    private updateRouteFlags(url: string) {
+        this.isNotificationRoute = url === '/notifications';
+        this.isDashboardRoute = url.startsWith('/dashboard');
     }
 
     @HostListener('document:click', ['$event'])

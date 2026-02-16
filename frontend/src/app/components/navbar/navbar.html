@@ -3,16 +3,13 @@
         <!-- Left: Logo & Search -->
         <div class="navbar-left">
             <!-- Burger Menu for Admin in Dashboard -->
-            <button *ngIf="dataService.isAdmin() && isDashboardRoute" class="burger-menu-btn"
+            <button type="button" *ngIf="dataService.isAdmin() && isDashboardRoute" class="burger-menu-btn"
                 (click)="onToggleSidebar.emit()" aria-label="Toggle Sidebar">
-                <span class="material-symbols-outlined">menu</span>
+                <span class="material-symbols-outlined">{{ isSidebarOpen ? 'close' : 'menu' }}</span>
             </button>
 
             <a class="navbar-logo" [routerLink]="dataService.isAdmin() ? '/dashboard' : '/home'"
                 routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-                <div class="logo-icon" *ngIf="!dataService.isAdmin()">
-                    <span class="material-symbols-outlined nav-item-icon">code_blocks</span>
-                </div>
                 <h1 class="logo-text">01Blog</h1>
             </a>
 
@@ -36,7 +33,7 @@
                         <div class="search-filters">
                             <button class="filter-btn" [class.active]="searchFilter === 'all'"
                                 (click)="setFilter('all')" (mousedown)="$event.preventDefault()">
-                                <span class="material-symbols-outlined">select_all</span>
+                                <span class="material-symbols-outlined">manage_search</span>
                                 All
                             </button>
                             <button class="filter-btn" [class.active]="searchFilter === 'posts'"
@@ -195,11 +192,20 @@
         </div>
 
         <div class="search-filters" *ngIf="isSearchOpen">
-            <button class="filter-btn" [class.active]="searchFilter === 'all'" (click)="setFilter('all')">All</button>
+            <button class="filter-btn" [class.active]="searchFilter === 'all'" (click)="setFilter('all')">
+                <span class="material-symbols-outlined">manage_search</span>
+                All
+            </button>
             <button class="filter-btn" [class.active]="searchFilter === 'posts'"
-                (click)="setFilter('posts')">Posts</button>
+                (click)="setFilter('posts')">
+                <span class="material-symbols-outlined">article</span>
+                Posts
+            </button>
             <button class="filter-btn" [class.active]="searchFilter === 'people'"
-                (click)="setFilter('people')">People</button>
+                (click)="setFilter('people')">
+                <span class="material-symbols-outlined">person</span>
+                People
+            </button>
         </div>
 
         <div class="search-results-container">

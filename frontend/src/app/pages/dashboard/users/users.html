@@ -1,21 +1,19 @@
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 db-page-shell">
     <app-db-page-header title="User Management" subtitle="Monitor and manage user accounts, roles and permissions."
         titleIcon="group" iconColor="#6f42c1" actionIcon="person_add" actionLabel="Add User"
-        (click)="modalService.open('create-user')">
+        (onAction)="modalService.open('create-user')">
     </app-db-page-header>
 
     <!-- Filters -->
-    <div class="d-flex flex-wrap gap-3 mb-4 align-items-center bg-white p-3 rounded-4 shadow-sm border">
-        <div class="position-relative flex-grow-1" style="max-width: 400px;">
-            <span class="material-symbols-outlined position-absolute top-50 start-0 translate-middle-y ms-3"
-                style="color: #6f42c1;">search</span>
+    <div class="db-toolbar db-toolbar--users">
+        <div class="db-search-wrap">
+            <span class="material-symbols-outlined db-search-icon">search</span>
             <input type="text" class="form-control form-control-lg ps-5 fs-6 border-0 bg-light rounded-3"
                 placeholder="Search by name, email or role..." [ngModel]="searchQuery()" (input)="onSearch($event)">
         </div>
-        <div class="d-flex align-items-center gap-2 ms-auto">
-            <span class="text-secondary small fw-bold text-uppercase me-2"
-                style="letter-spacing: 0.05em;">Filter:</span>
-            <div class="btn-group btn-group-sm p-1 bg-light rounded-pill border shadow-sm">
+        <div class="db-toolbar-actions">
+            <span class="db-toolbar-label">Filter</span>
+            <div class="btn-group btn-group-sm p-1 bg-light rounded-pill border shadow-sm db-pill-group">
                 <button class="btn rounded-pill px-3 transition-all"
                     [ngClass]="{'btn-pill-active': statusFilter() === 'all', 'text-secondary': statusFilter() !== 'all'}"
                     (click)="setStatusFilter('all')" title="All Users">
@@ -41,10 +39,10 @@
     </div>
 
     <!-- Users Table -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4"
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 db-table-card"
         *ngIf="filteredUsers().length > 0 && !isLoading()">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0 db-data-table">
                 <thead class="bg-light border-bottom text-secondary small fw-bold text-uppercase"
                     style="letter-spacing: 0.05em;">
                     <tr>
@@ -56,15 +54,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr *ngFor="let user of filteredUsers()">
+                    <tr *ngFor="let user of paginatedUsers()">
                         <td class="ps-4 py-3">
                             <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle border border-2 shadow-sm flex-shrink-0"
-                                    style="width: 40px; height: 40px; background-size: cover; cursor: pointer;"
+                                <div class="rounded-circle border border-2 shadow-sm flex-shrink-0 user-avatar-thumb"
                                     [style.background-image]="'url(' + (user.avatar || 'assets/default-avatar.png') + ')'"
                                     (click)="router.navigate(['/profile', user.id])">
                                 </div>
-                                <div class="text-truncate" style="max-width: 150px;">
+                                <div class="text-truncate user-main-text">
                                     <h6 class="mb-0 fw-bold text-truncate" style="cursor: pointer;"
                                         (click)="router.navigate(['/profile', user.id])">
                                         {{ user.name }}
@@ -114,6 +111,10 @@
             </table>
         </div>
     </div>
+
+    <app-db-pagination *ngIf="filteredUsers().length > 0 && !isLoading()" [pagination]="pagination"
+        [totalItems]="filteredUsers().length" label="users">
+    </app-db-pagination>
 
     <!-- Empty/Loading States -->
     <app-db-feedback *ngIf="filteredUsers().length === 0 && !isLoading()" type="empty" icon="person_search"

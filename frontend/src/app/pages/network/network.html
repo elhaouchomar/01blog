@@ -36,8 +36,8 @@
                     <p class="network-user-role">{{ user.role }}</p>
 
                     <div class="network-stats">
-                        <span class="stat-item">{{ user.followersCount || 0 }} followers</span>
-                        <span class="stat-item">{{ user.followingCount || 0 }} following</span>
+                        <span class="stat-item">{{ user.followersCount || 0 }} subscribers</span>
+                        <span class="stat-item">{{ user.followingCount || 0 }} subscriptions</span>
                     </div>
 
                     <p class="network-user-bio" *ngIf="user.bio">{{ user.bio }}</p>
@@ -52,6 +52,12 @@
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <div class="empty-state-premium" *ngIf="!hasMoreUsers() && displayUsers().length > 0"
+                style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <span class="material-symbols-outlined fs-1 mb-2">groups</span>
+                <p class="fw-bold">No more people to show.</p>
             </div>
 
             <!-- Load More -->

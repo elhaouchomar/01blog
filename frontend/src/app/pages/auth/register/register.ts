@@ -3,7 +3,7 @@ import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DataService } from '../../../services/data.service';
-import Swal from 'sweetalert2';
+import { MaterialAlertService } from '../../../services/material-alert.service';
 
 @Component({
     selector: 'app-register',
@@ -17,10 +17,13 @@ export class Register {
     lastname = '';
     email = '';
     password = '';
-    error = '';
     showPassword = false;
 
-    constructor(private dataService: DataService, private router: Router) { }
+    constructor(
+        private dataService: DataService,
+        private router: Router,
+        private alert: MaterialAlertService
+    ) { }
 
     get strength(): number {
         if (!this.password) return 0;
@@ -41,8 +44,10 @@ export class Register {
     }
 
     onRegister() {
-        // Clear any previous error
-        this.error = '';
+        this.firstname = this.sanitizeInput(this.firstname);
+        this.lastname = this.sanitizeInput(this.lastname);
+        this.email = this.sanitizeInput(this.email).toLowerCase();
+        this.password = this.password.trim();
 
         if (!this.firstname || !this.lastname || !this.email || !this.password) {
             this.showErrorAlert('All fields are required.');
@@ -79,11 +84,11 @@ export class Register {
                 console.log('Registration successful:', response);
                 
                 // Show success message
-                Swal.fire({
+                this.alert.fire({
                     icon: 'success',
                     title: 'Registration Successful!',
                     text: 'Welcome to 01Blog! Your account has been created.',
-                    confirmButtonColor: '#135bec',
+                    confirmButtonColor: '#0f766e',
                     confirmButtonText: 'Get Started'
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -100,18 +105,21 @@ export class Register {
     }
 
     private showErrorAlert(message: string) {
-        Swal.fire({
+        this.alert.fire({
             icon: 'error',
             title: 'Oops...',
             text: message,
-            confirmButtonColor: '#135bec',
-            confirmButtonText: 'Try Again',
-            customClass: {
-                popup: 'sweet-alert-popup',
-                title: 'sweet-alert-title',
-                htmlContainer: 'sweet-alert-content',
-                confirmButton: 'sweet-alert-confirm-btn'
-            }
+            confirmButtonColor: '#0f766e',
+            confirmButtonText: 'Try Again'
         });
+    }
+
+    private sanitizeInput(value: string): string {
+        if (typeof document === 'undefined') {
+            return value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        }
+        const div = document.createElement('div');
+        div.innerHTML = value;
+        return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
     }
 }

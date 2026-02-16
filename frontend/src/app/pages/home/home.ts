@@ -30,6 +30,7 @@ export class Home implements OnInit {
   pageSize = 10;
   isMoreAvailable = signal(true);
   isFetchingMore = signal(false);
+  private readonly scrollThreshold = 320;
 
   constructor(
     public dataService: DataService,
@@ -38,7 +39,7 @@ export class Home implements OnInit {
   ) { }
 
   ngOnInit() {
-    if (this.dataService.posts().length === 0 && this.dataService.isLoggedIn()) {
+    if (this.dataService.posts().length === 0) {
       this.loadPosts();
     }
   }
@@ -46,6 +47,7 @@ export class Home implements OnInit {
   loadPosts() {
     this.dataService.fetchPosts(this.currentPage, this.pageSize).subscribe(posts => {
       this.isMoreAvailable.set(posts.length >= this.pageSize);
+      this.ensureScrollableFeed();
     });
   }
 
@@ -53,11 +55,14 @@ export class Home implements OnInit {
   onWindowScroll() {
     if (this.isFetchingMore() || !this.isMoreAvailable()) return;
 
-    const pos = (document.documentElement.scrollTop || document.body.scrollTop) + document.documentElement.offsetHeight;
-    const max = document.documentElement.scrollHeight;
+    const viewportBottom = window.innerHeight + window.scrollY;
+    const pageHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight
+    );
 
-    // Load more when 200px from bottom
-    if (pos >= max - 200) {
+    // Load more when user is near the bottom.
+    if (viewportBottom >= pageHeight - this.scrollThreshold) {
       this.loadMore();
     }
   }
@@ -71,13 +76,28 @@ export class Home implements OnInit {
           this.isMoreAvailable.set(false);
         }
         this.isFetchingMore.set(false);
+        this.ensureScrollableFeed();
       },
       error: () => this.isFetchingMore.set(false)
     });
+  }
+
+  private ensureScrollableFeed() {
+    if (this.isFetchingMore() || !this.isMoreAvailable()) return;
+
+    const pageHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body.scrollHeight
+    );
+    const viewportHeight = window.innerHeight;
+
+    // If page is still shorter than viewport after a fetch, prefetch next page.
+    if (pageHeight <= viewportHeight + this.scrollThreshold) {
+      this.loadMore();
+    }
   }
 
   get posts() {
     return this.dataService.posts();
   }
 }
-

@@ -14,9 +14,6 @@
                     <h1>01Blog Admin</h1>
                 </div>
             </div>
-            <button class="mobile-close" (click)="toggleSidebar()">
-                <span class="material-symbols-outlined">close</span>
-            </button>
         </div>
 
         <nav class="sidebar-nav">
@@ -50,7 +47,7 @@
 
     <!-- Main Content -->
     <main class="dashboard-main">
-        <app-navbar (onToggleSidebar)="toggleSidebar()"></app-navbar>
+        <app-navbar [isSidebarOpen]="isSidebarOpen" (onToggleSidebar)="toggleSidebar()"></app-navbar>
 
         <div class="dashboard-content">
             <header class="content-header">

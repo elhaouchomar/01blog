@@ -1,8 +1,8 @@
-import { Injectable, signal, computed, WritableSignal, effect, Injector, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, tap, map, finalize, switchMap } from 'rxjs'; // Added switchMap
+import { Injectable, signal, computed, effect, Injector, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, tap, map, switchMap, retry, timer, throwError } from 'rxjs';
 import { User, Post, Notification, Comment, AuthenticationRequest, AuthenticationResponse, RegisterRequest, CreatePostRequest } from '../models/data.models';
-import Swal from 'sweetalert2';
+import { MaterialAlertService } from './material-alert.service';
 
 @Injectable({
     providedIn: 'root'
@@ -47,15 +47,34 @@ export class DataService {
         this._notifications().filter(n => !n.isRead).length
     );
 
-    constructor(private http: HttpClient) {
+    constructor(
+        private http: HttpClient,
+        private alert: MaterialAlertService
+    ) {
+        this.primeCsrfToken();
         this.initializeAuth();
-        if (this.isLoggedIn()) {
-            this.refreshAllData();
-            this.startPolling();
-        }
     }
 
     private pollingInterval: any;
+    private recoveryTimer: any;
+    private lastRefreshAt = 0;
+
+    private shouldRetryRequest(err: any): boolean {
+        const status = err?.status;
+        // Do not retry auth/client/rate-limit failures.
+        return !(status === 400 || status === 401 || status === 403 || status === 404 || status === 429);
+    }
+
+    private primeCsrfToken() {
+        this.http.get(`${this.API_URL}/auth/csrf`, { responseType: 'text' }).subscribe({
+            next: () => {
+                // CSRF cookie is issued by backend.
+            },
+            error: () => {
+                // Non-blocking; auth endpoints remain available even if prefetch fails.
+            }
+        });
+    }
 
     private startPolling() {
         if (this.pollingInterval) clearInterval(this.pollingInterval);
@@ -67,35 +86,88 @@ export class DataService {
     }
 
     private initializeAuth() {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
+        this.getProfile().pipe(
+            retry({
+                count: 2,
+                delay: (err, retryCount) => {
+                    if (!this.shouldRetryRequest(err)) {
+                        throw err;
+                    }
+                    return timer(300 * retryCount);
+                }
+            })
+        ).subscribe({
+            next: () => {
+                this._authChecked.set(true);
+                this.refreshAllData();
+                this.startPolling();
+            },
+            error: (err) => {
+                if (err.status === 401 || err.status === 403) {
+                    this.handleTokenExpiration();
+                } else {
+                    this.scheduleProfileRecovery();
+                }
+                this._authChecked.set(true);
+                this.loadPosts();
+            }
+        });
+    }
+
+    private handleTokenExpiration() {
+        this._currentUser.set(null);
+        this._notifications.set([]);
+        this._dashboardStats.set(null);
+        this._reports.set([]);
+        this._managementPosts.set([]);
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+        }
+        if (this.recoveryTimer) {
+            clearTimeout(this.recoveryTimer);
+            this.recoveryTimer = null;
+        }
+    }
+
+    private scheduleProfileRecovery() {
+        // If another refresh/retry happens before timeout, reset the previous timer.
+        if (this.recoveryTimer) {
+            clearTimeout(this.recoveryTimer);
+            this.recoveryTimer = null;
+        }
+        this.recoveryTimer = setTimeout(() => {
+            this.recoveryTimer = null;
             this.getProfile().subscribe({
                 next: () => {
-                    this._authChecked.set(true);
                     this.refreshAllData();
+                    this.startPolling();
                 },
                 error: (err) => {
                     if (err.status === 401 || err.status === 403) {
                         this.handleTokenExpiration();
+                    } else {
+                        this.scheduleProfileRecovery();
                     }
-                    this._authChecked.set(true);
                 }
             });
-        } else {
-            this._authChecked.set(true);
-        }
-    }
-
-    private handleTokenExpiration() {
-        localStorage.removeItem('auth_token');
-        this._currentUser.set(null);
+        }, 1200);
     }
 
     refreshAllData() {
+        const now = Date.now();
+        // Prevent burst refresh loops that can trigger backend 429.
+        if (now - this.lastRefreshAt < 1200) return;
+        this.lastRefreshAt = now;
+
         this.loadPosts();
+        if (!this.isLoggedIn()) return;
+
         this.loadNotifications();
+        // Needed for right sidebar + network suggestions.
+        this.loadUsers();
+
         if (this.isAdmin()) {
-            this.loadUsers();
             this.loadDashboardStats();
             this.loadReports();
             this.loadManagementPosts();
@@ -103,15 +175,19 @@ export class DataService {
     }
 
     logout() {
-        localStorage.removeItem('auth_token');
-        this._currentUser.set(null);
+        this.http.post<void>(`${this.API_URL}/auth/logout`, {}).subscribe({
+            error: () => {
+                // Ignore network failures and proceed with local cleanup.
+            }
+        });
+        this.handleTokenExpiration();
         window.location.href = '/login';
     }
 
     private checkBanned(): boolean {
         const user = this._currentUser();
         if (user && user.banned) {
-            Swal.fire({
+            this.alert.fire({
                 icon: 'error',
                 title: 'Account Banned',
                 text: 'Your account has been restricted. You have been logged out.',
@@ -128,18 +204,19 @@ export class DataService {
     // --- Auth Methods ---
 
     login(request: AuthenticationRequest): Observable<AuthenticationResponse> {
-        return this.http.post<AuthenticationResponse>(`${this.API_URL}/auth/authenticate`, request)
+        const sanitizedRequest: AuthenticationRequest = {
+            email: this.sanitizePlainText(request.email).toLowerCase(),
+            password: (request.password || '').trim()
+        };
+        return this.http.post<AuthenticationResponse>(`${this.API_URL}/auth/authenticate`, sanitizedRequest)
             .pipe(
-                tap(response => {
-                    localStorage.setItem('auth_token', response.token);
-                }),
                 switchMap(response => // Use switchMap to chain the getProfile observable
                     this.getProfile().pipe(
                         tap(user => {
                             if (user.banned) {
                                 this.handleTokenExpiration(); // Clear token
                                 this.logout(); // Redirect to login
-                                Swal.fire({
+                                this.alert.fire({
                                     icon: 'error',
                                     title: 'Account Banned',
                                     text: 'Your account has been banned. Please contact support for more information.',
@@ -150,6 +227,8 @@ export class DataService {
                             }
                         }),
                         tap(() => this.refreshAllData()), // Only refresh if not banned
+                        tap(() => this._authChecked.set(true)),
+                        tap(() => this.startPolling()),
                         map(() => response) // Map back to the original AuthenticationResponse
                     )
                 )
@@ -157,18 +236,27 @@ export class DataService {
     }
 
     register(request: RegisterRequest): Observable<AuthenticationResponse> {
-        return this.http.post<AuthenticationResponse>(`${this.API_URL}/auth/register`, request)
+        const sanitizedRequest = this.sanitizeRegisterRequest(request);
+        return this.http.post<AuthenticationResponse>(`${this.API_URL}/auth/register`, sanitizedRequest)
             .pipe(
-                tap(response => {
-                    localStorage.setItem('auth_token', response.token);
-                    this.getProfile().subscribe(() => this.refreshAllData());
+                tap(() => {
+                    this.getProfile().subscribe(() => {
+                        this.refreshAllData();
+                        this._authChecked.set(true);
+                        this.startPolling();
+                    });
                 })
             );
     }
 
     // Admin method to create user without logging in as them
     provisionUser(request: RegisterRequest): Observable<AuthenticationResponse> {
-        return this.http.post<AuthenticationResponse>(`${this.API_URL}/auth/register`, request);
+        const sanitizedRequest = this.sanitizeRegisterRequest(request);
+        return this.http.post<AuthenticationResponse>(`${this.API_URL}/auth/register`, sanitizedRequest, {
+            headers: new HttpHeaders({
+                'X-Skip-Auth-Cookie': 'true'
+            })
+        });
     }
 
     getProfile(): Observable<User> {
@@ -179,7 +267,7 @@ export class DataService {
                     this._currentUser.set(user);
                     if (user.banned) { // Check banned status when profile is fetched
                         this.handleTokenExpiration(); // Clear token
-                        Swal.fire({
+                        this.alert.fire({
                             icon: 'error',
                             title: 'Account Banned',
                             text: 'Your account has been banned. You have been logged out.',
@@ -201,6 +289,13 @@ export class DataService {
 
     getUsers(): Observable<User[]> {
         return this.http.get<User[]>(`${this.API_URL}/users`).pipe(
+            retry({
+                count: 2,
+                delay: (err, retryCount) => {
+                    if (!this.shouldRetryRequest(err)) throw err;
+                    return timer(250 * retryCount);
+                }
+            }),
             map(users => users.map(u => this.mapDTOToUser(u)))
         );
     }
@@ -229,6 +324,13 @@ export class DataService {
     fetchPosts(page: number = 0, size: number = 10, append: boolean = false): Observable<Post[]> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
         return this.http.get<Post[]>(`${this.API_URL}/posts`, { params: { page: page.toString(), size: size.toString() } }).pipe(
+            retry({
+                count: 2,
+                delay: (err, retryCount) => {
+                    if (!this.shouldRetryRequest(err)) throw err;
+                    return timer(250 * retryCount);
+                }
+            }),
             tap(posts => {
                 if (append) {
                     this._posts.update(current => [...current, ...posts]);
@@ -240,15 +342,43 @@ export class DataService {
     }
 
     loadUsers() {
-        this.http.get<User[]>(`${this.API_URL}/users`).subscribe({
+        this.http.get<User[]>(`${this.API_URL}/users`).pipe(
+            retry({
+                count: 2,
+                delay: (err, retryCount) => {
+                    if (!this.shouldRetryRequest(err)) throw err;
+                    return timer(250 * retryCount);
+                }
+            })
+        ).subscribe({
             next: (users) => this._users.set(users.map(u => this.mapDTOToUser(u))),
             error: (err) => console.error('Failed to load users:', err)
         });
     }
 
-    loadNotifications(page: number = 0, size: number = 20) {
-        this.http.get<Notification[]>(`${this.API_URL}/notifications`, { params: { page: page.toString(), size: size.toString() } }).subscribe({
-            next: (notifs) => this._notifications.set(notifs),
+    fetchNotifications(page: number = 0, size: number = 20, append: boolean = false): Observable<Notification[]> {
+        return this.http.get<Notification[]>(`${this.API_URL}/notifications`, {
+            params: { page: page.toString(), size: size.toString() }
+        }).pipe(
+            retry({
+                count: 2,
+                delay: (err, retryCount) => {
+                    if (!this.shouldRetryRequest(err)) throw err;
+                    return timer(250 * retryCount);
+                }
+            }),
+            tap(notifs => {
+                if (append) {
+                    this._notifications.update(current => [...current, ...notifs]);
+                } else {
+                    this._notifications.set(notifs);
+                }
+            })
+        );
+    }
+
+    loadNotifications(page: number = 0, size: number = 20, append: boolean = false) {
+        this.fetchNotifications(page, size, append).subscribe({
             error: (err) => console.error('Failed to load notifications:', err)
         });
     }
@@ -277,14 +407,16 @@ export class DataService {
 
     addPost(post: CreatePostRequest): Observable<Post> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
-        return this.http.post<Post>(`${this.API_URL}/posts`, post).pipe(
+        const sanitizedPost = this.sanitizePostRequest(post);
+        return this.http.post<Post>(`${this.API_URL}/posts`, sanitizedPost).pipe(
             tap(() => this.loadPosts())
         );
     }
 
     updatePost(id: number, post: CreatePostRequest): Observable<Post> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
-        return this.http.put<Post>(`${this.API_URL}/posts/${id}`, post).pipe(
+        const sanitizedPost = this.sanitizePostRequest(post);
+        return this.http.put<Post>(`${this.API_URL}/posts/${id}`, sanitizedPost).pipe(
             tap(() => this.refreshPosts())
         );
     }
@@ -299,20 +431,52 @@ export class DataService {
     togglePostVisibility(id: number): Observable<Post> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
         return this.http.put<Post>(`${this.API_URL}/posts/${id}/toggle-hidden`, {}).pipe(
-            tap(() => this.refreshPosts())
+            tap((updatedPost) => {
+                const applyLocalUpdate = (posts: Post[]) =>
+                    posts.map(p => {
+                        if (p.id !== id) return p;
+                        return {
+                            ...p,
+                            hidden: updatedPost?.hidden ?? !p.hidden,
+                            reportsCount: updatedPost?.reportsCount ?? p.reportsCount
+                        };
+                    });
+
+                // Immediate UI update for both feed and dashboard tables.
+                this._posts.update(applyLocalUpdate);
+                this._managementPosts.update(applyLocalUpdate);
+
+                // Keep full state consistent with backend after optimistic update.
+                this.refreshPosts();
+            })
         );
     }
 
     toggleLike(postId: number): Observable<Post> {
         if (this.checkBanned()) return new Observable(observer => observer.error('User is banned'));
         return this.http.post<Post>(`${this.API_URL}/posts/${postId}/like`, {}).pipe(
-            tap(() => this.refreshPosts())
+            tap((updatedPost) => {
+                const applyLocalUpdate = (posts: Post[]) =>
+                    posts.map(p => p.id === postId ? { ...p, ...updatedPost } : p);
+
+                // Keep current feed pages intact (no reset to page 0) and only update the toggled post.
+                this._posts.update(applyLocalUpdate);
+                this._managementPosts.update(applyLocalUpdate);
+            })
         );
     }
 
     addComment(postId: number, content: string): Observable<Comment> {
         if (this.checkBanned()) return new Observable(observer => observer.error('User is banned'));
-        return this.http.post<Comment>(`${this.API_URL}/posts/${postId}/comment`, { content }).pipe(
+        const sanitizedContent = this.sanitizePlainText(content);
+        return this.http.post<Comment>(`${this.API_URL}/posts/${postId}/comment`, { content: sanitizedContent }).pipe(
+            tap(() => this.refreshPosts())
+        );
+    }
+
+    deleteComment(commentId: number): Observable<void> {
+        if (this.checkBanned()) return new Observable(observer => observer.error('User is banned'));
+        return this.http.delete<void>(`${this.API_URL}/posts/comment/${commentId}`).pipe(
             tap(() => this.refreshPosts())
         );
     }
@@ -348,7 +512,8 @@ export class DataService {
     }
 
     adminUpdateUser(userId: number, user: Partial<User>): Observable<User> {
-        return this.http.put<any>(`${this.API_URL}/users/${userId}`, user).pipe(
+        const sanitizedUser = this.sanitizeUserUpdate(user);
+        return this.http.put<any>(`${this.API_URL}/users/${userId}`, sanitizedUser).pipe(
             tap((userDTO: any) => {
                 this.loadUsers();
                 this.loadDashboardStats();
@@ -366,7 +531,15 @@ export class DataService {
     }
 
     reportContent(reason: string, reportedUserId?: number, reportedPostId?: number): Observable<any> {
-        return this.http.post<any>(`${this.API_URL}/reports`, { reason, reportedUserId, reportedPostId }).pipe(
+        const sanitizedReason = this.sanitizePlainText(reason);
+        if (sanitizedReason.length < 10 || sanitizedReason.length > 500) {
+            return throwError(() => new Error('Reason must be between 10 and 500 characters.'));
+        }
+        return this.http.post<any>(`${this.API_URL}/reports`, {
+            reason: sanitizedReason,
+            reportedUserId,
+            reportedPostId
+        }).pipe(
             tap(() => {
                 if (this.isAdmin()) {
                     this.loadReports();
@@ -400,7 +573,8 @@ export class DataService {
 
     updateProfile(user: Partial<User>): Observable<User> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
-        return this.http.put<any>(`${this.API_URL}/users/me`, user).pipe(
+        const sanitizedUser = this.sanitizeUserUpdate(user);
+        return this.http.put<any>(`${this.API_URL}/users/me`, sanitizedUser).pipe(
             tap((userDTO: any) => {
                 const refreshed = this.mapDTOToUser(userDTO);
                 this._currentUser.set(refreshed);
@@ -428,7 +602,7 @@ export class DataService {
 
     search(query: string, filter: string = 'all', limit: number = 10): Observable<any> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
-        const params = { q: query, filter, limit: limit.toString() };
+        const params = { q: this.sanitizePlainText(query), filter, limit: limit.toString() };
         return this.http.get<any>(`${this.API_URL}/search`, { params });
     }
 
@@ -442,6 +616,61 @@ export class DataService {
 
     getPost(id: number): Observable<Post> {
         return this.http.get<Post>(`${this.API_URL}/posts/${id}`);
+    }
+
+    private sanitizeRegisterRequest(request: RegisterRequest): RegisterRequest {
+        return {
+            firstname: this.sanitizePlainText(request.firstname),
+            lastname: this.sanitizePlainText(request.lastname),
+            email: this.sanitizePlainText(request.email).toLowerCase(),
+            password: (request.password || '').trim(),
+            role: this.sanitizePlainText(request.role)
+        };
+    }
+
+    private sanitizePostRequest(post: CreatePostRequest): CreatePostRequest {
+        return {
+            ...post,
+            title: this.sanitizePlainText(post.title),
+            content: this.sanitizePlainText(post.content),
+            category: this.sanitizeOptionalPlainText(post.category),
+            readTime: this.sanitizeOptionalPlainText(post.readTime),
+            images: this.sanitizeStringArray(post.images),
+            tags: this.sanitizeStringArray(post.tags)
+        };
+    }
+
+    private sanitizeUserUpdate(user: Partial<User>): Partial<User> {
+        return {
+            ...user,
+            firstname: user.firstname !== undefined ? this.sanitizePlainText(user.firstname) : user.firstname,
+            lastname: user.lastname !== undefined ? this.sanitizePlainText(user.lastname) : user.lastname,
+            bio: user.bio !== undefined ? this.sanitizePlainText(user.bio) : user.bio,
+            role: user.role !== undefined ? this.sanitizePlainText(user.role) : user.role
+        };
+    }
+
+    private sanitizeStringArray(values?: string[]): string[] | undefined {
+        if (!values) return values;
+        return values
+            .map(v => this.sanitizePlainText(v))
+            .filter(v => v.length > 0);
+    }
+
+    private sanitizeOptionalPlainText(value?: string): string | undefined {
+        if (value === undefined || value === null) return value;
+        const sanitized = this.sanitizePlainText(value);
+        return sanitized.length > 0 ? sanitized : undefined;
+    }
+
+    private sanitizePlainText(value?: string): string {
+        const raw = value ?? '';
+        if (typeof document === 'undefined') {
+            return raw.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        }
+        const div = document.createElement('div');
+        div.innerHTML = raw;
+        return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
     }
 
     private mapDTOToUser(dto: any): User {

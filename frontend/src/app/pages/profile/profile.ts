@@ -10,7 +10,7 @@ import { RightSidebarComponent } from '../../components/right-sidebar/right-side
 import { ActionMenuComponent, ActionMenuItem } from '../../components/action-menu/action-menu';
 import { getInitials } from '../../utils/string.utils';
 import { PostCardComponent } from '../../components/post-card/post-card';
-import Swal from 'sweetalert2';
+import { MaterialAlertService } from '../../services/material-alert.service';
 
 @Component({
   selector: 'app-profile',
@@ -23,7 +23,9 @@ export class Profile implements OnInit {
   isMenuOpen = false;
   user: User | null = null;
   posts: Post[] = [];
+  likedPosts: Post[] = [];
   isLoading = false;
+  isLikesLoading = false;
   activeTab = 'Posts';
   currentPage = 0;
   pageSize = 10;
@@ -35,7 +37,8 @@ export class Profile implements OnInit {
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private router: Router,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private alert: MaterialAlertService
   ) {
     // Handle route changes
     this.route.params.subscribe(params => {
@@ -67,6 +70,7 @@ export class Profile implements OnInit {
     // Shared refresh logic for data signal changes
     effect(() => {
       const allPosts = this.dataService.posts();
+      this.syncLikedPosts(allPosts);
       if (this.user && this.user.id) {
         // Reload this profile's post list when global posts signal changes (e.g. after adding a post)
         this.loadPosts();
@@ -78,6 +82,9 @@ export class Profile implements OnInit {
 
   setTab(tab: string) {
     this.activeTab = tab;
+    if (tab === 'Likes') {
+      this.loadLikedPosts();
+    }
     this.cdr.detectChanges();
   }
 
@@ -136,47 +143,75 @@ export class Profile implements OnInit {
     this.loadPosts(true);
   }
 
+  private syncLikedPosts(feedPosts: Post[]) {
+    this.likedPosts = (feedPosts || []).filter(post => post.isLiked);
+  }
+
+  loadLikedPosts() {
+    this.isLikesLoading = true;
+    // Fetch a larger page so the likes tab has enough visible items.
+    this.dataService.fetchPosts(0, 50, false).subscribe({
+      next: (feedPosts) => {
+        this.syncLikedPosts(feedPosts);
+        this.isLikesLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error loading liked posts:', err);
+        this.isLikesLoading = false;
+      }
+    });
+  }
+
   reportUser() {
     this.isMenuOpen = false;
     if (this.user) {
-      Swal.fire({
-        title: 'Report User?',
-        text: `Are you sure you want to report ${this.user.name}? This helps our community stay safe.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, Report',
-        confirmButtonColor: '#d33',
-        cancelButtonText: 'Cancel'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.dataService.reportContent('General Report', this.user!.id).subscribe({
-            next: () => {
-              Swal.fire({
-                icon: 'success',
-                title: 'Reported',
-                text: 'Thank you. Our team will review this user.',
-                timer: 2000,
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false
-              });
-            },
-            error: () => Swal.fire('Error', 'Failed to submit report.', 'error')
-          });
-        }
+      this.alert.promptReason({
+        title: `Report ${this.user.name}`,
+        subtitle: 'Explain why this profile should be reviewed.',
+        placeholder: 'Enter report reason'
+      }).then((reason) => {
+        if (!reason) return;
+
+        this.dataService.reportContent(reason, this.user!.id).subscribe({
+          next: () => {
+            this.alert.fire({
+              icon: 'success',
+              title: 'Reported',
+              text: 'Thank you. Our team will review this user.',
+              timer: 2000,
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false
+            });
+          },
+          error: (err) => this.alert.fire('Error', err.error?.message || 'Failed to submit report.', 'error')
+        });
       });
     }
   }
 
   toggleSubscribe() {
     if (this.user) {
+      const wasFollowing = !!this.user.isFollowing;
       this.dataService.followUser(this.user.id).subscribe({
         next: () => {
           if (this.user) {
             this.loadUserProfile(this.user.id);
           }
+          this.alert.fire({
+            icon: 'success',
+            title: wasFollowing ? 'Unsubscribed' : 'Subscribed',
+            toast: true,
+            position: 'top-end',
+            timer: 1600,
+            showConfirmButton: false
+          });
         },
-        error: (err) => console.error('Error toggling subscribe:', err)
+        error: (err) => {
+          console.error('Error toggling subscribe:', err);
+          this.alert.fire('Error', err.error?.message || 'Failed to update subscription.', 'error');
+        }
       });
     }
   }
@@ -222,7 +257,7 @@ export class Profile implements OnInit {
   deleteUser() {
     this.isMenuOpen = false;
     if (this.user && this.user.id) {
-      Swal.fire({
+      this.alert.fire({
         title: 'Delete User?',
         text: `Are you sure you want to permanently delete ${this.user.name}? This action cannot be undone.`,
         icon: 'warning',
@@ -234,10 +269,10 @@ export class Profile implements OnInit {
         if (result.isConfirmed) {
           this.dataService.deleteUserAction(this.user!.id).subscribe({
             next: () => {
-              Swal.fire('Deleted!', 'User has been removed.', 'success');
+              this.alert.fire('Deleted!', 'User has been removed.', 'success');
               this.router.navigate(['/home']);
             },
-            error: () => Swal.fire('Error', 'Failed to delete user.', 'error')
+            error: () => this.alert.fire('Error', 'Failed to delete user.', 'error')
           });
         }
       });
@@ -248,7 +283,7 @@ export class Profile implements OnInit {
     this.isMenuOpen = false;
     if (this.user && this.user.id) {
       const action = this.user.banned ? 'Unban' : 'Ban';
-      Swal.fire({
+      this.alert.fire({
         title: `${action} User?`,
         text: `Are you sure you want to ${action.toLowerCase()} ${this.user.name}?`,
         icon: 'warning',
@@ -260,9 +295,9 @@ export class Profile implements OnInit {
           this.dataService.toggleBan(this.user!.id).subscribe({
             next: () => {
               this.loadUserProfile(this.user!.id);
-              Swal.fire('Updated!', `User has been ${action.toLowerCase()}ned.`, 'success');
+              this.alert.fire('Updated!', `User has been ${action.toLowerCase()}ned.`, 'success');
             },
-            error: () => Swal.fire('Error', 'Failed to update user.', 'error')
+            error: () => this.alert.fire('Error', 'Failed to update user.', 'error')
           });
         }
       });

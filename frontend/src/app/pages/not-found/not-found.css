@@ -1,0 +1,63 @@
+.error-page {
+    min-height: calc(100vh - 4rem);
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+}
+
+.error-content {
+    width: min(640px, 100%);
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-md);
+    padding: 2rem 1.25rem;
+}
+
+.error-icon {
+    margin-bottom: 0.5rem;
+}
+
+.error-icon-symbol {
+    font-size: 80px;
+    color: var(--danger);
+}
+
+.error-code {
+    margin: 0;
+    font-size: clamp(3rem, 8vw, 4.5rem);
+    line-height: 1;
+    color: var(--text-main);
+}
+
+.error-title {
+    margin: 0.5rem 0 0;
+    font-size: 1.4rem;
+    color: var(--text-main);
+}
+
+.error-message {
+    margin: 0.75rem auto 0;
+    max-width: 520px;
+    color: var(--text-secondary);
+}
+
+.error-actions {
+    margin-top: 1.25rem;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-action-icon {
+    font-size: 20px;
+}
+
+.error-help {
+    margin-top: 2rem;
+    font-size: 0.875rem;
+    color: var(--gray-500);
+}

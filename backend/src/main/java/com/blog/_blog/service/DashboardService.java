@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,21 +43,41 @@ public class DashboardService {
                                                 .build())
                                 .collect(Collectors.toList());
 
-                List<ReportedUserDTO> mostReportedUsers = reportRepository.findMostReportedUsers()
+                List<Object[]> mostReportedUsersRaw = reportRepository.findMostReportedUsers()
                                 .stream()
                                 .limit(5)
+                                .collect(Collectors.toList());
+
+                List<Integer> mostReportedUserIds = mostReportedUsersRaw.stream()
+                                .map(obj -> ((Number) obj[0]).intValue())
+                                .collect(Collectors.toList());
+
+                Map<Integer, User> usersById = userRepository.findAllById(mostReportedUserIds).stream()
+                                .collect(Collectors.toMap(User::getId, user -> user));
+
+                List<ReportedUserDTO> mostReportedUsers = mostReportedUsersRaw.stream()
                                 .map(obj -> {
-                                        User user = (User) obj[0];
+                                        Integer userId = ((Number) obj[0]).intValue();
+                                        User user = usersById.get(userId);
+                                        if (user == null) {
+                                                return null;
+                                        }
+
+                                        String fullName = ((user.getFirstname() == null ? "" : user.getFirstname()) + " "
+                                                        + (user.getLastname() == null ? "" : user.getLastname())).trim();
+                                        String username = user.getEmail() != null ? user.getEmail().split("@")[0] : "";
+
                                         return ReportedUserDTO.builder()
                                                         .id(user.getId())
-                                                        .name(user.getFirstname() + " " + user.getLastname())
-                                                        .username(user.getEmail().split("@")[0])
+                                                        .name(fullName)
+                                                        .username(username)
                                                         .avatar(user.getAvatar())
                                                         .reportCount(((Number) obj[1]).longValue())
                                                         .status(Boolean.TRUE.equals(user.getBanned()) ? "Banned"
                                                                         : "Active")
                                                         .build();
                                 })
+                                .filter(Objects::nonNull)
                                 .collect(Collectors.toList());
 
                 return DashboardStatsDTO.builder()

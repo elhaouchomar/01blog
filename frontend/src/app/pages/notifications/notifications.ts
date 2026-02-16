@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, signal, computed, effect } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
@@ -18,6 +18,11 @@ import { getInitials } from '../../utils/string.utils';
 })
 export class Notifications implements OnInit {
     activeFilter = signal('All');
+    private page = 0;
+    readonly pageSize = 20;
+    isLoadingMore = signal(false);
+    isMoreAvailable = signal(true);
+    private readonly scrollThreshold = 220;
 
     filteredNotifications = computed(() => {
         const all = this.dataService.notifications();
@@ -29,7 +34,7 @@ export class Notifications implements OnInit {
         const map: { [key: string]: string } = {
             'Comments': 'COMMENT',
             'Likes': 'LIKE',
-            'Follows': 'FOLLOW',
+            'Subscriptions': 'FOLLOW',
             'Posts': 'NEW_POST',
             'Events': 'SYSTEM'
         };
@@ -45,13 +50,45 @@ export class Notifications implements OnInit {
     ) { }
 
     ngOnInit() {
-        if (this.dataService.notifications().length === 0) {
-            this.dataService.loadNotifications();
-        }
+        this.loadInitialNotifications();
     }
 
     setFilter(filter: string) {
         this.activeFilter.set(filter);
+    }
+
+    private loadInitialNotifications() {
+        this.page = 0;
+        this.isMoreAvailable.set(true);
+        this.dataService.fetchNotifications(this.page, this.pageSize, false).subscribe({
+            next: (notifs) => {
+                this.isMoreAvailable.set(notifs.length >= this.pageSize);
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error('Failed to load notifications:', err);
+                this.isMoreAvailable.set(false);
+            }
+        });
+    }
+
+    private loadMoreNotifications() {
+        if (this.isLoadingMore() || !this.isMoreAvailable()) return;
+
+        this.isLoadingMore.set(true);
+        this.page++;
+        this.dataService.fetchNotifications(this.page, this.pageSize, true).subscribe({
+            next: (notifs) => {
+                this.isMoreAvailable.set(notifs.length >= this.pageSize);
+                this.isLoadingMore.set(false);
+                this.cdr.detectChanges();
+            },
+            error: (err) => {
+                console.error('Failed to load more notifications:', err);
+                this.isLoadingMore.set(false);
+                this.page = Math.max(0, this.page - 1);
+            }
+        });
     }
 
     markAllAsRead() {
@@ -99,4 +136,19 @@ export class Notifications implements OnInit {
 
     // Use shared utility
     getInitials = getInitials;
+
+    @HostListener('window:scroll', [])
+    onWindowScroll() {
+        if (this.isLoadingMore() || !this.isMoreAvailable()) return;
+
+        const viewportBottom = window.innerHeight + window.scrollY;
+        const pageHeight = Math.max(
+            document.documentElement.scrollHeight,
+            document.body.scrollHeight
+        );
+
+        if (viewportBottom >= pageHeight - this.scrollThreshold) {
+            this.loadMoreNotifications();
+        }
+    }
 }

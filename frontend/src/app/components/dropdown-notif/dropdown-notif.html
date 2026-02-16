@@ -26,12 +26,15 @@
                     <div class="notif-icon-badge" [ngClass]="{
                         'like-type': n.type === 'LIKE',
                         'comment-type': n.type === 'COMMENT',
-                        'follow-type': n.type === 'FOLLOW'
+                        'follow-type': n.type === 'FOLLOW',
+                        'system-type': n.type === 'SYSTEM',
+                        'post-type': n.type === 'NEW_POST'
                     }">
                         <span class="material-symbols-outlined icon-small" *ngIf="n.type === 'LIKE'">favorite</span>
                         <span class="material-symbols-outlined icon-small" *ngIf="n.type === 'COMMENT'">chat</span>
                         <span class="material-symbols-outlined icon-small" *ngIf="n.type === 'FOLLOW'">person_add</span>
                         <span class="material-symbols-outlined icon-small" *ngIf="n.type === 'SYSTEM'">info</span>
+                        <span class="material-symbols-outlined icon-small" *ngIf="n.type === 'NEW_POST'">article</span>
                     </div>
                 </div>
 

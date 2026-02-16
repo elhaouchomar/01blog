@@ -25,7 +25,7 @@
                             post.user.name }}</a>
                         <span class="post-author-handle">{{ post.user.handle }}</span>
                     </div>
-                    <p class="post-meta">{{ post.user.role || 'User' }} • {{ (post.createdAt || post.time) |
+                    <p class="post-meta">{{ (post.createdAt || post.time) |
                         date:'short'
                         }}</p>
                 </div>
@@ -47,31 +47,36 @@
             </button>
         </div>
 
-        <!-- Media Content (Image or Video) -->
-        <!-- Media Content (Image or Video) -->
-        <div class="post-media" *ngIf="hasMedia" (click)="openPostDetails($event)" style="cursor: pointer;">
-            <div class="media-slider" id="slider-{{ post.id }}" (scroll)="onScroll($event)"
-                [class.has-multiple]="mediaItems.length > 1">
-                <div class="media-slide" *ngFor="let media of mediaItems; let i = index; trackBy: trackByMedia">
-                    <!-- Video Player -->
-                    <div *ngIf="media.isVideo" class="video-container" (click)="openMediaViewer(i)"
-                        style="cursor: pointer;">
-                        <video class="post-video">
-                            <source [src]="media.url" type="video/mp4">
+        <div class="post-media" *ngIf="hasMedia">
+            <div class="media-slider" [style.transform]="'translateX(-' + (currentSlide * 100) + '%)'">
+                <div class="media-slide" *ngFor="let media of mediaItems; let i = index">
+                    <div *ngIf="media.isVideo" class="video-container">
+                        <video class="post-video" controls playsinline preload="metadata" (click)="$event.stopPropagation()"
+                            [poster]="media.poster || ''"
+                            (dblclick)="openMediaFullscreen($event, i)">
+                            <source [src]="media.url">
                             Your browser does not support the video tag.
                         </video>
                     </div>
 
-                    <!-- Image Viewer -->
-                    <div *ngIf="!media.isVideo" class="post-image" (click)="openMediaViewer(i)"
-                        style="cursor: pointer;">
+                    <div *ngIf="!media.isVideo" class="post-image" (click)="openMediaFullscreen($event, i)"
+                        style="cursor: zoom-in;">
                         <img [src]="media.url" alt="Post image" class="post-image-content"
                             style="width: 100%; height: 100%; object-fit: cover; display: block;" />
                     </div>
+
+                    <button type="button" class="media-expand-btn" (click)="openMediaFullscreen($event, i)"
+                        [attr.aria-label]="'Open media ' + (i + 1) + ' fullscreen'">
+                        <span class="material-symbols-outlined">open_in_full</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Navigation Buttons -->
+            <button type="button" class="media-details-btn" (click)="openPostDetails($event, currentSlide)">
+                <span class="material-symbols-outlined">article</span>
+                Details
+            </button>
+
             <div class="slider-nav" *ngIf="mediaItems.length > 1">
                 <button class="slider-btn prev" (click)="prevSlide($event)" [style.opacity]="currentSlide === 0 ? 0 : 1"
                     [disabled]="currentSlide === 0">
@@ -84,10 +89,11 @@
                 </button>
             </div>
 
-            <!-- Dots -->
             <div class="media-dots" *ngIf="mediaItems.length > 1">
-                <div class="dot" *ngFor="let item of mediaItems; let i = index" [class.active]="i === currentSlide">
-                </div>
+                <button type="button" class="dot" *ngFor="let item of mediaItems; let i = index"
+                    [class.active]="i === currentSlide" (click)="goToSlide($event, i)"
+                    [attr.aria-label]="'Go to media ' + (i + 1)">
+                </button>
             </div>
         </div>
 
@@ -105,4 +111,48 @@
             </div>
         </div>
     </article>
+
+    <div class="media-fullscreen-backdrop" *ngIf="isFullscreenOpen" (click)="closeMediaFullscreen($event)">
+        <div class="media-fullscreen-content" (click)="$event.stopPropagation()">
+            <button type="button" class="fullscreen-details-btn" (click)="openPostDetails($event, fullscreenSlide)"
+                aria-label="Open post details">
+                <span class="material-symbols-outlined">article</span>
+            </button>
+            <button type="button" class="fullscreen-close-btn" (click)="closeMediaFullscreen($event)"
+                aria-label="Close media viewer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+
+            <div class="media-fullscreen-slider"
+                [style.transform]="'translateX(-' + (fullscreenSlide * 100) + '%)'">
+                <div class="media-fullscreen-slide" *ngFor="let media of mediaItems; let i = index">
+                    <div *ngIf="media.isVideo" class="fullscreen-video-wrap">
+                        <video class="fullscreen-video" controls playsinline preload="metadata"
+                            [poster]="media.poster || ''">
+                            <source [src]="media.url">
+                        </video>
+                    </div>
+                    <img *ngIf="!media.isVideo" [src]="media.url" alt="Post media" class="fullscreen-image" />
+                </div>
+            </div>
+
+            <div class="fullscreen-nav" *ngIf="mediaItems.length > 1">
+                <button type="button" class="slider-btn prev" (click)="prevFullscreen($event)"
+                    [disabled]="fullscreenSlide === 0">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <button type="button" class="slider-btn next" (click)="nextFullscreen($event)"
+                    [disabled]="fullscreenSlide === mediaItems.length - 1">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+
+            <div class="fullscreen-dots" *ngIf="mediaItems.length > 1">
+                <button type="button" class="dot" *ngFor="let item of mediaItems; let i = index"
+                    [class.active]="i === fullscreenSlide" (click)="goToFullscreenSlide($event, i)"
+                    [attr.aria-label]="'Go to fullscreen media ' + (i + 1)">
+                </button>
+            </div>
+        </div>
+    </div>
 </ng-container>

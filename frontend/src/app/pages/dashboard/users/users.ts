@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -6,12 +6,14 @@ import { DataService } from '../../../services/data.service';
 import { ModalService } from '../../../services/modal.service';
 import { DbPageHeaderComponent } from '../../../components/dashboard/db-page-header';
 import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
-import Swal from 'sweetalert2';
+import { DbPaginationComponent } from '../../../components/dashboard/db-pagination';
+import { usePagination } from '../../../utils/pagination.utils';
+import { MaterialAlertService } from '../../../services/material-alert.service';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, DbPageHeaderComponent, DbFeedbackComponent],
+  imports: [CommonModule, FormsModule, RouterModule, DbPageHeaderComponent, DbFeedbackComponent, DbPaginationComponent],
   templateUrl: './users.html',
   styleUrl: './users.css',
 })
@@ -51,11 +53,24 @@ export class Users implements OnInit {
     return filtered;
   });
 
-  // Removed local pagination utility as we now use full-list scrolling
+  pagination = usePagination(() => this.filteredUsers(), 8);
+  paginatedUsers = computed(() => this.pagination.paginatedData());
 
   isLoading = computed(() => this.dataService.allUsers().length === 0 && !this.dataService.dashboardStats());
 
-  constructor(public dataService: DataService, public modalService: ModalService, public router: Router) { }
+  constructor(
+    public dataService: DataService,
+    public modalService: ModalService,
+    public router: Router,
+    private alert: MaterialAlertService
+  ) {
+    effect(() => {
+      const totalPages = this.pagination.totalPages();
+      if (this.pagination.currentPage() > totalPages) {
+        this.pagination.goToPage(totalPages);
+      }
+    });
+  }
 
   ngOnInit() {
     if (this.dataService.allUsers().length === 0) {
@@ -65,15 +80,17 @@ export class Users implements OnInit {
 
   onSearch(event: any) {
     this.searchQuery.set(event.target.value);
+    this.pagination.goToPage(1);
   }
 
   setStatusFilter(status: string) {
     this.statusFilter.set(status);
+    this.pagination.goToPage(1);
   }
 
   toggleBan(user: any) {
     const action = user.banned ? 'Unban' : 'Ban';
-    Swal.fire({
+    this.alert.fire({
       title: `${action} User?`,
       text: `Are you sure you want to ${action.toLowerCase()} ${user.name}?`,
       icon: 'warning',
@@ -85,7 +102,7 @@ export class Users implements OnInit {
       if (result.isConfirmed) {
         this.dataService.toggleBan(user.id).subscribe({
           next: () => {
-            Swal.fire(
+            this.alert.fire(
               'Updated!',
               `User has been ${user.banned ? 'unbanned' : 'banned'}.`,
               'success'
@@ -93,7 +110,7 @@ export class Users implements OnInit {
           },
           error: (err: any) => {
             const errorMessage = err.error?.message || 'Failed to update user status.';
-            Swal.fire('Error', errorMessage, 'error');
+            this.alert.fire('Error', errorMessage, 'error');
           }
         });
       }
@@ -101,7 +118,7 @@ export class Users implements OnInit {
   }
 
   deleteUser(user: any) {
-    Swal.fire({
+    this.alert.fire({
       title: 'Delete User?',
       text: `Are you sure you want to delete ${user.name}? This action cannot be undone.`,
       icon: 'warning',
@@ -113,7 +130,7 @@ export class Users implements OnInit {
       if (result.isConfirmed) {
         this.dataService.deleteUserAction(user.id).subscribe({
           next: () => {
-            Swal.fire(
+            this.alert.fire(
               'Deleted!',
               'User has been deleted.',
               'success'
@@ -121,7 +138,7 @@ export class Users implements OnInit {
           },
           error: (err) => {
             const errorMessage = err.error?.message || 'Failed to delete user.';
-            Swal.fire('Error', errorMessage, 'error');
+            this.alert.fire('Error', errorMessage, 'error');
           }
         });
       }

@@ -1,0 +1,150 @@
+.db-pagination {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.db-pagination__summary {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.db-pagination__summary strong {
+    color: var(--text-main);
+}
+
+.db-pagination__controls {
+    display: flex;
+    align-items: center;
+}
+
+.db-pagination__group {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid var(--gray-300);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    background: #fff;
+}
+
+.db-pagination__button,
+.db-pagination__counter {
+    min-height: 36px;
+    border: 0;
+    border-right: 1px solid var(--gray-300);
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.db-pagination__button {
+    width: 42px;
+    cursor: pointer;
+    color: var(--text-main);
+}
+
+.db-pagination__button:last-child {
+    border-right: 0;
+}
+
+.db-pagination__button .material-symbols-outlined {
+    font-size: 1.25rem;
+}
+
+.db-pagination__button:hover:not(:disabled) {
+    background: var(--gray-100);
+}
+
+.db-pagination__button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.db-pagination__counter {
+    padding: 0 0.8rem;
+    font-weight: 700;
+    color: var(--text-main);
+    background: var(--gray-100);
+    white-space: nowrap;
+}
+
+.db-pagination__pages {
+    display: inline-flex;
+    align-items: center;
+    border-right: 1px solid var(--gray-300);
+    background: #fff;
+}
+
+.db-pagination__page-btn {
+    min-width: 34px;
+    height: 36px;
+    border: 0;
+    border-right: 1px solid var(--gray-200);
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 700;
+    padding: 0 0.45rem;
+}
+
+.db-pagination__page-btn:last-child {
+    border-right: 0;
+}
+
+.db-pagination__page-btn:not(:disabled):hover {
+    background: var(--gray-100);
+    color: var(--text-main);
+}
+
+.db-pagination__page-btn--active {
+    background: rgba(var(--primary-rgb), 0.08);
+    color: var(--text-main);
+}
+
+.db-pagination__page-btn--ellipsis {
+    cursor: default;
+    color: var(--gray-400);
+}
+
+.db-pagination__counter-label {
+    margin-right: 0.35rem;
+}
+
+.db-pagination__counter-separator {
+    margin: 0 0.3rem;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 576px) {
+    .db-pagination {
+        flex-direction: column-reverse;
+        align-items: flex-start;
+        gap: 0.6rem;
+    }
+
+    .db-pagination__group {
+        width: 100%;
+        justify-content: space-between;
+        overflow: hidden;
+    }
+
+    .db-pagination__counter {
+        order: 1;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .db-pagination__pages {
+        display: none;
+    }
+
+    .db-pagination__counter-label {
+        display: none;
+    }
+}

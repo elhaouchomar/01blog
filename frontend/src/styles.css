@@ -1,3 +1,5 @@
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+
 /* ============================================
    CSS DESIGN SYSTEM - 01 BLOG
    Semantic Component-Based CSS
@@ -6,34 +8,41 @@
 /* ===== CSS VARIABLES ===== */
 :root {
     /* Colors */
-    --primary: #000000;
-    --primary-rgb: 0, 0, 0;
-    --primary-hover: #111111;
-    --primary-dark: #000000;
-    --background-light: #ffffff;
-    --background-dark: #0a0a0a;
+    --primary: #0f766e;
+    --primary-rgb: 15, 118, 110;
+    --primary-hover: #0d9488;
+    --primary-dark: #115e59;
+    --background-light: #f7fbfa;
+    --background-dark: #0b1318;
     --surface-light: #ffffff;
-    --surface-dark: #1e1e2f;
-    --text-main: #111318;
-    --text-secondary: #616f89;
-    --danger: #ef4444;
-    --danger-rgb: 239, 68, 68;
-    --warning: #f97316;
-    --warning-rgb: 249, 115, 22;
-    --success: #22c55e;
-    --success-rgb: 34, 197, 94;
+    --surface-dark: #18232d;
+    --text-main: #102a2c;
+    --text-secondary: #4f6b70;
+    --danger: #e11d48;
+    --danger-rgb: 225, 29, 72;
+    --warning: #f59e0b;
+    --warning-rgb: 245, 158, 11;
+    --success: #16a34a;
+    --success-rgb: 22, 163, 74;
 
     /* Gray Scale */
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --gray-900: #111827;
+    --gray-50: #f4f8f8;
+    --gray-100: #e9efef;
+    --gray-200: #d6e1e1;
+    --gray-300: #bdcbcb;
+    --gray-400: #91a8a8;
+    --gray-500: #6d8686;
+    --gray-600: #4f6b6b;
+    --gray-700: #385252;
+    --gray-800: #203738;
+    --gray-900: #10282a;
+
+    /* Bootstrap Bridge */
+    --bs-primary: var(--primary);
+    --bs-primary-rgb: var(--primary-rgb);
+    --bs-success: var(--success);
+    --bs-danger: var(--danger);
+    --bs-warning: var(--warning);
 
     /* Fonts */
     --font-display: 'Inter', sans-serif;
@@ -63,6 +72,10 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.2s, color 0.2s;
+}
+
+.material-symbols-outlined {
+    color: inherit;
 }
 
 /* ===== LAYOUT ===== */
@@ -162,7 +175,7 @@ body {
 
 .logo-icon {
     padding: 0.375rem;
-    background-color: rgba(19, 19, 236, 0.1);
+    background-color: rgba(var(--primary-rgb), 0.1);
     border-radius: 0.5rem;
 }
 
@@ -213,7 +226,7 @@ body {
 
 .search-input:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(19, 19, 236, 0.2);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
     background-color: white;
 }
 
@@ -487,7 +500,7 @@ body {
 .btn-primary {
     background-color: var(--primary);
     color: white;
-    box-shadow: 0 1px 2px 0 rgba(19, 19, 236, 0.2);
+    box-shadow: 0 1px 2px 0 rgba(var(--primary-rgb), 0.2);
 }
 
 .btn-primary:hover {
@@ -621,7 +634,7 @@ body {
 .input-field:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(19, 19, 236, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
 .textarea-field {
@@ -642,7 +655,7 @@ body {
 .textarea-field:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(19, 19, 236, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
 /* ===== AUTH PAGES ===== */
@@ -1334,7 +1347,7 @@ body {
 
 
 .nav-link.active {
-    background-color: rgba(19, 19, 236, 0.1);
+    background-color: rgba(var(--primary-rgb), 0.1);
     color: var(--primary);
     font-weight: 700;
 }
@@ -1729,7 +1742,7 @@ body {
 
 
 .tag-item:hover {
-    background-color: rgba(19, 19, 236, 0.05);
+    background-color: rgba(var(--primary-rgb), 0.05);
     color: var(--primary);
 }
 
@@ -1780,7 +1793,7 @@ body {
 }
 
 .share-btn:hover .icon-wrapper {
-    background-color: rgba(19, 19, 236, 0.05);
+    background-color: rgba(var(--primary-rgb), 0.05);
 }
 
 .bookmark-btn {
@@ -1987,7 +2000,7 @@ body {
 }
 
 .send-btn:hover {
-    background-color: rgba(19, 19, 236, 0.1);
+    background-color: rgba(var(--primary-rgb), 0.1);
 }
 
 /* ===== CONFIRM DELETE MODAL ===== */
@@ -2258,7 +2271,7 @@ body {
 .text-input:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(19, 19, 236, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
 /* Notification styles moved to notifications.css */
@@ -2968,4 +2981,59 @@ body {
     overflow: hidden;
     line-clamp: 2;
     /* Compatibility fix */
+}
+
+/* Material alert toast themes */
+.mat-mdc-snack-bar-container.material-alert-toast .mdc-snackbar__surface {
+    border-radius: 12px !important;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.mat-mdc-snack-bar-container.material-alert-toast .mdc-snackbar__label,
+.mat-mdc-snack-bar-container.material-alert-toast .mat-mdc-button {
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+.mat-mdc-snack-bar-container.material-alert-toast .mdc-snackbar__label {
+    font-family: var(--font-display) !important;
+    letter-spacing: 0.01em;
+}
+
+.mat-mdc-snack-bar-container.material-alert-toast .mat-mdc-button {
+    font-family: var(--font-display) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.mat-mdc-snack-bar-container.material-alert-toast--success .mdc-snackbar__surface {
+    background: linear-gradient(135deg, #16a34a, #22c55e) !important;
+}
+
+.mat-mdc-snack-bar-container.material-alert-toast--error .mdc-snackbar__surface {
+    background: linear-gradient(135deg, #b91c1c, #dc2626) !important;
+}
+
+.mat-mdc-snack-bar-container.material-alert-toast--warning .mdc-snackbar__surface {
+    background: linear-gradient(135deg, #b45309, #f59e0b) !important;
+}
+
+.mat-mdc-snack-bar-container.material-alert-toast--info .mdc-snackbar__surface,
+.mat-mdc-snack-bar-container.material-alert-toast--question .mdc-snackbar__surface {
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6) !important;
+}
+
+/* Reusable single-line overflow handling */
+.text-ellipsis {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* Reusable flex/table shrink helper */
+.min-w-0 {
+    min-width: 0 !important;
 }

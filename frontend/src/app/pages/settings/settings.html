@@ -1,15 +1,13 @@
-<div class="settings-container">
-    <div class="settings-wrapper">
-        <app-navbar></app-navbar>
+<div class="page-container settings-container">
+    <app-navbar></app-navbar>
 
-        <div class="settings-main-content">
-            <div class="settings-grid">
-                <!-- Global Sidebar Integration -->
-                <app-sidebar class="settings-sidebar-wrapper"></app-sidebar>
+    <div class="content-wrapper settings-content-wrapper">
+        <!-- Left Sidebar -->
+        <app-sidebar class="sidebar"></app-sidebar>
 
-                <main class="settings-content-area">
-                    <div class="settings-layout">
-                        <div class="settings-content-wrapper">
+        <main class="main-feed settings-content-area">
+            <div class="settings-layout">
+                <div class="settings-content-wrapper-inner">
 
                             <!-- Account Tab Content -->
                             <ng-container *ngIf="activeTab === 'Account'">
@@ -94,11 +92,12 @@
                                 </div>
                             </ng-container>
 
-                        </div>
-                    </div>
-                </main>
+                </div>
             </div>
-        </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <app-right-sidebar class="sidebar"></app-right-sidebar>
     </div>
 
     <!-- Global Feedback Toast -->

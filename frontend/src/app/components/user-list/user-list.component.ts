@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from '../../services/data.service';
-import Swal from 'sweetalert2';
+import { MaterialAlertService } from '../../services/material-alert.service';
 
 @Component({
     selector: 'app-user-list',
@@ -22,7 +22,10 @@ export class UserListComponent implements OnInit {
     currentPage = 1;
     itemsPerPage = 10;
 
-    constructor(private dataService: DataService) { }
+    constructor(
+        private dataService: DataService,
+        private alert: MaterialAlertService
+    ) { }
 
     ngOnInit() {
         this.loadUsers();
@@ -59,7 +62,7 @@ export class UserListComponent implements OnInit {
     }
 
     deleteUser(user: any) {
-        Swal.fire({
+        this.alert.fire({
             title: `Delete ${user.name}?`,
             text: "This action cannot be undone.",
             icon: 'warning',
@@ -73,13 +76,13 @@ export class UserListComponent implements OnInit {
                     next: () => {
                         this.users = this.users.filter(u => u.id !== user.id);
                         this.filterUsers();
-                        Swal.fire(
+                        this.alert.fire(
                             'Deleted!',
                             'User has been deleted.',
                             'success'
                         );
                     },
-                    error: (err) => Swal.fire('Error', 'Could not delete user.', 'error')
+                    error: (err) => this.alert.fire('Error', 'Could not delete user.', 'error')
                 });
             }
         });
@@ -90,7 +93,7 @@ export class UserListComponent implements OnInit {
         user.isBanned = !user.isBanned;
         this.dataService.toggleBan(user.id).subscribe({
             next: () => {
-                Swal.fire({
+                this.alert.fire({
                     position: 'top-end',
                     icon: 'success',
                     title: `User ${user.isBanned ? 'Banned' : 'Activated'}`,
@@ -102,7 +105,7 @@ export class UserListComponent implements OnInit {
             error: (err) => {
                 user.isBanned = !user.isBanned; // Revert
                 console.error('Error banning user', err);
-                Swal.fire('Error', 'Could not update ban status.', 'error');
+                this.alert.fire('Error', 'Could not update ban status.', 'error');
             }
         });
     }

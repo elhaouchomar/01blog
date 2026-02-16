@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ModalService } from '../../services/modal.service';
 import { DataService } from '../../services/data.service';
 import { User } from '../../models/data.models';
-import Swal from 'sweetalert2';
+import { MaterialAlertService } from '../../services/material-alert.service';
 
 @Component({
     selector: 'app-edit-profile-modal',
@@ -23,7 +23,11 @@ export class EditProfileModal implements OnInit {
         banned: false
     };
 
-    constructor(protected modalService: ModalService, private dataService: DataService) { }
+    constructor(
+        protected modalService: ModalService,
+        private dataService: DataService,
+        private alert: MaterialAlertService
+    ) { }
 
     ngOnInit() {
         this.user = this.modalService.modalData();
@@ -41,17 +45,21 @@ export class EditProfileModal implements OnInit {
     save() {
         if (!this.user) return;
 
+        this.form.firstname = this.sanitizeInput(this.form.firstname);
+        this.form.lastname = this.sanitizeInput(this.form.lastname);
+        this.form.bio = this.sanitizeInput(this.form.bio);
+
         const nameRegex = /^[A-Za-z\-']{2,50}$/;
         if (!nameRegex.test(this.form.firstname)) {
-            Swal.fire('Validation Error', 'First name must contain only letters and be 2-50 characters.', 'warning');
+            this.alert.fire('Validation Error', 'First name must contain only letters and be 2-50 characters.', 'warning');
             return;
         }
         if (!nameRegex.test(this.form.lastname)) {
-            Swal.fire('Validation Error', 'Last name must contain only letters and be 2-50 characters.', 'warning');
+            this.alert.fire('Validation Error', 'Last name must contain only letters and be 2-50 characters.', 'warning');
             return;
         }
         if (this.form.bio && this.form.bio.length > 500) {
-            Swal.fire('Validation Error', 'Bio must be less than 500 characters.', 'warning');
+            this.alert.fire('Validation Error', 'Bio must be less than 500 characters.', 'warning');
             return;
         }
 
@@ -59,7 +67,7 @@ export class EditProfileModal implements OnInit {
             next: () => {
                 this.dataService.loadUsers();
                 this.modalService.close();
-                Swal.fire({
+                this.alert.fire({
                     position: 'top-end',
                     icon: 'success',
                     title: 'Profile updated',
@@ -70,12 +78,21 @@ export class EditProfileModal implements OnInit {
             },
             error: (err) => {
                 console.error('Error updating user:', err);
-                Swal.fire('Error', 'Failed to update user.', 'error');
+                this.alert.fire('Error', 'Failed to update user.', 'error');
             }
         });
     }
 
     close() {
         this.modalService.close();
+    }
+
+    private sanitizeInput(value: string): string {
+        if (typeof document === 'undefined') {
+            return value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        }
+        const div = document.createElement('div');
+        div.innerHTML = value;
+        return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
     }
 }

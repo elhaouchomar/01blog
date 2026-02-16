@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { SidebarComponent } from '../../components/left-sidebar/left-sidebar';
+import { RightSidebarComponent } from '../../components/right-sidebar/right-sidebar';
 import { DataService } from '../../services/data.service';
 import { User } from '../../models/data.models';
 
 @Component({
     selector: 'app-settings',
     standalone: true,
-    imports: [CommonModule, NavbarComponent, SidebarComponent, FormsModule],
+    imports: [CommonModule, NavbarComponent, SidebarComponent, RightSidebarComponent, FormsModule],
     templateUrl: './settings.html',
     styleUrl: './settings.css'
 })

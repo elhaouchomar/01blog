@@ -218,7 +218,7 @@
     width: 6rem;
     height: 2rem;
     border-radius: 9999px;
-    border: 1px solid rgba(19, 19, 236, 0.5);
+    border: 1px solid rgba(var(--primary-rgb), 0.5);
     color: var(--primary);
     background: none;
     font-size: 0.75rem;
@@ -228,7 +228,7 @@
 }
 
 .follow-btn:hover {
-    background-color: rgba(19, 19, 236, 0.05);
+    background-color: rgba(var(--primary-rgb), 0.05);
 }
 
 .view-all-link {
@@ -296,5 +296,5 @@
 }
 
 :host-context(.dark) .follow-btn:hover {
-    background-color: rgba(19, 19, 236, 0.1);
+    background-color: rgba(var(--primary-rgb), 0.1);
 }

@@ -5,6 +5,7 @@ import com.blog._blog.dto.UserDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 
 import javax.validation.Valid;
@@ -56,6 +57,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Integer id, Authentication authentication) {
         String email = authentication.getName();
         userService.deleteUser(id, email);
@@ -63,12 +65,14 @@ public class UserController {
     }
 
     @PutMapping("/{id}/ban")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UserDTO> toggleBan(@PathVariable Integer id, Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(userService.toggleBan(id, email));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<UserDTO> adminUpdateUser(@PathVariable Integer id, @Valid @RequestBody UserDTO userDTO,
             Authentication authentication) {
         String email = authentication.getName();

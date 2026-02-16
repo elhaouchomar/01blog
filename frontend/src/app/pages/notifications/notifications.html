@@ -29,8 +29,8 @@
                     (click)="setFilter('Comments')">Comments</button>
                 <button class="filter-btn" [class.active]="activeFilter() === 'Likes'"
                     (click)="setFilter('Likes')">Likes</button>
-                <button class="filter-btn" [class.active]="activeFilter() === 'Follows'"
-                    (click)="setFilter('Follows')">Follows</button>
+                <button class="filter-btn" [class.active]="activeFilter() === 'Subscriptions'"
+                    (click)="setFilter('Subscriptions')">Subscriptions</button>
                 <button class="filter-btn" [class.active]="activeFilter() === 'Posts'"
                     (click)="setFilter('Posts')">Posts</button>
             </div>
@@ -94,10 +94,21 @@
                     <h3 class="empty-title">No notifications found</h3>
                     <p class="empty-desc">Adjust your filters to see more.</p>
                 </div>
+
+                <div class="notifications-load-state" *ngIf="isLoadingMore()">
+                    <div class="spinner-border text-primary shadow-sm" role="status">
+                        <span class="visually-hidden">Loading more...</span>
+                    </div>
+                </div>
+
+                <div class="notifications-load-state done" *ngIf="!isMoreAvailable() && filteredNotifications().length > 0">
+                    <span class="material-symbols-outlined">done_all</span>
+                    <span>You're up to date</span>
+                </div>
             </div>
         </main>
 
-        <!-- Right Sidebar (Who to follow) -->
+        <!-- Right Sidebar (Who to subscribe) -->
         <app-right-sidebar class="sidebar"></app-right-sidebar>
     </div>
 </div>

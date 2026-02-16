@@ -1,13 +1,12 @@
-import { Component, Input, ChangeDetectorRef, effect } from '@angular/core';
+import { Component, Input, ChangeDetectorRef, effect, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { Post } from '../../models/data.models';
 import { ModalService } from '../../services/modal.service';
 import { DataService } from '../../services/data.service';
 import { ActionMenuComponent, ActionMenuItem } from '../action-menu/action-menu';
 import { getInitials } from '../../utils/string.utils';
-import Swal from 'sweetalert2';
+import { MaterialAlertService } from '../../services/material-alert.service';
 
 @Component({
     selector: 'app-post-card',
@@ -16,7 +15,7 @@ import Swal from 'sweetalert2';
     templateUrl: './post-card.html',
     styleUrl: './post-card.css'
 })
-export class PostCardComponent {
+export class PostCardComponent implements OnDestroy {
     private _post!: Post;
     @Input() set post(value: Post) {
         this._post = value;
@@ -27,13 +26,15 @@ export class PostCardComponent {
     currentUser: any = null;
     isExpanded: boolean = false;
     currentSlide = 0;
-    cachedMediaItems: { url: SafeUrl, isVideo: boolean }[] = [];
+    cachedMediaItems: { url: string, isVideo: boolean, poster?: string }[] = [];
+    isFullscreenOpen = false;
+    fullscreenSlide = 0;
 
     constructor(
         protected modalService: ModalService,
         public dataService: DataService,
         private cdr: ChangeDetectorRef,
-        private sanitizer: DomSanitizer
+        private alert: MaterialAlertService
     ) {
         effect(() => {
             this.currentUser = this.dataService.currentUser();
@@ -52,22 +53,36 @@ export class PostCardComponent {
 
     private computeMediaItems() {
         if (!this._post) return;
-        const items: { content: string, isVideo: boolean }[] = [];
+        const items: { content: string, isVideo: boolean, poster?: string }[] = [];
 
         if (this._post.images && Array.isArray(this._post.images) && this._post.images.length > 0) {
-            items.push(...this._post.images.map(img => ({ content: img, isVideo: this.checkIsVideo(img) })));
+            items.push(...this._post.images
+                .filter((img): img is string => typeof img === 'string' && !!img)
+                .map(img => ({ content: img, isVideo: this.checkIsVideo(img), poster: undefined })));
         }
         if (items.length === 0 && this._post.image) {
-            items.push({ content: this._post.image, isVideo: this.checkIsVideo(this._post.image) });
+            items.push({ content: this._post.image, isVideo: this.checkIsVideo(this._post.image), poster: undefined });
         }
-        if (this._post.video?.url) {
-            items.push({ content: this._post.video.url, isVideo: true });
+
+        // Accept multiple backend shapes for video field.
+        const videoField: any = (this._post as any).video;
+        const videoUrl: string | undefined =
+            typeof videoField === 'string'
+                ? videoField
+                : videoField?.url || (this._post as any).videoUrl;
+        const videoPoster: string | undefined =
+            typeof videoField === 'object' ? videoField?.thumbnail : undefined;
+
+        if (videoUrl) {
+            items.push({ content: videoUrl, isVideo: true, poster: videoPoster });
         }
 
         this.cachedMediaItems = items.map(item => ({
-            url: this.sanitizer.bypassSecurityTrustUrl(item.content),
-            isVideo: item.isVideo
+            url: item.content,
+            isVideo: item.isVideo,
+            poster: item.poster
         }));
+        this.currentSlide = 0;
     }
 
     get mediaItems() { return this.cachedMediaItems; }
@@ -76,25 +91,14 @@ export class PostCardComponent {
         return this.cachedMediaItems.length > 0;
     }
 
-    trackByMedia(index: number, item: any) {
-        return item.url || index;
-    }
-
     toggleExpand() {
         this.isExpanded = !this.isExpanded;
-    }
-
-    checkIsVideo(url: string): boolean {
-        if (!url) return false;
-        const u = url.toLowerCase();
-        return u.startsWith('data:video') || u.endsWith('.mp4') || u.endsWith('.webm') || u.endsWith('.mov');
     }
 
     nextSlide(event: Event) {
         event.stopPropagation();
         if (this.currentSlide < this.mediaItems.length - 1) {
             this.currentSlide++;
-            this.scrollToSlide();
         }
     }
 
@@ -102,24 +106,62 @@ export class PostCardComponent {
         event.stopPropagation();
         if (this.currentSlide > 0) {
             this.currentSlide--;
-            this.scrollToSlide();
         }
     }
 
-    scrollToSlide() {
-        const slider = document.querySelector(`#slider-${this.post.id}`);
-        if (slider) {
-            const slideWidth = slider.clientWidth;
-            slider.scrollTo({ left: this.currentSlide * slideWidth, behavior: 'smooth' });
+    goToSlide(event: Event, index: number) {
+        event.stopPropagation();
+        this.currentSlide = index;
+    }
+
+    openMediaFullscreen(event: Event, index: number) {
+        event.stopPropagation();
+        this.fullscreenSlide = index;
+        this.isFullscreenOpen = true;
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeMediaFullscreen(event?: Event) {
+        if (event) event.stopPropagation();
+        this.isFullscreenOpen = false;
+        if (!this.modalService.activeModal()) {
+            document.body.style.overflow = '';
         }
     }
 
-    onScroll(event: Event) {
-        const target = event.target as HTMLElement;
-        const slideWidth = target.clientWidth;
-        if (slideWidth > 0) {
-            this.currentSlide = Math.round(target.scrollLeft / slideWidth);
+    ngOnDestroy(): void {
+        if (this.isFullscreenOpen && !this.modalService.activeModal()) {
+            document.body.style.overflow = '';
         }
+    }
+
+    nextFullscreen(event: Event) {
+        event.stopPropagation();
+        if (this.fullscreenSlide < this.mediaItems.length - 1) {
+            this.fullscreenSlide++;
+        }
+    }
+
+    prevFullscreen(event: Event) {
+        event.stopPropagation();
+        if (this.fullscreenSlide > 0) {
+            this.fullscreenSlide--;
+        }
+    }
+
+    goToFullscreenSlide(event: Event, index: number) {
+        event.stopPropagation();
+        this.fullscreenSlide = index;
+    }
+
+    checkIsVideo(url: string): boolean {
+        if (!url) return false;
+        const u = url.toLowerCase().trim();
+        if (u.startsWith('data:video') || u.startsWith('blob:')) return true;
+
+        // Remove query/hash so signed URLs like ".mp4?token=..." are recognized.
+        const clean = u.split('#')[0].split('?')[0];
+        return /\.(mp4|webm|mov|m4v|mkv|avi|mpeg|mpg|ogv|ogg)$/i.test(clean);
     }
 
     // Use shared utility
@@ -183,7 +225,7 @@ export class PostCardComponent {
     togglePostVisibility(event: Event, post: any) {
         if (event) event.stopPropagation();
         const action = post.hidden ? 'unhide' : 'hide';
-        Swal.fire({
+        this.alert.fire({
             title: `${action.charAt(0).toUpperCase() + action.slice(1)} Post?`,
             text: `Are you sure you want to ${action} "${post.title}"?`,
             icon: 'warning',
@@ -198,7 +240,7 @@ export class PostCardComponent {
                         // Update the post's hidden status locally using the response if possible, or toggle
                         this.post.hidden = updatedPost ? updatedPost.hidden : !this.post.hidden;
                         this.cdr.detectChanges();
-                        Swal.fire({
+                        this.alert.fire({
                             position: 'top-end',
                             icon: 'success',
                             title: `Post ${action}d`,
@@ -218,7 +260,7 @@ export class PostCardComponent {
     }
 
     deletePost() {
-        Swal.fire({
+        this.alert.fire({
             title: 'Delete Post?',
             text: `Are you sure you want to permanently delete "${this.post.title}"?`,
             icon: 'warning',
@@ -231,7 +273,7 @@ export class PostCardComponent {
                 this.dataService.deletePost(this.post.id).subscribe({
                     next: () => {
                         this.dataService.loadPosts();
-                        Swal.fire(
+                        this.alert.fire(
                             'Deleted!',
                             'Your post has been deleted.',
                             'success'
@@ -244,51 +286,44 @@ export class PostCardComponent {
     }
 
     reportPost() {
-        Swal.fire({
-            title: 'Report Post?',
-            text: 'Are you sure you want to flag this content? Our moderation team will review it.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, Report',
-            confirmButtonColor: '#d33',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                this.dataService.reportContent('General Report', undefined, this.post.id).subscribe({
-                    next: () => {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Report Received',
-                            text: 'Thank you for your feedback.',
-                            timer: 2000,
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false
-                        });
-                    },
-                    error: (err) => this.handleError(err, 'submit report')
-                });
-            }
+        this.alert.promptReason({
+            title: 'Report Post',
+            subtitle: 'Describe why this post should be reviewed.',
+            placeholder: 'Enter your reason (required)'
+        }).then((reason) => {
+            if (!reason) return;
+
+            this.dataService.reportContent(reason, undefined, this.post.id).subscribe({
+                next: () => {
+                    this.alert.fire({
+                        icon: 'success',
+                        title: 'Report Received',
+                        text: 'Thank you for your feedback.',
+                        timer: 2000,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false
+                    });
+                },
+                error: (err) => this.handleError(err, 'submit report')
+            });
         });
     }
 
-    openMediaViewer(index: number) {
-        this.modalService.open('media-viewer', {
-            items: this.mediaItems,
-            initialIndex: index
-        });
-    }
-
-    openPostDetails(event?: Event) {
+    openPostDetails(event?: Event, initialMediaIndex = 0) {
         if (event) {
             event.stopPropagation();
         }
-        this.modalService.open('post-details', this.post);
+        this.isFullscreenOpen = false;
+        const modalPayload = this.post?.id
+            ? { id: this.post.id, initialMediaIndex }
+            : { ...this.post, initialMediaIndex };
+        this.modalService.open('post-details', modalPayload);
     }
 
     deleteUserAccount() {
         if (!this.post.user) return;
-        Swal.fire({
+        this.alert.fire({
             title: 'Delete User Account?',
             text: `Are you sure you want to permanently delete ${this.post.user.name}? This action cannot be undone.`,
             icon: 'warning',
@@ -299,7 +334,7 @@ export class PostCardComponent {
             if (result.isConfirmed) {
                 this.dataService.deleteUserAction(this.post.user.id).subscribe({
                     next: () => {
-                        Swal.fire('Deleted!', 'User has been removed.', 'success');
+                        this.alert.fire('Deleted!', 'User has been removed.', 'success');
                         // DataService.loadPosts will be called by deleteUserAction, which refreshes feed
                     },
                     error: (err) => this.handleError(err, 'delete user')
@@ -313,7 +348,7 @@ export class PostCardComponent {
         const errorMessage = err.error?.message || err.message || `Failed to ${action}.`;
 
         if (errorMessage.toLowerCase().includes('banned')) {
-            Swal.fire({
+            this.alert.fire({
                 icon: 'error',
                 title: 'Account Restricted',
                 text: 'You are banned and cannot perform this action.',
@@ -324,7 +359,7 @@ export class PostCardComponent {
                 }
             });
         } else {
-            Swal.fire('Error', errorMessage, 'error');
+            this.alert.fire('Error', errorMessage, 'error');
         }
     }
 }
