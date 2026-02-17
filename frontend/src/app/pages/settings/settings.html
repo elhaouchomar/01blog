@@ -9,88 +9,86 @@
             <div class="settings-layout">
                 <div class="settings-content-wrapper-inner">
 
-                            <!-- Account Tab Content -->
-                            <ng-container *ngIf="activeTab === 'Account'">
-                                <div class="settings-page-header">
-                                    <h1 class="settings-page-title">Account Settings</h1>
-                                    <p class="settings-page-description">Manage your personal information and profile
-                                        details.</p>
+                    <!-- Account Tab Content -->
+                    <ng-container *ngIf="activeTab === 'Account'">
+                        <div class="settings-page-header">
+                            <h1 class="settings-page-title">Account Settings</h1>
+                            <p class="settings-page-description">Manage your personal information and profile
+                                details.</p>
+                        </div>
+
+                        <!-- Profile Photo & Cover Section -->
+                        <section class="settings-section">
+                            <div class="profile-photo-container">
+                                <div class="profile-photo-wrapper">
+                                    <div class="profile-photo-preview"
+                                        [style.background-image]="'url(' + (editForm.avatar || 'assets/default-avatar.png') + ')'">
+                                    </div>
+                                    <div class="profile-photo-overlay" (click)="avatarInput.click()">
+                                        <span class="material-symbols-outlined">photo_camera</span>
+                                    </div>
                                 </div>
-
-                                <!-- Profile Photo & Cover Section -->
-                                <section class="settings-section">
-                                    <div class="profile-photo-container">
-                                        <div class="profile-photo-wrapper">
-                                            <div class="profile-photo-preview"
-                                                [style.background-image]="'url(' + (editForm.avatar || 'assets/default-avatar.png') + ')'">
-                                            </div>
-                                            <div class="profile-photo-overlay" (click)="avatarInput.click()">
-                                                <span class="material-symbols-outlined">photo_camera</span>
-                                            </div>
-                                        </div>
-                                        <div class="profile-photo-info">
-                                            <h3 class="profile-photo-title">Profile Photo</h3>
-                                            <p class="profile-photo-description">Choose a high-quality square image for
-                                                your avatar.</p>
-                                            <div class="profile-photo-actions">
-                                                <input type="file" #avatarInput
-                                                    (change)="onFileSelected($event, 'avatar')" accept="image/*"
-                                                    style="display: none;">
-                                                <button class="btn-upload" (click)="avatarInput.click()">Upload
-                                                    New</button>
-                                                <button class="btn-remove"
-                                                    (click)="editForm.avatar = ''">Remove</button>
-                                            </div>
-                                        </div>
+                                <div class="profile-photo-info">
+                                    <h3 class="profile-photo-title">Profile Photo</h3>
+                                    <p class="profile-photo-description">Choose a high-quality square image for
+                                        your avatar.</p>
+                                    <div class="profile-photo-actions">
+                                        <input type="file" #avatarInput (change)="onFileSelected($event, 'avatar')"
+                                            accept="image/*" style="display: none;">
+                                        <button class="btn-upload" (click)="avatarInput.click()">Upload
+                                            New</button>
+                                        <button class="btn-remove" (click)="editForm.avatar = ''">Remove</button>
                                     </div>
-                                </section>
-
-                                <!-- Personal Information Form -->
-                                <section class="settings-section">
-                                    <div class="settings-section-header">
-                                        <h3 class="settings-section-title">Personal Information</h3>
-                                    </div>
-                                    <div class="settings-form-grid">
-                                        <div class="form-field">
-                                            <label class="form-field-label">First Name</label>
-                                            <div class="form-field-wrapper">
-                                                <input class="form-field-input" type="text"
-                                                    [(ngModel)]="editForm.firstname" placeholder="First Name" />
-                                                <span class="material-symbols-outlined form-field-icon">person</span>
-                                            </div>
-                                        </div>
-                                        <div class="form-field">
-                                            <label class="form-field-label">Last Name</label>
-                                            <div class="form-field-wrapper">
-                                                <input class="form-field-input" type="text"
-                                                    [(ngModel)]="editForm.lastname" placeholder="Last Name" />
-                                                <span class="material-symbols-outlined form-field-icon">person</span>
-                                            </div>
-                                        </div>
-                                        <div class="form-field form-field-full">
-                                            <label class="form-field-label">Bio</label>
-                                            <textarea class="form-field-textarea" [(ngModel)]="editForm.bio"
-                                                placeholder="Tell us about yourself..." maxlength="200"></textarea>
-                                            <div class="form-field-footer">
-                                                <span>{{ editForm.bio.length }}/200</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-actions">
-                                        <button (click)="saveSettings()" class="btn-save">Save Changes</button>
-                                    </div>
-                                </section>
-                            </ng-container>
-
-                            <!-- Other Tabs Placeholder -->
-                            <ng-container
-                                *ngIf="activeTab === 'Notifications' || activeTab === 'Privacy' || activeTab === 'Help'">
-                                <div class="placeholder-state">
-                                    <span class="material-symbols-outlined">construction</span>
-                                    <h2>Under Development</h2>
-                                    <p>More settings are coming soon to this section.</p>
                                 </div>
-                            </ng-container>
+                            </div>
+                        </section>
+
+                        <!-- Personal Information Form -->
+                        <section class="settings-section">
+                            <div class="settings-section-header">
+                                <h3 class="settings-section-title">Personal Information</h3>
+                            </div>
+                            <div class="settings-form-grid">
+                                <div class="form-field">
+                                    <label class="form-field-label">First Name</label>
+                                    <div class="form-field-wrapper">
+                                        <input class="form-field-input" type="text" [(ngModel)]="editForm.firstname"
+                                            placeholder="First Name" />
+                                        <span class="material-symbols-outlined form-field-icon">person</span>
+                                    </div>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-field-label">Last Name</label>
+                                    <div class="form-field-wrapper">
+                                        <input class="form-field-input" type="text" [(ngModel)]="editForm.lastname"
+                                            placeholder="Last Name" />
+                                        <span class="material-symbols-outlined form-field-icon">person</span>
+                                    </div>
+                                </div>
+                                <div class="form-field form-field-full">
+                                    <label class="form-field-label">Bio</label>
+                                    <textarea class="form-field-textarea" [(ngModel)]="editForm.bio"
+                                        placeholder="Tell us about yourself..." maxlength="200"></textarea>
+                                    <div class="form-field-footer">
+                                        <span>{{ editForm.bio.length }}/200</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button (click)="saveSettings()" class="btn-save">Save Changes</button>
+                            </div>
+                        </section>
+                    </ng-container>
+
+                    <!-- Other Tabs Placeholder -->
+                    <ng-container
+                        *ngIf="activeTab === 'Notifications' || activeTab === 'Privacy' || activeTab === 'Help'">
+                        <div class="placeholder-state">
+                            <span class="material-symbols-outlined">construction</span>
+                            <h2>Under Development</h2>
+                            <p>More settings are coming soon to this section.</p>
+                        </div>
+                    </ng-container>
 
                 </div>
             </div>
@@ -98,13 +96,5 @@
 
         <!-- Right Sidebar -->
         <app-right-sidebar class="sidebar"></app-right-sidebar>
-    </div>
-
-    <!-- Global Feedback Toast -->
-    <div class="status-message-toast" *ngIf="status.visible" [class]="status.type">
-        <span class="material-symbols-outlined">
-            {{ status.type === 'success' ? 'check_circle' : (status.type === 'error' ? 'error' : 'info') }}
-        </span>
-        <span class="message-text">{{ status.message }}</span>
     </div>
 </div>

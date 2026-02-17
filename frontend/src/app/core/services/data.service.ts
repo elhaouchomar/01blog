@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, effect, Injector, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap, map, switchMap, retry, timer, throwError } from 'rxjs';
-import { User, Post, Notification, Comment, AuthenticationRequest, AuthenticationResponse, RegisterRequest, CreatePostRequest } from '../models/data.models';
+import { User, Post, Notification, Comment, AuthenticationRequest, AuthenticationResponse, RegisterRequest, CreatePostRequest } from '../../shared/models/data.models';
 import { MaterialAlertService } from './material-alert.service';
 
 @Injectable({

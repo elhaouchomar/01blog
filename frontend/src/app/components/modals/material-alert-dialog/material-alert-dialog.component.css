@@ -1,0 +1,121 @@
+:host {
+    display: block;
+    font-family: var(--font-display);
+}
+
+.alert-shell {
+    border-radius: 12px;
+    background: var(--surface-light);
+    border: 1px solid var(--gray-200);
+    border-top-width: 4px;
+    border-top-color: var(--primary);
+    padding: 0.5rem;
+    box-shadow: var(--shadow-lg);
+}
+
+.alert-shell.success {
+    border-top-color: var(--success);
+}
+
+.alert-shell.error {
+    border-top-color: var(--danger);
+}
+
+.alert-shell.warning {
+    border-top-color: var(--warning);
+}
+
+.dialog-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-main);
+    padding: 1rem 1rem 0.5rem;
+}
+
+.icon-badge {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--primary-rgb), 0.1);
+    color: var(--primary);
+}
+
+.icon-badge.success {
+    background: rgba(var(--success-rgb), 0.1);
+    color: var(--success);
+}
+
+.icon-badge.error {
+    background: rgba(var(--danger-rgb), 0.1);
+    color: var(--danger);
+}
+
+.icon-badge.warning {
+    background: rgba(var(--warning-rgb), 0.1);
+    color: var(--warning);
+}
+
+.dialog-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding: 0.5rem 1rem 1rem;
+    font-size: 0.9375rem;
+}
+
+.dialog-content p {
+    margin: 0;
+}
+
+.dialog-actions {
+    gap: 0.75rem;
+    padding: 0.5rem 1rem 1rem;
+}
+
+.confirm-button,
+.cancel-button {
+    min-width: 100px;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s;
+}
+
+.cancel-button {
+    border: 1px solid var(--gray-200);
+    color: var(--text-secondary);
+    background: transparent;
+}
+
+.cancel-button:hover {
+    background: var(--gray-50);
+}
+
+.confirm-button {
+    color: #ffffff;
+    background: var(--primary);
+    border: none;
+}
+
+.confirm-button:hover {
+    filter: brightness(1.1);
+}
+
+.alert-shell.success .confirm-button {
+    background: var(--success);
+}
+
+.alert-shell.error .confirm-button {
+    background: var(--danger);
+}
+
+.alert-shell.warning .confirm-button {
+    background: var(--warning);
+}

@@ -4,11 +4,11 @@ import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { SidebarComponent } from '../../components/left-sidebar/left-sidebar';
 import { RightSidebarComponent } from '../../components/right-sidebar/right-sidebar';
-import { DataService } from '../../services/data.service';
-import { User } from '../../models/data.models';
-import { ModalService } from '../../services/modal.service';
-import { getInitials } from '../../utils/string.utils';
-import { MaterialAlertService } from '../../services/material-alert.service';
+import { DataService } from '../../core/services/data.service';
+import { User } from '../../shared/models/data.models';
+import { ModalService } from '../../core/services/modal.service';
+import { getInitials } from '../../shared/utils/string.utils';
+import { MaterialAlertService } from '../../core/services/material-alert.service';
 
 @Component({
     selector: 'app-network',

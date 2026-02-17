@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { DataService } from '../../services/data.service';
-import { User } from '../../models/data.models';
+import { DataService } from '../../core/services/data.service';
+import { User } from '../../shared/models/data.models';
 
 @Component({
     selector: 'app-sidebar',

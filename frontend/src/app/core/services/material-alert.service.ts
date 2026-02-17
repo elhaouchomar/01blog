@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material/snack-bar';
-import { MaterialAlertDialogComponent, MaterialAlertDialogData } from './material-alert-dialog.component';
-import { ReportReasonDialogComponent, ReportReasonDialogData } from './report-reason-dialog.component';
+import { MaterialAlertDialogComponent, MaterialAlertDialogData } from '../../components/modals/material-alert-dialog/material-alert-dialog.component';
+import { ReportReasonDialogComponent, ReportReasonDialogData } from '../../components/modals/report-reason-dialog/report-reason-dialog.component';
 
-type MaterialAlertIcon = 'success' | 'error' | 'warning' | 'info' | 'question';
-type MaterialAlertPosition =
+export type MaterialAlertIcon = 'success' | 'error' | 'warning' | 'info' | 'question';
+export type MaterialAlertPosition =
     | 'top-start'
     | 'top'
     | 'top-end'
@@ -13,19 +13,19 @@ type MaterialAlertPosition =
     | 'bottom'
     | 'bottom-end';
 
-interface MaterialAlertOptions extends MaterialAlertDialogData {
+export interface MaterialAlertOptions extends MaterialAlertDialogData {
     toast?: boolean;
     timer?: number;
     position?: MaterialAlertPosition;
     allowOutsideClick?: boolean;
 }
 
-interface MaterialAlertResult {
+export interface MaterialAlertResult {
     isConfirmed: boolean;
     isDismissed: boolean;
 }
 
-interface ReportReasonOptions extends ReportReasonDialogData {
+export interface ReportReasonOptions extends ReportReasonDialogData {
 }
 
 const TOAST_POSITIONS: Record<MaterialAlertPosition, {

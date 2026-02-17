@@ -1,10 +1,10 @@
 import { Component, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { DataService } from '../../services/data.service';
-import { User } from '../../models/data.models';
-import { getInitials } from '../../utils/string.utils';
-import { MaterialAlertService } from '../../services/material-alert.service';
+import { DataService } from '../../core/services/data.service';
+import { User } from '../../shared/models/data.models';
+import { getInitials } from '../../shared/utils/string.utils';
+import { MaterialAlertService } from '../../core/services/material-alert.service';
 
 @Component({
     selector: 'app-right-sidebar',

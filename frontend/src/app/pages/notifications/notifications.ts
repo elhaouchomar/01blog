@@ -4,10 +4,10 @@ import { RouterModule, Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
 import { SidebarComponent } from '../../components/left-sidebar/left-sidebar';
 import { RightSidebarComponent } from '../../components/right-sidebar/right-sidebar';
-import { DataService } from '../../services/data.service';
-import { Notification as AppNotification } from '../../models/data.models';
-import { ModalService } from '../../services/modal.service';
-import { getInitials } from '../../utils/string.utils';
+import { DataService } from '../../core/services/data.service';
+import { Notification as AppNotification } from '../../shared/models/data.models';
+import { ModalService } from '../../core/services/modal.service';
+import { getInitials } from '../../shared/utils/string.utils';
 
 @Component({
     selector: 'app-notifications',

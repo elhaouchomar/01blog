@@ -1,13 +1,13 @@
 import { Component, OnInit, computed, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { DataService } from '../../../services/data.service';
-import { ModalService } from '../../../services/modal.service';
+import { DataService } from '../../../core/services/data.service';
+import { ModalService } from '../../../core/services/modal.service';
 import { DbPageHeaderComponent } from '../../../components/dashboard/db-page-header';
 import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
 import { DbPaginationComponent } from '../../../components/dashboard/db-pagination';
-import { usePagination } from '../../../utils/pagination.utils';
-import { MaterialAlertService } from '../../../services/material-alert.service';
+import { usePagination } from '../../../shared/utils/pagination.utils';
+import { MaterialAlertService } from '../../../core/services/material-alert.service';
 
 @Component({
     selector: 'app-dashboard-reports',

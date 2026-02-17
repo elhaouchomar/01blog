@@ -37,6 +37,10 @@
     --gray-800: #203738;
     --gray-900: #10282a;
 
+    /* Accents */
+    --accent-purple: #7c3aed;
+    --accent-purple-rgb: 124, 58, 237;
+
     /* Bootstrap Bridge */
     --bs-primary: var(--primary);
     --bs-primary-rgb: var(--primary-rgb);

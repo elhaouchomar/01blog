@@ -1,0 +1,68 @@
+:host {
+    display: inline-block;
+}
+
+.report-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.125rem;
+    border-radius: 10px;
+    border: 1px solid var(--gray-200);
+    background: white;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-sm);
+}
+
+.report-btn:hover {
+    background: var(--gray-50);
+    color: var(--danger);
+    border-color: var(--danger);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.report-btn:active {
+    transform: translateY(0);
+}
+
+.report-btn.icon-only {
+    padding: 0.625rem;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+.report-btn.icon-only:hover {
+    background: rgba(var(--danger-rgb), 0.1);
+    color: var(--danger);
+}
+
+.material-symbols-outlined {
+    font-size: 1.25rem;
+}
+
+.button-label {
+    white-space: nowrap;
+}
+
+/* Dark Mode */
+.dark .report-btn {
+    background: var(--gray-900);
+    border-color: var(--gray-800);
+    color: var(--gray-400);
+}
+
+.dark .report-btn:hover {
+    background: var(--gray-800);
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.dark .report-btn.icon-only:hover {
+    background: rgba(var(--danger-rgb), 0.2);
+}

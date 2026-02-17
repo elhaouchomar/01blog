@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 
+import { REPORT_REASONS } from '../../../shared/constants/report-reasons.data';
+
 export interface ReportReasonDialogData {
     title?: string;
     subtitle?: string;
@@ -21,6 +23,8 @@ export interface ReportReasonDialogData {
     styleUrl: './report-reason-dialog.component.css'
 })
 export class ReportReasonDialogComponent {
+    reasons = REPORT_REASONS;
+    selectedReason = '';
     reason = '';
     error = '';
     readonly minLength: number;
@@ -34,13 +38,30 @@ export class ReportReasonDialogComponent {
         this.maxLength = data.maxLength ?? 500;
     }
 
+    selectReason(reason: string) {
+        this.selectedReason = reason;
+        this.error = '';
+        if (reason !== 'Other') {
+            this.reason = '';
+        }
+    }
+
     submit() {
-        const trimmed = this.reason.trim();
-        if (trimmed.length < this.minLength || trimmed.length > this.maxLength) {
-            this.error = `Reason must be between ${this.minLength} and ${this.maxLength} characters.`;
+        let finalReason = '';
+        if (this.selectedReason === 'Other') {
+            const trimmed = this.reason.trim();
+            if (trimmed.length < this.minLength || trimmed.length > this.maxLength) {
+                this.error = `Please provide more details (between ${this.minLength} and ${this.maxLength} characters).`;
+                return;
+            }
+            finalReason = trimmed;
+        } else if (this.selectedReason) {
+            finalReason = this.selectedReason;
+        } else {
+            this.error = 'Please select a reason.';
             return;
         }
-        this.close(trimmed);
+        this.close(finalReason);
     }
 
     close(value: string | null) {

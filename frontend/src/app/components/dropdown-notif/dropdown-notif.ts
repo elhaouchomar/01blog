@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Notification } from '../../models/data.models';
+import { Notification } from '../../shared/models/data.models';
 import { RouterLink, Router } from '@angular/router';
-import { getInitials } from '../../utils/string.utils';
-import { DataService } from '../../services/data.service';
+import { getInitials } from '../../shared/utils/string.utils';
+import { DataService } from '../../core/services/data.service';
 
 @Component({
     selector: 'app-dropdown-notif',

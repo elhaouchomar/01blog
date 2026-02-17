@@ -1,13 +1,13 @@
 import { Component, OnInit, Input, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
-import { DataService } from '../../services/data.service';
-import { Post, Comment } from '../../models/data.models';
+import { DataService } from '../../core/services/data.service';
+import { Post, Comment } from '../../shared/models/data.models';
 import { FormsModule } from '@angular/forms';
-import { ModalService } from '../../services/modal.service';
+import { ModalService } from '../../core/services/modal.service';
 import { ActionMenuComponent, ActionMenuItem } from '../action-menu/action-menu';
-import { getInitials } from '../../utils/string.utils';
-import { MaterialAlertService } from '../../services/material-alert.service';
+import { getInitials } from '../../shared/utils/string.utils';
+import { MaterialAlertService } from '../../core/services/material-alert.service';
 
 @Component({
   selector: 'app-post-details',

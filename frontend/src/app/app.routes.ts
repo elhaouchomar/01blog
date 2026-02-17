@@ -14,8 +14,8 @@ import { Network } from './pages/network/network';
 import { Notifications } from './pages/notifications/notifications';
 import { Settings } from './pages/settings/settings';
 
-import { adminGuard } from './guards/admin.guard';
-import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
+import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
     { path: 'login', component: Login },

@@ -1,10 +1,10 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ModalService } from '../../services/modal.service';
-import { DataService } from '../../services/data.service';
-import { User } from '../../models/data.models';
-import { MaterialAlertService } from '../../services/material-alert.service';
+import { ModalService } from '../../core/services/modal.service';
+import { DataService } from '../../core/services/data.service';
+import { User } from '../../shared/models/data.models';
+import { MaterialAlertService } from '../../core/services/material-alert.service';
 
 @Component({
     selector: 'app-edit-profile-modal',

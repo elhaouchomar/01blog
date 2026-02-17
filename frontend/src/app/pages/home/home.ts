@@ -5,9 +5,9 @@ import { NavbarComponent } from '../../components/navbar/navbar';
 import { SidebarComponent } from '../../components/left-sidebar/left-sidebar';
 import { RightSidebarComponent } from '../../components/right-sidebar/right-sidebar';
 import { PostCardComponent } from '../../components/post-card/post-card';
-import { DataService } from '../../services/data.service';
-import { Post, User } from '../../models/data.models';
-import { ModalService } from '../../services/modal.service';
+import { DataService } from '../../core/services/data.service';
+import { Post, User } from '../../shared/models/data.models';
+import { ModalService } from '../../core/services/modal.service';
 import { HostListener } from '@angular/core';
 
 @Component({

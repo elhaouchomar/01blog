@@ -1,9 +1,9 @@
 import { Component, HostListener, OnDestroy, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ModalService } from '../../services/modal.service';
-import { DataService } from '../../services/data.service';
-import { Post } from '../../models/data.models';
+import { ModalService } from '../../core/services/modal.service';
+import { DataService } from '../../core/services/data.service';
+import { Post } from '../../shared/models/data.models';
 
 @Component({
     selector: 'app-edit-post',

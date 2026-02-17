@@ -1,12 +1,12 @@
 import { Component, Input, ChangeDetectorRef, effect, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { Post } from '../../models/data.models';
-import { ModalService } from '../../services/modal.service';
-import { DataService } from '../../services/data.service';
+import { Post } from '../../shared/models/data.models';
+import { ModalService } from '../../core/services/modal.service';
+import { DataService } from '../../core/services/data.service';
 import { ActionMenuComponent, ActionMenuItem } from '../action-menu/action-menu';
-import { getInitials } from '../../utils/string.utils';
-import { MaterialAlertService } from '../../services/material-alert.service';
+import { getInitials } from '../../shared/utils/string.utils';
+import { MaterialAlertService } from '../../core/services/material-alert.service';
 
 @Component({
     selector: 'app-post-card',

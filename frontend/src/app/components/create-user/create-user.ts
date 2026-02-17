@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ModalService } from '../../services/modal.service';
-import { DataService } from '../../services/data.service';
-import { ToastService } from '../../services/toast.service';
+import { ModalService } from '../../core/services/modal.service';
+import { DataService } from '../../core/services/data.service';
+import { MaterialAlertService } from '../../core/services/material-alert.service';
 
 @Component({
     selector: 'app-create-user',
@@ -24,7 +24,7 @@ export class CreateUser {
     constructor(
         protected modalService: ModalService,
         private dataService: DataService,
-        private toastService: ToastService
+        private alert: MaterialAlertService
     ) { }
 
     createUser() {
@@ -35,26 +35,29 @@ export class CreateUser {
             lastname: this.form.lastname,
             email: this.form.email,
             password: this.form.password,
-            role: this.form.role // Sending role
+            role: this.form.role
         }).subscribe({
-            next: (res) => { // Accept response but do nothing with token if admin
-                // Admin creates user, we don't want to log in as the new user.
-                // The DataService.register logs us in automatically which is the issue.
-                // However, since we are likely already modifying DataService or deciding how to handle this...
-
-                // Ideally, DataService should have a separate method or parameter to NOT set token.
-                // But for now, since we are inside the component...
-
-                // Actually, the previous step added a 'next' block but didn't remove the old one properly or merged poorly?
-                // Let's just fix it to be one next block.
-
+            next: (res) => {
                 this.dataService.loadUsers();
-                this.toastService.success('User created successfully');
+                this.alert.fire({
+                    icon: 'success',
+                    title: 'User created successfully',
+                    toast: true,
+                    timer: 3000,
+                    position: 'top-end'
+                });
                 this.modalService.close();
             },
             error: (err: any) => {
                 console.error('Error creating user:', err);
-                this.toastService.error('Failed to create user. Please try again.');
+                this.alert.fire({
+                    icon: 'error',
+                    title: 'Failed to create user',
+                    text: 'Please check the details and try again.',
+                    toast: true,
+                    timer: 4000,
+                    position: 'top-end'
+                });
             }
         });
     }

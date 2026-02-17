@@ -1,0 +1,82 @@
+<div class="report-card" [class.resolved]="report.status === 'RESOLVED'">
+    <!-- Content Preview Section -->
+    <div class="card-section preview-section" (click)="onViewTarget.emit(report)">
+        <div class="avatar-wrapper">
+            <img *ngIf="report.reportedPostImage || report.reportedUser?.avatar"
+                [src]="report.reportedPostImage || report.reportedUser?.avatar" class="avatar-img">
+            <div *ngIf="!report.reportedPostImage && !report.reportedUser?.avatar" class="avatar-placeholder">
+                <span class="material-symbols-outlined">{{ report.reportedPostId ? 'article' : 'person' }}</span>
+            </div>
+        </div>
+
+        <div class="info-wrapper">
+            <div class="badge-row">
+                <span class="type-badge" [class.post]="report.reportedPostId" [class.user]="!report.reportedPostId">
+                    {{ report.reportedPostId ? 'POST' : 'USER' }}
+                </span>
+                <span class="report-id">#{{ report.id }}</span>
+            </div>
+            <h4 class="target-name">
+                {{ report.reportedPostTitle || report.reportedUser?.name || 'Reference Content' }}
+            </h4>
+            <p class="meta-text">
+                Flagged by <span class="reporter-name">{{ report.reporter?.name }}</span> • {{ report.createdAt |
+                date:'MMM d' }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Reason Section -->
+    <div class="card-section reason-section hide-mobile-lg">
+        <p class="reason-text">{{ report.reason }}</p>
+    </div>
+
+    <!-- Status Section -->
+    <div class="card-section status-section">
+        <span class="status-badge" [class.resolved]="report.status === 'RESOLVED'"
+            [class.pending]="report.status !== 'RESOLVED'">
+            {{ report.status.replace('_', ' ') | titlecase }}
+        </span>
+    </div>
+
+    <!-- Actions Section -->
+    <div class="card-section actions-section">
+        <!-- Content Management Group -->
+        <div class="action-group">
+            <button class="action-btn success" (click)="onAction.emit({report, action: 'resolve'})"
+                title="Mark as resolved">
+                <span class="material-symbols-outlined">check_circle</span>
+            </button>
+
+            <ng-container *ngIf="report.reportedPostId">
+                <button class="action-btn warning" (click)="onAction.emit({report, action: 'toggleVisibility'})"
+                    title="Toggle Visibility">
+                    <span class="material-symbols-outlined">visibility_off</span>
+                </button>
+                <button class="action-btn danger" (click)="onAction.emit({report, action: 'deletePost'})"
+                    title="Delete Post">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+            </ng-container>
+        </div>
+
+        <!-- User Management Group -->
+        <ng-container *ngIf="report.reportedUser || report.reportedPostAuthor">
+            <div class="divider"></div>
+            <div class="action-group">
+                <button class="action-btn" [class.success]="(report.reportedUser || report.reportedPostAuthor).banned"
+                    [class.danger]="!(report.reportedUser || report.reportedPostAuthor).banned"
+                    (click)="onAction.emit({report, action: 'banUser'})"
+                    [title]="(report.reportedUser || report.reportedPostAuthor).banned ? 'Unban User' : 'Ban User'">
+                    <span class="material-symbols-outlined">
+                        {{ (report.reportedUser || report.reportedPostAuthor).banned ? 'verified_user' : 'block' }}
+                    </span>
+                </button>
+                <button class="action-btn danger" *ngIf="currentUser?.isAdmin"
+                    (click)="onAction.emit({report, action: 'deleteUser'})" title="Purge User Account">
+                    <span class="material-symbols-outlined">person_remove</span>
+                </button>
+            </div>
+        </ng-container>
+    </div>
+</div>

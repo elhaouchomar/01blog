@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { Post } from '../../models/data.models';
+import { Post } from '../../shared/models/data.models';
 
 @Component({
   selector: 'app-hidden-post-card',

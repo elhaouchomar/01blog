@@ -1,0 +1,24 @@
+<section class="alert-shell" [ngClass]="typeClass">
+    <h2 mat-dialog-title class="dialog-title">
+        <span class="icon-badge" [ngClass]="typeClass">
+            <mat-icon>{{ iconName }}</mat-icon>
+        </span>
+        <span>{{ data.title || defaultTitle }}</span>
+    </h2>
+
+    <mat-dialog-content class="dialog-content">
+        <p *ngIf="data.text">{{ data.text }}</p>
+        <div *ngIf="data.html" [innerHTML]="data.html"></div>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end" class="dialog-actions">
+        <button mat-button class="cancel-button" *ngIf="data.showCancelButton" [ngStyle]="cancelButtonStyle"
+            (click)="close(false)">
+            {{ data.cancelButtonText || 'Cancel' }}
+        </button>
+        <button mat-flat-button class="confirm-button" *ngIf="data.showConfirmButton !== false"
+            [ngStyle]="confirmButtonStyle" (click)="close(true)">
+            {{ data.confirmButtonText || 'OK' }}
+        </button>
+    </mat-dialog-actions>
+</section>

@@ -15,11 +15,7 @@
     "target": "ES2022",
     "module": "preserve",
     "baseUrl": ".",
-    "paths": {
-      "sweetalert2": [
-        "src/sweetalert2.ts"
-      ]
-    }
+    "paths": {}
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

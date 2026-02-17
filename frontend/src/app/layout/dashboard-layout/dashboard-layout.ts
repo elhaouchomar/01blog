@@ -3,8 +3,8 @@ import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } fro
 import { CommonModule } from '@angular/common';
 import { filter } from 'rxjs';
 
-import { DataService } from '../../services/data.service';
-import { ModalService } from '../../services/modal.service';
+import { DataService } from '../../core/services/data.service';
+import { ModalService } from '../../core/services/modal.service';
 
 import { NavbarComponent } from '../../components/navbar/navbar';
 

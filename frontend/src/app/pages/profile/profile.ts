@@ -2,15 +2,15 @@ import { Component, OnInit, ChangeDetectorRef, effect, HostListener, ElementRef 
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../components/navbar/navbar';
-import { DataService } from '../../services/data.service';
-import { User, Post } from '../../models/data.models';
-import { ModalService } from '../../services/modal.service';
+import { DataService } from '../../core/services/data.service';
+import { User, Post } from '../../shared/models/data.models';
+import { ModalService } from '../../core/services/modal.service';
 import { SidebarComponent } from '../../components/left-sidebar/left-sidebar';
 import { RightSidebarComponent } from '../../components/right-sidebar/right-sidebar';
 import { ActionMenuComponent, ActionMenuItem } from '../../components/action-menu/action-menu';
-import { getInitials } from '../../utils/string.utils';
+import { getInitials } from '../../shared/utils/string.utils';
 import { PostCardComponent } from '../../components/post-card/post-card';
-import { MaterialAlertService } from '../../services/material-alert.service';
+import { MaterialAlertService } from '../../core/services/material-alert.service';
 
 @Component({
   selector: 'app-profile',

@@ -2,8 +2,8 @@ import { ApplicationConfig, APP_INITIALIZER, provideBrowserGlobalErrorListeners 
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { authInterceptor } from './services/auth.interceptor';
-import { MaterialAlertService } from './services/material-alert.service';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { MaterialAlertService } from './core/services/material-alert.service';
 
 import { routes } from './app.routes';
 

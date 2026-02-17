@@ -1,122 +1,114 @@
-<div class="container-fluid py-4 db-page-shell">
+<div class="db-page-container">
     <app-db-page-header title="Safety & Reports" subtitle="Review and handle user and post reports." titleIcon="flag"
-        iconColor="#fd7e14">
+        iconColor="var(--warning)">
     </app-db-page-header>
 
-    <!-- Filters -->
-    <div class="db-toolbar db-toolbar--reports">
-        <div class="db-toolbar-actions">
-            <span class="db-toolbar-label">Filter Status</span>
-            <div class="btn-group btn-group-sm p-1 bg-light rounded-pill overflow-hidden border shadow-sm db-pill-group">
-                <button class="btn rounded-pill px-3 transition-all"
-                    [ngClass]="{'btn-pill-active': statusFilter() === 'PENDING', 'text-secondary': statusFilter() !== 'PENDING'}"
+    <!-- Toolbar -->
+    <div class="db-toolbar reports-toolbar">
+        <div class="filter-section">
+            <span class="filter-label">Status Filter</span>
+            <div class="pill-group">
+                <button class="pill-btn" [class.active]="statusFilter() === 'PENDING'"
                     (click)="setStatusFilter('PENDING')" title="Queue">
-                    <span class="material-symbols-outlined fs-5 d-block">inbox</span>
+                    <span class="material-symbols-outlined">inbox</span>
+                    <span>Pending</span>
                 </button>
-                <button class="btn rounded-pill px-3 transition-all"
-                    [ngClass]="{'btn-pill-active': statusFilter() === 'RESOLVED', 'text-secondary': statusFilter() !== 'RESOLVED'}"
+                <button class="pill-btn" [class.active]="statusFilter() === 'RESOLVED'"
                     (click)="setStatusFilter('RESOLVED')" title="Resolved">
-                    <span class="material-symbols-outlined fs-5 d-block">check_circle</span>
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span>Resolved</span>
                 </button>
-                <button class="btn rounded-pill px-3 transition-all"
-                    [ngClass]="{'btn-pill-active': statusFilter() === 'ALL', 'text-secondary': statusFilter() !== 'ALL'}"
-                    (click)="setStatusFilter('ALL')" title="All Reports">
-                    <span class="material-symbols-outlined fs-5 d-block">filter_list</span>
+                <button class="pill-btn" [class.active]="statusFilter() === 'ALL'" (click)="setStatusFilter('ALL')"
+                    title="All Reports">
+                    <span class="material-symbols-outlined">filter_list</span>
+                    <span>All</span>
                 </button>
             </div>
         </div>
-        <div class="db-toolbar-badge">
-            <span class="badge rounded-pill bg-light border text-secondary px-3 py-2 fw-medium">
-                Total Reports: {{ filteredReports().length }}
+        <div class="toolbar-stats">
+            <span class="count-badge">
+                Total: {{ filteredReports().length }}
             </span>
         </div>
     </div>
 
-    <!-- Reports Table -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 db-table-card"
-        *ngIf="filteredReports().length > 0 && !isLoading()">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 db-data-table">
-                <thead class="bg-light border-bottom text-secondary small fw-bold text-uppercase"
-                    style="letter-spacing: 0.05em;">
+    <!-- Data Table -->
+    <div class="db-card table-card" *ngIf="filteredReports().length > 0 && !isLoading()">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <th class="ps-4 py-3">Target</th>
-                        <th class="py-3 d-none d-lg-table-cell">Reason</th>
-                        <th class="py-3 d-none d-md-table-cell">Reporter</th>
-                        <th class="py-3 text-center">Status</th>
-                        <th class="py-3 d-none d-xl-table-cell">Date</th>
-                        <th class="pe-4 py-3 text-end">Actions</th>
+                        <th class="col-target">Target</th>
+                        <th class="col-reason hide-md">Reason</th>
+                        <th class="col-reporter hide-lg">Reporter</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-date hide-xl">Date</th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr *ngFor="let report of paginatedReports()">
-                        <td class="ps-4 py-3 report-target-cell">
-                            <div class="d-flex align-items-center gap-3 report-target-wrap">
-                                <div class="rounded-3 border overflow-hidden shadow-sm flex-shrink-0 report-thumb"
-                                    (click)="handleView(report)">
+                        <td>
+                            <div class="target-cell">
+                                <div class="target-preview" (click)="handleView(report)">
                                     <img *ngIf="report.reportedPostImage || report.reportedUser?.avatar"
-                                        [src]="report.reportedPostImage || report.reportedUser?.avatar"
-                                        class="w-100 h-100 object-fit-cover">
+                                        [src]="report.reportedPostImage || report.reportedUser?.avatar" alt="Thumbnail">
                                     <div *ngIf="!report.reportedPostImage && !report.reportedUser?.avatar"
-                                        class="w-100 h-100 d-flex align-items-center justify-content-center text-muted bg-light">
-                                        <span class="material-symbols-outlined fs-6">{{ report.reportedPostId ? 'article' : 'person'
-                                            }}</span>
+                                        class="placeholder-icon">
+                                        <span class="material-symbols-outlined">{{ report.reportedPostId ? 'article' :
+                                            'person' }}</span>
                                     </div>
                                 </div>
-                                <div class="report-target-text">
-                                    <h6 class="mb-0 fw-bold text-ellipsis report-target-title" (click)="handleView(report)"
-                                        style="cursor: pointer;">
+                                <div class="target-info">
+                                    <h6 class="target-title" (click)="handleView(report)">
                                         {{ getTargetLabel(report) }}
                                     </h6>
-                                    <p class="mb-0 small text-secondary text-ellipsis">#{{ report.id }}</p>
+                                    <p class="target-id">#{{ report.id }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="py-3 d-none d-lg-table-cell">
-                            <p class="mb-0 text-ellipsis report-reason-text">{{ report.reason }}</p>
+                        <td class="hide-md">
+                            <p class="reason-text" [title]="report.reason">{{ report.reason }}</p>
                         </td>
-                        <td class="py-3 d-none d-md-table-cell">
-                            <span class="fw-medium text-ellipsis report-reporter-text">{{ getReporterLabel(report) }}</span>
+                        <td class="hide-lg">
+                            <span class="reporter-name">{{ getReporterLabel(report) }}</span>
                         </td>
-                        <td class="py-3 text-center">
-                            <span class="badge rounded-pill fw-bold py-2 px-3"
-                                [style.background-color]="report.status === 'RESOLVED' ? '#dcfce7' : '#fff7ed'"
-                                [style.color]="report.status === 'RESOLVED' ? '#198754' : '#fd7e14'">
+                        <td>
+                            <span class="status-badge" [class.resolved]="report.status === 'RESOLVED'">
                                 {{ formatStatus(report.status) | titlecase }}
                             </span>
                         </td>
-                        <td class="py-3 d-none d-xl-table-cell text-secondary small">
-                            {{ report.createdAt | date:'MMM d, yyyy' }}
+                        <td class="hide-xl">
+                            <span class="date-text">{{ report.createdAt | date:'MMM d, yyyy' }}</span>
                         </td>
-                        <td class="pe-4 py-3 text-end report-actions-cell">
-                            <div class="d-inline-flex gap-1 db-actions-group">
-                                <button class="btn btn-white btn-sm rounded-3 p-2 shadow-sm text-success"
+                        <td>
+                            <div class="action-group">
+                                <button class="btn-icon success"
                                     (click)="handleReportAction({ report, action: 'resolve' })" title="Resolve">
-                                    <span class="material-symbols-outlined fs-6">check_circle</span>
+                                    <span class="material-symbols-outlined">check_circle</span>
                                 </button>
-                                <button *ngIf="report.reportedPostId"
-                                    class="btn btn-white btn-sm rounded-3 p-2 shadow-sm text-warning"
+                                <button *ngIf="report.reportedPostId" class="btn-icon warning"
                                     (click)="handleReportAction({ report, action: 'toggleVisibility' })"
                                     title="Toggle Visibility">
-                                    <span class="material-symbols-outlined fs-6">cancel</span>
+                                    <span class="material-symbols-outlined">cancel</span>
                                 </button>
-                                <button *ngIf="report.reportedPostId"
-                                    class="btn btn-white btn-sm rounded-3 p-2 shadow-sm text-danger"
+                                <button *ngIf="report.reportedPostId" class="btn-icon danger"
                                     (click)="handleReportAction({ report, action: 'deletePost' })" title="Delete Post">
-                                    <span class="material-symbols-outlined fs-6">delete</span>
+                                    <span class="material-symbols-outlined">delete</span>
                                 </button>
-                                <button *ngIf="report.reportedUser || report.reportedPostAuthor"
-                                    class="btn btn-white btn-sm rounded-3 p-2 shadow-sm"
-                                    [style.color]="(report.reportedUser || report.reportedPostAuthor).banned ? '#198754' : '#ef4444'"
+                                <button *ngIf="report.reportedUser || report.reportedPostAuthor" class="btn-icon"
+                                    [class.unban]="(report.reportedUser || report.reportedPostAuthor).banned"
                                     (click)="handleReportAction({ report, action: 'banUser' })"
                                     [title]="(report.reportedUser || report.reportedPostAuthor).banned ? 'Unban User' : 'Ban User'">
-                                    <span class="material-symbols-outlined fs-6">{{
-                                        (report.reportedUser || report.reportedPostAuthor).banned ? 'check_circle' : 'block' }}</span>
+                                    <span class="material-symbols-outlined">{{
+                                        (report.reportedUser || report.reportedPostAuthor).banned ? 'check_circle' :
+                                        'block' }}</span>
                                 </button>
-                                <button *ngIf="dataService.currentUser()?.isAdmin && (report.reportedUser || report.reportedPostAuthor)"
-                                    class="btn btn-white btn-sm rounded-3 p-2 shadow-sm text-danger"
+                                <button
+                                    *ngIf="dataService.currentUser()?.isAdmin && (report.reportedUser || report.reportedPostAuthor)"
+                                    class="btn-icon danger"
                                     (click)="handleReportAction({ report, action: 'deleteUser' })" title="Delete User">
-                                    <span class="material-symbols-outlined fs-6">person_remove</span>
+                                    <span class="material-symbols-outlined">person_remove</span>
                                 </button>
                             </div>
                         </td>
@@ -126,12 +118,14 @@
         </div>
     </div>
 
+    <!-- Feedbacks -->
     <app-db-feedback *ngIf="filteredReports().length === 0 && !isLoading()" type="empty" icon="flag"
-        iconColor="#fd7e14" title="No reports yet" [message]="emptyStateMessage()">
+        iconColor="var(--warning)" title="No reports yet" [message]="emptyStateMessage()">
     </app-db-feedback>
 
     <app-db-feedback *ngIf="isLoading()" type="loading"></app-db-feedback>
 
+    <!-- Pagination -->
     <app-db-pagination *ngIf="filteredReports().length > 0 && !isLoading()" [pagination]="pagination"
         [totalItems]="filteredReports().length" label="reports">
     </app-db-pagination>

@@ -2,11 +2,11 @@ import { Component, OnInit, ChangeDetectorRef, OnDestroy, HostListener, ElementR
 import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../services/data.service';
-import { ModalService } from '../../services/modal.service';
+import { DataService } from '../../core/services/data.service';
+import { ModalService } from '../../core/services/modal.service';
 import { DropdownNotifComponent } from '../dropdown-notif/dropdown-notif';
 import { filter, debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
-import { getInitials } from '../../utils/string.utils';
+import { getInitials } from '../../shared/utils/string.utils';
 
 @Component({
     selector: 'app-navbar',

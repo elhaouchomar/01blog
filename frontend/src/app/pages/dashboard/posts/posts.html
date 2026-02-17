@@ -1,126 +1,123 @@
-<div class="container-fluid py-4 db-page-shell">
+<div class="db-page-container">
     <app-db-page-header title="Content Moderator"
         subtitle="Review platform posts, track engagement and manage visibility." titleIcon="article"
-        iconColor="#198754" actionIcon="add" actionLabel="New Post" (onAction)="modalService.open('create-post')">
+        iconColor="var(--success)" actionIcon="add" actionLabel="New Post"
+        (onAction)="modalService.open('create-post')">
     </app-db-page-header>
 
-    <!-- Filters -->
-    <div class="db-toolbar db-toolbar--posts">
-        <div class="db-search-wrap">
-            <span class="material-symbols-outlined db-search-icon">search</span>
-            <input type="text" class="form-control form-control-lg ps-5 fs-6 border-0 bg-light rounded-3"
-                placeholder="Filter by author or keyword..." [ngModel]="searchQuery()"
-                (input)="setSearchQuery($any($event.target).value)">
+    <!-- Toolbar -->
+    <div class="db-toolbar posts-toolbar">
+        <div class="search-section">
+            <span class="material-symbols-outlined search-icon">search</span>
+            <input type="text" class="search-input" placeholder="Filter by author or keyword..."
+                [ngModel]="searchQuery()" (input)="setSearchQuery($any($event.target).value)">
         </div>
 
-        <div class="db-toolbar-actions">
-            <select class="form-select border-0 bg-light rounded-3 fw-bold text-secondary db-toolbar-select"
-                [ngModel]="statusFilter()" (change)="setStatusFilter($any($event.target).value)">
-                <option value="visible">Visible</option>
-                <option value="hidden">Hidden</option>
-                <option value="all">All</option>
-            </select>
-            <select class="form-select border-0 bg-light rounded-3 fw-bold text-secondary db-toolbar-select"
-                [ngModel]="sortBy()" (change)="setSortBy($any($event.target).value)">
-                <option value="newest">Newest First</option>
-                <option value="most-liked">Most Liked</option>
-                <option value="most-reported">Most Reported</option>
-            </select>
+        <div class="filter-section">
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select class="filter-select" [ngModel]="statusFilter()"
+                    (change)="setStatusFilter($any($event.target).value)">
+                    <option value="visible">Visible</option>
+                    <option value="hidden">Hidden</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Sort</label>
+                <select class="filter-select" [ngModel]="sortBy()" (change)="setSortBy($any($event.target).value)">
+                    <option value="newest">Newest First</option>
+                    <option value="most-liked">Most Liked</option>
+                    <option value="most-reported">Most Reported</option>
+                </select>
+            </div>
         </div>
     </div>
 
-    <!-- Posts Table -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 db-table-card"
-        *ngIf="filteredPosts().length > 0 && !isLoading()">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 db-data-table">
-                <thead class="bg-light border-bottom text-secondary small fw-bold text-uppercase"
-                    style="letter-spacing: 0.05em;">
+    <!-- Data Table -->
+    <div class="db-card table-card" *ngIf="filteredPosts().length > 0 && !isLoading()">
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <th class="ps-4 py-3">Post</th>
-                        <th class="py-3 d-none d-lg-table-cell">Author</th>
-                        <th class="py-3 text-center">Engagement</th>
-                        <th class="py-3 text-center">Status</th>
-                        <th class="py-3 d-none d-xl-table-cell">Date</th>
-                        <th class="pe-4 py-3 text-end">Actions</th>
+                        <th class="col-post">Post</th>
+                        <th class="col-author hide-md">Author</th>
+                        <th class="col-stats">Engagement</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-date hide-lg">Date</th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr *ngFor="let post of paginatedPosts()">
-                        <td class="ps-4 py-3">
-                            <div class="d-flex align-items-center gap-3 min-w-0">
-                                <div class="rounded-3 border overflow-hidden flex-shrink-0 shadow-sm post-thumb"
-                                    (click)="reviewPost(post)">
-                                    <img *ngIf="post.image" [src]="post.image" class="w-100 h-100 object-fit-cover">
-                                    <div *ngIf="!post.image"
-                                        class="w-100 h-100 d-flex align-items-center justify-content-center text-secondary bg-light">
-                                        <span class="material-symbols-outlined fs-6">{{ post.hidden ? 'archive' : 'image'
+                        <td>
+                            <div class="post-cell">
+                                <div class="post-preview" (click)="reviewPost(post)">
+                                    <img *ngIf="post.image" [src]="post.image" alt="Thumbnail">
+                                    <div *ngIf="!post.image" class="placeholder-icon">
+                                        <span class="material-symbols-outlined">{{ post.hidden ? 'archive' : 'image'
                                             }}</span>
                                     </div>
                                 </div>
-                                <div class="min-w-0">
-                                    <h6 class="mb-0 fw-bold post-title" (click)="reviewPost(post)" style="cursor: pointer;"
-                                        title="{{ post.title }}">
-                                        {{ post.hidden ? 'Hidden: ' : '' }}{{ post.title }}
+                                <div class="post-info">
+                                    <h6 class="post-title" (click)="reviewPost(post)" [title]="post.title">
+                                        {{ post.hidden ? '[Hidden] ' : '' }}{{ post.title }}
                                     </h6>
-                                    <p class="text-secondary small mb-0 post-meta d-lg-none">by {{ post.user.name }}</p>
+                                    <p class="post-author-mobile hide-lg">by {{ post.user.name }}</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="py-3 d-none d-lg-table-cell">
-                            <span class="fw-medium">{{ post.user.name }}</span>
+                        <td class="hide-md">
+                            <span class="author-name">{{ post.user.name }}</span>
                         </td>
-                        <td class="py-3 text-center">
-                            <div class="d-inline-flex align-items-center gap-2">
-                                <span class="badge text-bg-light border d-inline-flex align-items-center gap-1" title="Likes">
-                                    <span class="material-symbols-outlined fs-6 text-danger">favorite</span>
+                        <td>
+                            <div class="stats-badges">
+                                <span class="badge badge-stat likes" title="Likes">
+                                    <span class="material-symbols-outlined">favorite</span>
                                     <span>{{ post.likes || 0 }}</span>
                                 </span>
-                                <span class="badge text-bg-light border d-inline-flex align-items-center gap-1" title="Comments">
-                                    <span class="material-symbols-outlined fs-6 text-primary">chat_bubble</span>
+                                <span class="badge badge-stat comments" title="Comments">
+                                    <span class="material-symbols-outlined">chat_bubble</span>
                                     <span>{{ post.comments || 0 }}</span>
                                 </span>
                             </div>
                         </td>
-                        <td class="py-3 text-center">
-                            <span class="badge rounded-pill fw-bold px-2 py-2 d-inline-flex align-items-center justify-content-center"
-                                [class.bg-secondary-subtle]="post.hidden"
-                                [class.text-secondary]="post.hidden"
-                                [class.bg-success-subtle]="!post.hidden"
-                                [class.text-success]="!post.hidden"
-                                [title]="post.hidden ? 'Hidden' : 'Visible'">
-                                <span class="material-symbols-outlined fs-6">{{ post.hidden ? 'visibility_off' : 'visibility' }}</span>
-                            </span>
-                            <div class="small text-warning mt-1" *ngIf="(post.reportsCount ?? 0) > 0">
-                                <span class="material-symbols-outlined fs-6 align-middle me-1">report</span>
-                                <span class="align-middle">{{ post.reportsCount }}</span>
+                        <td>
+                            <div class="status-cell">
+                                <span class="status-indicator" [class.hidden]="post.hidden"
+                                    [class.visible]="!post.hidden" [title]="post.hidden ? 'Hidden' : 'Visible'">
+                                    <span class="material-symbols-outlined">{{ post.hidden ? 'visibility_off' :
+                                        'visibility' }}</span>
+                                </span>
+                                <div class="report-warning" *ngIf="(post.reportsCount ?? 0) > 0">
+                                    <span class="material-symbols-outlined">report</span>
+                                    <span>{{ post.reportsCount }}</span>
+                                </div>
                             </div>
                         </td>
-                        <td class="py-3 d-none d-xl-table-cell text-secondary small">
-                            {{ post.createdAt | date:'MMM d, yyyy' }}
+                        <td class="hide-lg">
+                            <span class="date-text">{{ post.createdAt | date:'MMM d, yyyy' }}</span>
                         </td>
-                        <td class="pe-4 py-3 text-end">
-                            <div class="d-inline-flex gap-1">
-                                <button class="btn btn-white btn-sm rounded-3 p-2 shadow-sm"
-                                    [style.color]="post.hidden ? '#198754' : '#fd7e14'" (click)="togglePostVisibility(post)"
+                        <td>
+                            <div class="action-group">
+                                <button class="btn-icon" [class.unhide]="post.hidden" [class.hide]="!post.hidden"
+                                    (click)="togglePostVisibility(post)"
                                     [title]="post.hidden ? 'Unhide Post' : 'Hide Post'">
-                                    <span class="material-symbols-outlined fs-6">{{ post.hidden ? 'check_circle' : 'cancel'
+                                    <span class="material-symbols-outlined">{{ post.hidden ? 'check_circle' : 'cancel'
                                         }}</span>
                                 </button>
-                                <button class="btn btn-white btn-sm rounded-3 p-2 shadow-sm text-danger"
-                                    (click)="deletePost(post)" title="Delete Post">
-                                    <span class="material-symbols-outlined fs-6">delete</span>
+                                <button class="btn-icon delete" (click)="deletePost(post)" title="Delete Post">
+                                    <span class="material-symbols-outlined">delete</span>
                                 </button>
-                                <button class="btn btn-white btn-sm rounded-3 p-2 shadow-sm"
-                                    [style.color]="post.user.banned ? '#198754' : '#ef4444'" (click)="toggleBan(post.user)"
+                                <button class="btn-icon ban" [class.unban]="post.user.banned"
+                                    (click)="toggleBan(post.user)"
                                     [title]="post.user.banned ? 'Unban Author' : 'Ban Author'">
-                                    <span class="material-symbols-outlined fs-6">{{ post.user.banned ? 'check_circle' : 'block'
-                                        }}</span>
+                                    <span class="material-symbols-outlined">{{ post.user.banned ? 'check_circle' :
+                                        'block' }}</span>
                                 </button>
-                                <button class="btn btn-white btn-sm rounded-3 p-2 shadow-sm text-danger"
-                                    *ngIf="dataService.currentUser()?.isAdmin" (click)="deleteUser(post.user)"
-                                    title="Delete Author">
-                                    <span class="material-symbols-outlined fs-6">person_remove</span>
+                                <button class="btn-icon danger" *ngIf="dataService.currentUser()?.isAdmin"
+                                    (click)="deleteUser(post.user)" title="Delete Author">
+                                    <span class="material-symbols-outlined">person_remove</span>
                                 </button>
                             </div>
                         </td>
@@ -130,12 +127,14 @@
         </div>
     </div>
 
+    <!-- Feedbacks -->
     <app-db-feedback *ngIf="filteredPosts().length === 0 && !isLoading()" type="empty" icon="article"
-        iconColor="#198754" title="No posts found" message="Try adjusting your search or category filters.">
+        iconColor="var(--success)" title="No posts found" message="Try adjusting your search or category filters.">
     </app-db-feedback>
 
     <app-db-feedback *ngIf="isLoading()" type="loading"></app-db-feedback>
 
+    <!-- Pagination -->
     <app-db-pagination *ngIf="filteredPosts().length > 0 && !isLoading()" [pagination]="pagination"
         [totalItems]="filteredPosts().length" label="posts">
     </app-db-pagination>

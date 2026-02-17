@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { DataService } from '../../../services/data.service';
+import { DataService } from '../../../core/services/data.service';
 import { CommonModule } from '@angular/common';
-import { MaterialAlertService } from '../../../services/material-alert.service';
+import { MaterialAlertService } from '../../../core/services/material-alert.service';
 
 @Component({
     selector: 'app-login',

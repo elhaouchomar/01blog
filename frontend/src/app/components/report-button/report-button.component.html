@@ -1,0 +1,4 @@
+<button class="report-btn" (click)="handleReport($event)" [class.icon-only]="iconOnly">
+    <span class="material-symbols-outlined">flag</span>
+    <span *ngIf="!iconOnly" class="button-label">Report {{ targetType | titlecase }}</span>
+</button>
