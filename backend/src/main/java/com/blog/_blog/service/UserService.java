@@ -99,6 +99,11 @@ public class UserService {
 
         if (follower.getFollowing().contains(target)) {
             follower.getFollowing().remove(target);
+            notificationService.deleteNotification(
+                    target,
+                    follower,
+                    NotificationType.FOLLOW,
+                    Long.valueOf(follower.getId()));
         } else {
             follower.getFollowing().add(target);
             notificationService.createNotification(target, follower, NotificationType.FOLLOW,

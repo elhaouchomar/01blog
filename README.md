@@ -42,17 +42,17 @@ The project combines a modern SPA frontend with a secure REST API backend and Po
 - JWT auth with token stored in `HttpOnly` cookie (`auth_token`).
 - CSRF protection with cookie token (`XSRF-TOKEN`) and `X-XSRF-TOKEN` header on unsafe methods.
 - Spring Security with role-based protection (`ADMIN` routes).
-- Request rate limiting (60 req/min per IP) on:
+- Request rate limiting (write-focused) on:
   - `/api/auth/**`
   - `/api/posts/**`
   - `/api/reports/**`
 - Server-side validation/sanitization for auth, posts, comments, reports, and profile updates.
-- Media upload validation (extension, MIME type, size limit).
+- Media upload validation (extension + declared MIME + content-sniffed MIME via Apache Tika + size limit).
 
 ## Tech Stack
 
 - Frontend: Angular 21, TypeScript, Angular Material, Bootstrap
-- Backend: Spring Boot 2.7, Spring Security, Spring Data JPA, JWT (jjwt), JSoup
+- Backend: Spring Boot 2.7, Spring Security, Spring Data JPA, JWT (jjwt), JSoup, Apache Tika
 - Database: PostgreSQL 16
 - Containers: Docker, Docker Compose
 
@@ -74,6 +74,43 @@ Services:
 - Frontend: `http://localhost:4200`
 - Backend API: `http://localhost:8080/api`
 - PostgreSQL: `localhost:5433` (container `5432`)
+
+### Docker Compose Usage
+
+```bash
+# Start all services (foreground)
+docker compose up --build
+
+# Start all services (background)
+docker compose up -d --build
+
+# Stop services
+docker compose down
+
+# Stop and remove volumes (resets DB data)
+docker compose down -v
+
+# Rebuild and restart a single service
+docker compose build backend
+docker compose up -d backend
+
+# Logs
+docker compose logs -f
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
+```
+
+## Usage
+
+1. Open `http://localhost:4200`.
+2. Register a new account (or login with an existing user).
+3. Go to **Network** and subscribe/follow users.
+4. Go to **Home** to view your feed.
+   - Normal users only see posts from users they follow (plus their own posts).
+   - Admin users can see all posts.
+5. Create posts, like/comment, follow/unfollow, and report content as needed.
+6. If your account is banned, the app shows a single restriction message and signs you out.
 
 ## Local Development Setup
 

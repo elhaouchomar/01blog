@@ -17,6 +17,7 @@ import { MaterialAlertService } from '../../core/services/material-alert.service
   styleUrl: './post-details.css'
 })
 export class PostDetails implements OnInit {
+  readonly COMMENT_MAX_LENGTH = 1000;
   private _post: Post | undefined;
   @Input() set post(value: Post | undefined) {
     this._post = value;
@@ -71,11 +72,11 @@ export class PostDetails implements OnInit {
                 this.cdr.detectChanges();
                 this.scrollToBottom();
               },
-              error: (err) => console.error('Error loading comments:', err)
+              error: () => {}
             });
             this.cdr.detectChanges();
           },
-          error: (err) => console.error('Error loading post:', err)
+          error: () => {}
         });
       } else {
         this.post = modalData;
@@ -147,6 +148,10 @@ export class PostDetails implements OnInit {
 
     // 1. Capture content & prepare optimistic update
     const content = this.newComment.trim();
+    if (content.length > this.COMMENT_MAX_LENGTH) {
+      this.alert.fire('Validation Error', `Comment must be at most ${this.COMMENT_MAX_LENGTH} characters.`, 'warning');
+      return;
+    }
     const currentUser = this.dataService.currentUser();
 
     // Create temp comment
@@ -188,7 +193,6 @@ export class PostDetails implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error adding comment:', err);
         // Revert 
         this.allComments = this.allComments.filter(c => c.id !== tempComment.id);
         this.updateDisplayedComments();
@@ -197,9 +201,15 @@ export class PostDetails implements OnInit {
         if (this.post) this.post.comments--;
 
         this.isSubmitting = false;
+        const message = err?.error?.message || err?.message || 'Failed to add comment.';
+        this.alert.fire('Error', message, 'error');
         this.cdr.detectChanges();
       }
     });
+  }
+
+  onCommentInput(value: string) {
+    this.newComment = (value || '').slice(0, this.COMMENT_MAX_LENGTH);
   }
 
   updateDisplayedComments() {
@@ -271,7 +281,6 @@ export class PostDetails implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Error toggling like:', err);
         if (this.post) {
           this.post.likes = prevLikes;
           this.post.isLiked = prevIsLiked;
@@ -302,7 +311,6 @@ export class PostDetails implements OnInit {
         }
       },
       error: (err) => {
-        console.error('Error toggling comment like:', err);
         comment.isLiked = prevIsLiked;
         comment.likes = prevLikes;
       }
@@ -355,7 +363,6 @@ export class PostDetails implements OnInit {
           this.cdr.detectChanges();
         },
         error: (err) => {
-          console.error('Error deleting comment:', err);
           this.alert.fire('Error', err.error?.message || 'Failed to delete comment.', 'error');
           this.isSubmitting = false;
         }
@@ -389,7 +396,6 @@ export class PostDetails implements OnInit {
         });
       },
       error: (err) => {
-        console.error('Error subscribing:', err);
         this.alert.fire('Error', err.error?.message || 'Failed to subscribe.', 'error');
       }
     });
@@ -460,7 +466,6 @@ export class PostDetails implements OnInit {
             );
           },
           error: (err) => {
-            console.error('Error deleting post:', err);
             this.alert.fire('Error', 'Failed to delete post.', 'error');
           }
         });

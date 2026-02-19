@@ -26,11 +26,11 @@
                 <div class="name-grid-premium" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group-premium">
                         <label class="premium-label">First Name</label>
-                        <input type="text" [(ngModel)]="form.firstname" name="firstname" class="premium-input" required>
+                        <input type="text" [(ngModel)]="form.firstname" name="firstname" class="premium-input" required maxlength="50">
                     </div>
                     <div class="form-group-premium">
                         <label class="premium-label">Last Name</label>
-                        <input type="text" [(ngModel)]="form.lastname" name="lastname" class="premium-input" required>
+                        <input type="text" [(ngModel)]="form.lastname" name="lastname" class="premium-input" required maxlength="50">
                     </div>
                 </div>
 
@@ -45,7 +45,7 @@
                 <div class="form-group-premium">
                     <label class="premium-label">Professional Bio</label>
                     <textarea [(ngModel)]="form.bio" name="bio" class="premium-input"
-                        style="min-height: 6rem; resize: vertical;" placeholder="Add a short bio..."></textarea>
+                        style="min-height: 6rem; resize: vertical;" placeholder="Add a short bio..." maxlength="500"></textarea>
                 </div>
 
                 <div class="moderation-controls"

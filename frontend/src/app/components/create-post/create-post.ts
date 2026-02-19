@@ -13,6 +13,8 @@ import { MaterialAlertService } from '../../core/services/material-alert.service
   styleUrl: './create-post.css'
 })
 export class CreatePost implements OnInit, OnDestroy {
+  readonly TITLE_MAX_LENGTH = 150;
+  readonly CONTENT_MAX_LENGTH = 10000;
   title = '';
   content = '';
   imageUrls: string[] = []; // For preview
@@ -56,6 +58,8 @@ export class CreatePost implements OnInit, OnDestroy {
   }
 
   createPost() {
+    if (this.isLoading) return;
+
     this.title = this.sanitizeInput(this.title);
     this.content = this.sanitizeInput(this.content);
 
@@ -64,13 +68,13 @@ export class CreatePost implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.title.length < 3 || this.title.length > 150) {
-      this.alert.fire('Validation Error', 'Title must be between 3 and 150 characters.', 'warning');
+    if (this.title.length < 3 || this.title.length > this.TITLE_MAX_LENGTH) {
+      this.alert.fire('Validation Error', `Title must be between 3 and ${this.TITLE_MAX_LENGTH} characters.`, 'warning');
       return;
     }
 
-    if (this.content.length < 3) {
-      this.alert.fire('Validation Error', 'Content must be at least 3 characters.', 'warning');
+    if (this.content.length < 3 || this.content.length > this.CONTENT_MAX_LENGTH) {
+      this.alert.fire('Validation Error', `Content must be between 3 and ${this.CONTENT_MAX_LENGTH} characters.`, 'warning');
       return;
     }
 
@@ -84,7 +88,6 @@ export class CreatePost implements OnInit, OnDestroy {
           this.submitPost(remoteUrls);
         },
         error: (err) => {
-          console.error('Error uploading files:', err);
           this.alert.fire('Error', 'Failed to upload media. Please try again.', 'error');
           this.isLoading = false;
           this.cdr.detectChanges();
@@ -93,6 +96,14 @@ export class CreatePost implements OnInit, OnDestroy {
     } else {
       this.submitPost([]);
     }
+  }
+
+  onTitleInput(value: string) {
+    this.title = this.limitText(value, this.TITLE_MAX_LENGTH);
+  }
+
+  onContentInput(value: string) {
+    this.content = this.limitText(value, this.CONTENT_MAX_LENGTH);
   }
 
   private submitPost(mediaUrls: string[]) {
@@ -119,7 +130,12 @@ export class CreatePost implements OnInit, OnDestroy {
           this.modalService.close();
           this.dataService.logout();
         } else {
-          this.alert.fire('Error', 'Failed to create post. Please try again.', 'error');
+          const details = err?.error?.data;
+          const firstDetail = details && typeof details === 'object'
+            ? Object.values(details)[0] as string
+            : '';
+          const message = firstDetail || err?.error?.message || err?.message || 'Failed to create post. Please try again.';
+          this.alert.fire('Error', message, 'error');
         }
       }
     });
@@ -166,5 +182,9 @@ export class CreatePost implements OnInit, OnDestroy {
     const div = document.createElement('div');
     div.innerHTML = value;
     return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
+  }
+
+  private limitText(value: string, maxLength: number): string {
+    return (value || '').slice(0, maxLength);
   }
 }

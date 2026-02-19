@@ -77,7 +77,6 @@ export class EditProfileModal implements OnInit {
                 });
             },
             error: (err) => {
-                console.error('Error updating user:', err);
                 this.alert.fire('Error', 'Failed to update user.', 'error');
             }
         });

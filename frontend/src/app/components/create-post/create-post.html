@@ -14,13 +14,14 @@
                 <!-- Title Input -->
                 <div class="form-group">
                     <input [(ngModel)]="title" name="title" type="text" class="input-field title-input"
-                        placeholder="Title of your post..." />
+                        placeholder="Title of your post..." maxlength="150" (ngModelChange)="onTitleInput($event)" />
                 </div>
 
                 <!-- Content Textarea -->
                 <div class="form-group">
                     <textarea [(ngModel)]="content" name="content" class="textarea-field content-textarea"
-                        placeholder="What do you want to share today?"></textarea>
+                        placeholder="What do you want to share today?" maxlength="10000"
+                        (ngModelChange)="onContentInput($event)"></textarea>
                 </div>
 
                 <!-- Media Upload Input -->
@@ -66,10 +67,11 @@
 
         <!-- Footer -->
         <div class="modal-footer">
-            <button class="btn btn-secondary" (click)="close()">
+            <button type="button" class="btn btn-secondary" (click)="close()">
                 Cancel
             </button>
-            <button class="btn btn-primary" [disabled]="!title || !content" (click)="createPost()">
+            <button type="button" class="btn btn-primary" [disabled]="!title || !content || isLoading"
+                (click)="createPost()">
                 <span>Publish</span>
                 <span class="material-symbols-outlined icon-small">send</span>
             </button>

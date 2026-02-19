@@ -62,7 +62,7 @@ export class RightSidebarComponent implements OnInit {
 
         this.dataService.getUsers().subscribe({
             next: (fetchedUsers) => this.applySuggestions(fetchedUsers),
-            error: (err) => console.error('Error loading suggestions:', err),
+            error: () => {},
         });
     }
 
@@ -101,7 +101,6 @@ export class RightSidebarComponent implements OnInit {
                 });
             },
             error: (err) => {
-                console.error('Error subscribing:', err);
                 // Revert on error
                 user.isFollowing = false;
                 RightSidebarComponent.cachedSuggestions = this.suggestedUsers.map(u =>

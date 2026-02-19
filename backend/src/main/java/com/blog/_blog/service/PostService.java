@@ -15,8 +15,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.blog._blog.entity.NotificationType;
@@ -44,8 +46,23 @@ public class PostService {
         org.springframework.data.domain.Page<Post> postsPage;
         if (currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN) {
             postsPage = postRepository.findAllByOrderByCreatedAtDesc(pageable);
+        } else if (currentUser != null) {
+            Set<Integer> visibleAuthorIds = new HashSet<>();
+            visibleAuthorIds.add(currentUser.getId());
+            if (currentUser.getFollowing() != null) {
+                currentUser.getFollowing().stream()
+                        .map(User::getId)
+                        .filter(id -> id != null)
+                        .forEach(visibleAuthorIds::add);
+            }
+
+            if (visibleAuthorIds.isEmpty()) {
+                postsPage = org.springframework.data.domain.Page.empty(pageable);
+            } else {
+                postsPage = postRepository.findByAuthorIdInAndHiddenFalseOrderByCreatedAtDesc(visibleAuthorIds, pageable);
+            }
         } else {
-            postsPage = postRepository.findByHiddenFalseOrderByCreatedAtDesc(pageable);
+            postsPage = org.springframework.data.domain.Page.empty(pageable);
         }
 
         return postsPage.getContent().stream()
@@ -61,16 +78,25 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostDTO> getUserPosts(Integer userId, String currentUserEmail, int page, int size) {
         User currentUser = currentUserEmail != null ? userRepository.findByEmail(currentUserEmail).orElse(null) : null;
+        User targetUser = userRepository.findById(userId).orElse(null);
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
 
         boolean isOwner = currentUser != null && currentUser.getId().equals(userId);
         boolean isAdmin = currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN;
+        boolean isFollowingTarget = currentUser != null
+                && targetUser != null
+                && currentUser.getFollowing() != null
+                && currentUser.getFollowing().stream()
+                        .map(User::getId)
+                        .anyMatch(id -> id != null && id.equals(userId));
 
         org.springframework.data.domain.Page<Post> postsPage;
         if (isOwner || isAdmin) {
             postsPage = postRepository.findByAuthorIdOrderByCreatedAtDesc(userId, pageable);
-        } else {
+        } else if (isFollowingTarget) {
             postsPage = postRepository.findByAuthorIdAndHiddenFalseOrderByCreatedAtDesc(userId, pageable);
+        } else {
+            postsPage = org.springframework.data.domain.Page.empty(pageable);
         }
 
         return postsPage.getContent().stream()
@@ -85,9 +111,7 @@ public class PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        boolean isOwner = currentUser != null && post.getAuthor().getId().equals(currentUser.getId());
-        boolean isAdmin = currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN;
-        if (post.isHidden() && !isOwner && !isAdmin) {
+        if (!canUserViewPost(post, currentUser)) {
             throw new RuntimeException("Post not found");
         }
 
@@ -104,7 +128,7 @@ public class PostService {
         }
 
         String sanitizedTitle = sanitizeRequiredText(request.getTitle(), "Title", 3, 150);
-        String sanitizedContent = sanitizeRequiredContent(request.getContent(), 3);
+        String sanitizedContent = sanitizeRequiredContent(request.getContent(), 3, 10000);
         String sanitizedCategory = sanitizeOptionalText(request.getCategory(), 100);
         String sanitizedReadTime = sanitizeOptionalText(request.getReadTime(), 50);
         List<String> sanitizedImages = sanitizeMediaUrlList(request.getImages(), 2048);
@@ -153,7 +177,7 @@ public class PostService {
         }
 
         String sanitizedTitle = sanitizeRequiredText(request.getTitle(), "Title", 3, 150);
-        String sanitizedContent = sanitizeRequiredContent(request.getContent(), 3);
+        String sanitizedContent = sanitizeRequiredContent(request.getContent(), 3, 10000);
         String sanitizedCategory = sanitizeOptionalText(request.getCategory(), 100);
         String sanitizedReadTime = sanitizeOptionalText(request.getReadTime(), 50);
         List<String> sanitizedImages = sanitizeMediaUrlList(request.getImages(), 2048);
@@ -190,6 +214,9 @@ public class PostService {
 
         // Delete all reports associated with the post
         reportRepository.deleteByReportedPostId(post.getId());
+        notificationService.deleteNotificationsByTypeAndEntity(NotificationType.LIKE, post.getId());
+        notificationService.deleteNotificationsByTypeAndEntity(NotificationType.COMMENT, post.getId());
+        notificationService.deleteNotificationsByTypeAndEntity(NotificationType.NEW_POST, post.getId());
 
         postRepository.delete(post);
     }
@@ -225,12 +252,17 @@ public class PostService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (!canUserViewPost(post, user)) {
+            throw new RuntimeException("Post not found");
+        }
+
         if (Boolean.TRUE.equals(user.getBanned())) {
             throw new RuntimeException("You are banned and cannot like posts");
         }
 
         if (post.getLikes().contains(user)) {
             post.getLikes().remove(user);
+            notificationService.deleteNotification(post.getAuthor(), user, NotificationType.LIKE, post.getId());
         } else {
             post.getLikes().add(user);
             notificationService.createNotification(post.getAuthor(), user, NotificationType.LIKE, post.getId());
@@ -283,6 +315,14 @@ public class PostService {
             throw new RuntimeException("Unauthorized");
         }
 
+        if (comment.getPost() != null && comment.getPost().getAuthor() != null) {
+            notificationService.deleteNotification(
+                    comment.getPost().getAuthor(),
+                    comment.getAuthor(),
+                    NotificationType.COMMENT,
+                    comment.getPost().getId());
+        }
+
         commentRepository.delete(comment);
     }
 
@@ -293,6 +333,10 @@ public class PostService {
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!canUserViewPost(post, user)) {
+            throw new RuntimeException("Post not found");
+        }
 
         if (Boolean.TRUE.equals(user.getBanned())) {
             throw new RuntimeException("You are banned and cannot comment");
@@ -317,9 +361,7 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        boolean isOwner = currentUser != null && post.getAuthor().getId().equals(currentUser.getId());
-        boolean isAdmin = currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN;
-        if (post.isHidden() && !isOwner && !isAdmin) {
+        if (!canUserViewPost(post, currentUser)) {
             throw new RuntimeException("Post not found");
         }
 
@@ -381,6 +423,20 @@ public class PostService {
                 .build();
     }
 
+    private boolean canUserViewPost(Post post, User user) {
+        if (post == null || user == null) return false;
+        if (user.getRole() == com.blog._blog.entity.Role.ADMIN) return true;
+        if (post.getAuthor() != null && post.getAuthor().getId().equals(user.getId())) return true;
+        if (post.isHidden()) return false;
+        if (user.getFollowing() == null || post.getAuthor() == null || post.getAuthor().getId() == null) {
+            return false;
+        }
+        Integer authorId = post.getAuthor().getId();
+        return user.getFollowing().stream()
+                .map(User::getId)
+                .anyMatch(id -> id != null && id.equals(authorId));
+    }
+
     private String sanitizeRequiredText(String value, String fieldName, int minLen, int maxLen) {
         String sanitized = HtmlSanitizer.sanitizeAndTrimText(value);
         if (sanitized == null || sanitized.isEmpty()) {
@@ -393,14 +449,14 @@ public class PostService {
         return sanitized;
     }
 
-    private String sanitizeRequiredContent(String value, int minLen) {
+    private String sanitizeRequiredContent(String value, int minLen, int maxLen) {
         String sanitizedHtml = HtmlSanitizer.sanitize(value);
         String plainText = HtmlSanitizer.sanitizeAndTrimText(value);
         if (plainText == null || plainText.isEmpty()) {
             throw new IllegalArgumentException("Content is required");
         }
-        if (plainText.length() < minLen) {
-            throw new IllegalArgumentException("Content must be at least " + minLen + " characters");
+        if (plainText.length() < minLen || plainText.length() > maxLen) {
+            throw new IllegalArgumentException("Content must be between " + minLen + " and " + maxLen + " characters");
         }
         return sanitizedHtml != null ? sanitizedHtml.trim() : null;
     }

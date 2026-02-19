@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.Objects;
 import java.util.UUID;
@@ -25,6 +26,9 @@ public class FileStorageService {
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             "image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp",
             "video/mp4", "video/webm", "video/quicktime");
+    private static final Map<String, String> CONTENT_TYPE_ALIASES = Map.of(
+            "image/jpg", "image/jpeg",
+            "video/x-m4v", "video/mp4");
 
     private final Path fileStorageLocation;
     private final long maxFileSizeBytes;
@@ -105,9 +109,47 @@ public class FileStorageService {
             throw new FileValidationException("Unsupported file type. Allowed: images and mp4/webm/mov videos");
         }
 
-        String contentType = file.getContentType() == null ? "" : file.getContentType().toLowerCase(Locale.ROOT);
-        if (!ALLOWED_CONTENT_TYPES.contains(contentType)) {
+        String declaredType = normalizeContentType(file.getContentType());
+        if (declaredType.isEmpty()) {
+            throw new FileValidationException("Content type is required");
+        }
+        if (!ALLOWED_CONTENT_TYPES.contains(declaredType)) {
             throw new FileValidationException("Unsupported media content type");
+        }
+        if (!isExtensionCompatible(extension, declaredType)) {
+            throw new FileValidationException("File extension does not match declared media content type");
+        }
+    }
+
+    private String normalizeContentType(String contentType) {
+        if (contentType == null) {
+            return "";
+        }
+        String normalized = contentType.toLowerCase(Locale.ROOT).trim();
+        return CONTENT_TYPE_ALIASES.getOrDefault(normalized, normalized);
+    }
+
+    private boolean isExtensionCompatible(String extension, String detectedType) {
+        switch (extension) {
+            case ".jpg":
+            case ".jpeg":
+                return "image/jpeg".equals(detectedType);
+            case ".png":
+                return "image/png".equals(detectedType);
+            case ".gif":
+                return "image/gif".equals(detectedType);
+            case ".webp":
+                return "image/webp".equals(detectedType);
+            case ".bmp":
+                return "image/bmp".equals(detectedType);
+            case ".mp4":
+                return "video/mp4".equals(detectedType);
+            case ".webm":
+                return "video/webm".equals(detectedType);
+            case ".mov":
+                return "video/quicktime".equals(detectedType);
+            default:
+                return false;
         }
     }
 }

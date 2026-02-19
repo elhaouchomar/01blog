@@ -7,6 +7,7 @@ import { MaterialAlertService } from '../services/material-alert.service';
 let lastTooManyRequestsPopupAt = 0;
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const API_BASE_URL = APP_CONSTANTS.API.BASE_URL.replace(/\/+$/, '');
+const BANNED_POPUP_LOCK_KEY = '__bannedModalActive';
 
 function readCookie(name: string): string | null {
     if (typeof document === 'undefined') return null;
@@ -57,15 +58,23 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                         icon: 'warning',
                         title: 'Too Many Requests',
                         text: 'You are sending requests too quickly. Please wait a few seconds and try again.',
-                        confirmButtonText: 'OK'
+                        toast: true,
+                        position: 'top-end',
+                        timer: 1800,
+                        showConfirmButton: false
                     });
                 }
                 return throwError(() => error);
             }
 
             if (errorMessage.toLowerCase().includes('banned')) {
-                if (req.url.includes('/auth/authenticate') || window.location.pathname === '/login') {
+                const globalLock = typeof window !== 'undefined' && (window as any)[BANNED_POPUP_LOCK_KEY];
+                if (req.url.includes('/auth/authenticate') || window.location.pathname === '/login' || globalLock) {
                     return throwError(() => error);
+                }
+
+                if (typeof window !== 'undefined') {
+                    (window as any)[BANNED_POPUP_LOCK_KEY] = true;
                 }
 
                 alert.fire({
@@ -75,6 +84,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                     confirmButtonText: 'OK',
                     allowOutsideClick: false
                 }).then(() => {
+                    if (typeof window !== 'undefined') {
+                        (window as any)[BANNED_POPUP_LOCK_KEY] = false;
+                    }
                     window.location.href = '/login';
                 });
             }

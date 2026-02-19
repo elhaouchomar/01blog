@@ -50,6 +50,18 @@ export class MaterialAlertDialogComponent {
         return this.typeClass === 'error' ? 'Error' : 'Notice';
     }
 
+    get impactText(): string {
+        if (this.typeClass === 'error') return 'Please review carefully before continuing.';
+        if (this.typeClass === 'warning') return 'This operation may have visible impact for users.';
+        if (this.typeClass === 'success') return 'Everything looks good. You can continue.';
+        return 'Confirm to proceed with this action.';
+    }
+
+    get confirmIcon(): string {
+        if (this.typeClass === 'warning' || this.typeClass === 'error') return 'task_alt';
+        return 'check';
+    }
+
     get confirmButtonStyle(): Record<string, string> {
         return this.data.confirmButtonColor
             ? { background: this.data.confirmButtonColor, color: '#ffffff' }

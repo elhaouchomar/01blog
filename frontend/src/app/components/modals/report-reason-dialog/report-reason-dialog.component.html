@@ -1,41 +1,58 @@
 <section class="reason-shell">
+  <div class="reason-header-band"></div>
+
   <h2 mat-dialog-title class="reason-title">
     <span class="title-icon-wrapper">
-      <span class="material-symbols-outlined">report</span>
+      <span class="material-symbols-outlined">shield_person</span>
     </span>
-    <span>{{ data.title || 'Report Content' }}</span>
+    <span class="title-copy">
+      <span class="eyebrow">Safety Report</span>
+      <span class="headline">{{ data.title || 'Report Content' }}</span>
+    </span>
   </h2>
 
   <mat-dialog-content class="reason-content">
     <p class="reason-subtitle">
-      {{ data.subtitle || 'Please select a reason for reporting this content.' }}
+      {{ data.subtitle || 'Choose the reason that best describes this issue. Your report helps keep the community safe.' }}
     </p>
 
     <div class="reasons-list">
       @for (r of reasons; track r) {
-      <div class="reason-item" [class.active]="selectedReason === r" (click)="selectReason(r)">
-        <span class="radio-circle"></span>
+      <button type="button" class="reason-item" [class.active]="selectedReason === r" (click)="selectReason(r)">
+        <span class="reason-icon material-symbols-outlined">{{ reasonIcon(r) }}</span>
         <span class="reason-label">{{ r }}</span>
-      </div>
+        <span class="reason-check material-symbols-outlined">check_circle</span>
+      </button>
       }
     </div>
 
     @if (selectedReason === 'Other') {
-    <textarea [(ngModel)]="reason" [attr.placeholder]="data.placeholder || 'Enter details (10-500 characters)'" rows="4"
-      maxlength="500" class="reason-input"></textarea>
+    <div class="reason-input-shell">
+      <label class="reason-input-label" for="other-reason">Additional details</label>
+      <textarea id="other-reason" [(ngModel)]="reason"
+        [attr.placeholder]="data.placeholder || 'Explain what happened (10-500 characters)'" rows="5" maxlength="500"
+        class="reason-input" (input)="onReasonInput()"></textarea>
 
-    <div class="reason-meta">
-      <span>{{ reason.trim().length }}/{{ maxLength }}</span>
+      <div class="reason-meta" [class.warn]="reason.trim().length > 0 && reason.trim().length < minLength">
+        <span>{{ reason.trim().length }} / {{ maxLength }}</span>
+      </div>
     </div>
     }
 
-    <p class="reason-error" *ngIf="error">{{ error }}</p>
+    <p class="reason-error" *ngIf="error">
+      <span class="material-symbols-outlined">error</span>
+      <span>{{ error }}</span>
+    </p>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end" class="reason-actions">
-    <button mat-button class="reason-cancel-btn" (click)="close(null)">Cancel</button>
-    <button mat-flat-button color="warn" class="reason-submit-btn" (click)="submit()">
-      {{ data.confirmButtonText || 'Submit Report' }}
+    <button mat-button class="reason-cancel-btn" (click)="close(null)">
+      <span class="material-symbols-outlined">close</span>
+      <span>Cancel</span>
+    </button>
+    <button mat-flat-button color="warn" class="reason-submit-btn" (click)="submit()" [disabled]="!canSubmit">
+      <span class="material-symbols-outlined">flag</span>
+      <span>{{ data.confirmButtonText || 'Submit Report' }}</span>
     </button>
   </mat-dialog-actions>
 </section>

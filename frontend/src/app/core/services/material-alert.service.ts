@@ -44,6 +44,10 @@ const TOAST_POSITIONS: Record<MaterialAlertPosition, {
     providedIn: 'root'
 })
 export class MaterialAlertService {
+    private activeDialogPromise: Promise<MaterialAlertResult> | null = null;
+    private lastToastKey = '';
+    private lastToastAt = 0;
+
     constructor(
         private dialog: MatDialog,
         private snackBar: MatSnackBar
@@ -57,8 +61,16 @@ export class MaterialAlertService {
         arg3?: MaterialAlertIcon
     ): Promise<MaterialAlertResult> {
         const options = this.normalizeArgs(arg1, arg2, arg3);
+        const messageKey = `${options.icon || 'info'}|${options.title || ''}|${options.text || ''}`;
 
         if (options.toast || options.timer) {
+            const now = Date.now();
+            if (this.lastToastKey === messageKey && now - this.lastToastAt < 1800) {
+                return Promise.resolve({ isConfirmed: false, isDismissed: true });
+            }
+            this.lastToastKey = messageKey;
+            this.lastToastAt = now;
+
             const message = options.title || options.text || 'Done';
             const duration = options.timer ?? 2500;
             const position = TOAST_POSITIONS[options.position || 'top-end'];
@@ -73,6 +85,10 @@ export class MaterialAlertService {
             return Promise.resolve({ isConfirmed: true, isDismissed: false });
         }
 
+        if (this.activeDialogPromise) {
+            return this.activeDialogPromise;
+        }
+
         const ref = this.dialog.open(MaterialAlertDialogComponent, {
             data: options,
             disableClose: options.allowOutsideClick === false,
@@ -82,14 +98,17 @@ export class MaterialAlertService {
             panelClass: 'material-alert-dialog-panel'
         });
 
-        return new Promise((resolve) => {
+        this.activeDialogPromise = new Promise((resolve) => {
             ref.afterClosed().subscribe((confirmed) => {
+                this.activeDialogPromise = null;
                 resolve({
                     isConfirmed: !!confirmed,
                     isDismissed: !confirmed
                 });
             });
         });
+
+        return this.activeDialogPromise;
     }
 
     promptReason(options?: ReportReasonOptions): Promise<string | null> {

@@ -66,7 +66,6 @@ export class Notifications implements OnInit {
                 this.cdr.detectChanges();
             },
             error: (err) => {
-                console.error('Failed to load notifications:', err);
                 this.isMoreAvailable.set(false);
             }
         });
@@ -84,7 +83,6 @@ export class Notifications implements OnInit {
                 this.cdr.detectChanges();
             },
             error: (err) => {
-                console.error('Failed to load more notifications:', err);
                 this.isLoadingMore.set(false);
                 this.page = Math.max(0, this.page - 1);
             }

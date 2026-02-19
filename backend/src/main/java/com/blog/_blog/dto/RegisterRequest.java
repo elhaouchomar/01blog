@@ -23,12 +23,14 @@ public class RegisterRequest {
     private String lastname;
 
     @NotBlank(message = "Email is required")
+    @Size(max = 254, message = "Email must be at most 254 characters")
     @Email(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Invalid email format")
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @Size(min = 6, max = 128, message = "Password must be between 6 and 128 characters")
     private String password;
 
+    @Size(max = 20, message = "Role must be at most 20 characters")
     private String role;
 }

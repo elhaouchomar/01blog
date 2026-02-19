@@ -13,6 +13,10 @@ import { MaterialAlertService } from '../../core/services/material-alert.service
     styleUrl: './create-user.css'
 })
 export class CreateUser {
+    readonly NAME_MAX_LENGTH = 50;
+    readonly EMAIL_MAX_LENGTH = 254;
+    readonly PASSWORD_MAX_LENGTH = 128;
+
     form = {
         firstname: '',
         lastname: '',
@@ -28,10 +32,10 @@ export class CreateUser {
     ) { }
 
     createUser() {
-        const firstname = (this.form.firstname || '').trim();
-        const lastname = (this.form.lastname || '').trim();
-        const email = (this.form.email || '').trim();
-        const password = this.form.password || '';
+        const firstname = (this.form.firstname || '').trim().slice(0, this.NAME_MAX_LENGTH);
+        const lastname = (this.form.lastname || '').trim().slice(0, this.NAME_MAX_LENGTH);
+        const email = (this.form.email || '').trim().slice(0, this.EMAIL_MAX_LENGTH);
+        const password = (this.form.password || '').slice(0, this.PASSWORD_MAX_LENGTH);
         const role = (this.form.role || 'USER').trim().toUpperCase();
 
         if (!firstname || !lastname || !email || !password) {
@@ -62,7 +66,6 @@ export class CreateUser {
                 this.modalService.close();
             },
             error: (err: any) => {
-                console.error('Error creating user:', err);
                 this.alert.fire({
                     icon: 'error',
                     title: 'Failed to create user',
@@ -77,5 +80,21 @@ export class CreateUser {
 
     close() {
         this.modalService.close();
+    }
+
+    onFirstNameInput(value: string) {
+        this.form.firstname = (value || '').slice(0, this.NAME_MAX_LENGTH);
+    }
+
+    onLastNameInput(value: string) {
+        this.form.lastname = (value || '').slice(0, this.NAME_MAX_LENGTH);
+    }
+
+    onEmailInput(value: string) {
+        this.form.email = (value || '').slice(0, this.EMAIL_MAX_LENGTH);
+    }
+
+    onPasswordInput(value: string) {
+        this.form.password = (value || '').slice(0, this.PASSWORD_MAX_LENGTH);
     }
 }

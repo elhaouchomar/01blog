@@ -13,25 +13,29 @@
                     <div class="form-group-premium">
                         <label class="premium-label">First Name</label>
                         <input type="text" [(ngModel)]="form.firstname" name="firstname" class="premium-input"
-                            placeholder="e.g. John" required>
+                            placeholder="e.g. John" required maxlength="50"
+                            (ngModelChange)="onFirstNameInput($event)">
                     </div>
                     <div class="form-group-premium">
                         <label class="premium-label">Last Name</label>
                         <input type="text" [(ngModel)]="form.lastname" name="lastname" class="premium-input"
-                            placeholder="e.g. Doe" required>
+                            placeholder="e.g. Doe" required maxlength="50"
+                            (ngModelChange)="onLastNameInput($event)">
                     </div>
                 </div>
 
                 <div class="form-group-premium">
                     <label class="premium-label">Email Address</label>
                     <input type="email" [(ngModel)]="form.email" name="email" class="premium-input"
-                        placeholder="name@university.edu" required>
+                        placeholder="name@university.edu" required maxlength="254"
+                        (ngModelChange)="onEmailInput($event)">
                 </div>
 
                 <div class="form-group-premium">
                     <label class="premium-label">Access Password</label>
                     <input type="password" [(ngModel)]="form.password" name="password" class="premium-input"
-                        placeholder="••••••••" required>
+                        placeholder="••••••••" required maxlength="128"
+                        (ngModelChange)="onPasswordInput($event)">
                 </div>
 
                 <div class="form-group-premium">

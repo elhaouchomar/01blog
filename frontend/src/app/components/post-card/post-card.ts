@@ -334,7 +334,6 @@ export class PostCardComponent implements OnDestroy {
     }
 
     private handleError(err: any, action: string) {
-        console.error(`Error during ${action}:`, err);
         const errorMessage = err.error?.message || err.message || `Failed to ${action}.`;
 
         if (errorMessage.toLowerCase().includes('banned')) {

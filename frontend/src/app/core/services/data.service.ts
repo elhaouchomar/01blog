@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, isDevMode } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, tap, map, switchMap, retry, timer, throwError } from 'rxjs';
+import { Observable, tap, map, switchMap, retry, timer, throwError, finalize, catchError } from 'rxjs';
+import { Router } from '@angular/router';
 import { User, Post, Notification, Comment, AuthenticationRequest, AuthenticationResponse, RegisterRequest, CreatePostRequest } from '../../shared/models/data.models';
 import { MaterialAlertService } from './material-alert.service';
 import { DashboardStats, ModerationReport, ReportStatus } from '../../shared/models/moderation.models';
@@ -12,10 +13,19 @@ type UserDTO = Partial<User> & {
     postCount?: number;
 };
 
+const BANNED_POPUP_LOCK_KEY = '__bannedModalActive';
+
 @Injectable({
     providedIn: 'root'
 })
 export class DataService {
+    private readonly TITLE_MIN = 3;
+    private readonly TITLE_MAX = 150;
+    private readonly POST_CONTENT_MIN = 3;
+    private readonly POST_CONTENT_MAX = 10000;
+    private readonly COMMENT_CONTENT_MIN = 1;
+    private readonly COMMENT_CONTENT_MAX = 1000;
+
     private readonly BASE_URL = APP_CONSTANTS.API.BASE_URL.replace(/\/+$/, '');
     private readonly API_URL = `${this.BASE_URL}/api`;
 
@@ -48,7 +58,8 @@ export class DataService {
 
     constructor(
         private http: HttpClient,
-        private alert: MaterialAlertService
+        private alert: MaterialAlertService,
+        private router: Router
     ) {
         this.primeCsrfToken();
         this.initializeAuth();
@@ -57,6 +68,10 @@ export class DataService {
     private pollingInterval: ReturnType<typeof setInterval> | null = null;
     private recoveryTimer: ReturnType<typeof setTimeout> | null = null;
     private lastRefreshAt = 0;
+    private isLoggingOut = false;
+    private bannedFlowInProgress = false;
+    private notificationsPauseUntil = 0;
+    private readonly notificationsBackoffMs = 60000;
 
     private shouldRetryRequest(err: HttpErrorResponse): boolean {
         const status = err?.status;
@@ -78,7 +93,7 @@ export class DataService {
     private startPolling() {
         if (this.pollingInterval) clearInterval(this.pollingInterval);
         this.pollingInterval = setInterval(() => {
-            if (this.isLoggedIn()) {
+            if (this.isLoggedIn() && Date.now() >= this.notificationsPauseUntil) {
                 this.loadNotifications();
             }
         }, 30000); // Poll every 30 seconds
@@ -119,6 +134,7 @@ export class DataService {
         this._dashboardStats.set(null);
         this._reports.set([]);
         this._managementPosts.set([]);
+        this.bannedFlowInProgress = false;
         if (this.pollingInterval) {
             clearInterval(this.pollingInterval);
             this.pollingInterval = null;
@@ -174,30 +190,59 @@ export class DataService {
     }
 
     logout() {
-        this.http.post<void>(`${this.API_URL}/auth/logout`, {}).subscribe({
+        if (this.isLoggingOut) return;
+        this.isLoggingOut = true;
+
+        const finishLogout = () => {
+            this.handleTokenExpiration();
+            this._authChecked.set(true);
+            this.router.navigateByUrl('/login');
+            setTimeout(() => {
+                this.bannedFlowInProgress = false;
+                if (typeof window !== 'undefined') {
+                    (window as any)[BANNED_POPUP_LOCK_KEY] = false;
+                }
+            }, 300);
+        };
+
+        this.http.post<void>(`${this.API_URL}/auth/logout`, {}).pipe(
+            finalize(() => {
+                this.isLoggingOut = false;
+            })
+        ).subscribe({
+            next: () => finishLogout(),
             error: () => {
                 // Ignore network failures and proceed with local cleanup.
+                finishLogout();
             }
         });
-        this.handleTokenExpiration();
-        window.location.href = '/login';
     }
 
     private checkBanned(): boolean {
         const user = this._currentUser();
         if (user && user.banned) {
-            this.alert.fire({
-                icon: 'error',
-                title: 'Account Banned',
-                text: 'Your account has been restricted. You have been logged out.',
-                confirmButtonText: 'OK',
-                allowOutsideClick: false
-            }).then(() => {
-                this.logout();
-            });
+            this.triggerBannedFlow('Your account has been restricted. You have been logged out.');
             return true;
         }
         return false;
+    }
+
+    private triggerBannedFlow(message: string) {
+        const globalLock = typeof window !== 'undefined' && (window as any)[BANNED_POPUP_LOCK_KEY];
+        if (this.bannedFlowInProgress || globalLock) return;
+        this.bannedFlowInProgress = true;
+        if (typeof window !== 'undefined') {
+            (window as any)[BANNED_POPUP_LOCK_KEY] = true;
+        }
+        this.alert.fire({
+            icon: 'error',
+            title: 'Account Banned',
+            text: message,
+            confirmButtonText: 'OK',
+            allowOutsideClick: false
+        }).then(() => {
+            this.logout();
+        });
     }
 
     // --- Auth Methods ---
@@ -213,14 +258,8 @@ export class DataService {
                     this.getProfile().pipe(
                         tap(user => {
                             if (user.banned) {
-                                this.handleTokenExpiration(); // Clear token
-                                this.logout(); // Redirect to login
-                                this.alert.fire({
-                                    icon: 'error',
-                                    title: 'Account Banned',
-                                    text: 'Your account has been banned. Please contact support for more information.',
-                                    confirmButtonText: 'OK'
-                                });
+                                this.handleTokenExpiration();
+                                this.triggerBannedFlow('Your account has been banned. Please contact support for more information.');
                                 // Throw an error to stop the observable chain and prevent refreshAllData
                                 throw new Error('User is banned');
                             }
@@ -261,16 +300,8 @@ export class DataService {
                 tap(user => {
                     this._currentUser.set(user);
                     if (user.banned) { // Check banned status when profile is fetched
-                        this.handleTokenExpiration(); // Clear token
-                        this.alert.fire({
-                            icon: 'error',
-                            title: 'Account Banned',
-                            text: 'Your account has been banned. You have been logged out.',
-                            confirmButtonText: 'OK',
-                            allowOutsideClick: false
-                        }).then(() => {
-                            this.logout(); // Redirect to login
-                        });
+                        this.handleTokenExpiration();
+                        this.triggerBannedFlow('Your account has been banned. You have been logged out.');
                         throw new Error('User is banned'); // Stop further processing
                     }
                 })
@@ -374,7 +405,17 @@ export class DataService {
 
     loadNotifications(page: number = 0, size: number = 20, append: boolean = false) {
         this.fetchNotifications(page, size, append).subscribe({
-            error: (err) => this.logError('Failed to load notifications', err)
+            next: () => {
+                this.notificationsPauseUntil = 0;
+            },
+            error: (err) => {
+                // Backend/network down: pause polling attempts for a minute to avoid console spam.
+                if (err instanceof HttpErrorResponse && err.status === 0) {
+                    this.notificationsPauseUntil = Date.now() + this.notificationsBackoffMs;
+                    return;
+                }
+                this.logError('Failed to load notifications', err);
+            }
         });
     }
 
@@ -402,7 +443,12 @@ export class DataService {
 
     addPost(post: CreatePostRequest): Observable<Post> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
-        const sanitizedPost = this.sanitizePostRequest(post);
+        let sanitizedPost: CreatePostRequest;
+        try {
+            sanitizedPost = this.sanitizePostRequest(post);
+        } catch (err) {
+            return throwError(() => err);
+        }
         return this.http.post<Post>(`${this.API_URL}/posts`, sanitizedPost).pipe(
             tap(() => this.loadPosts())
         );
@@ -410,7 +456,12 @@ export class DataService {
 
     updatePost(id: number, post: CreatePostRequest): Observable<Post> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
-        const sanitizedPost = this.sanitizePostRequest(post);
+        let sanitizedPost: CreatePostRequest;
+        try {
+            sanitizedPost = this.sanitizePostRequest(post);
+        } catch (err) {
+            return throwError(() => err);
+        }
         return this.http.put<Post>(`${this.API_URL}/posts/${id}`, sanitizedPost).pipe(
             tap(() => this.refreshPosts())
         );
@@ -418,8 +469,21 @@ export class DataService {
 
     deletePost(id: number): Observable<void> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
+        const previousFeedPosts = this._posts();
+        const previousManagementPosts = this._managementPosts();
+
+        // Optimistic UI update so deleted post disappears immediately.
+        this._posts.update(posts => posts.filter(p => p.id !== id));
+        this._managementPosts.update(posts => posts.filter(p => p.id !== id));
+
         return this.http.delete<void>(`${this.API_URL}/posts/${id}`).pipe(
-            tap(() => this.refreshPosts())
+            tap(() => this.refreshPosts()),
+            catchError(err => {
+                // Roll back optimistic removal if backend deletion fails.
+                this._posts.set(previousFeedPosts);
+                this._managementPosts.set(previousManagementPosts);
+                return throwError(() => err);
+            })
         );
     }
 
@@ -464,6 +528,9 @@ export class DataService {
     addComment(postId: number, content: string): Observable<Comment> {
         if (this.checkBanned()) return new Observable(observer => observer.error('User is banned'));
         const sanitizedContent = this.sanitizePlainText(content);
+        if (sanitizedContent.length < this.COMMENT_CONTENT_MIN || sanitizedContent.length > this.COMMENT_CONTENT_MAX) {
+            return throwError(() => new Error(`Comment must be between ${this.COMMENT_CONTENT_MIN} and ${this.COMMENT_CONTENT_MAX} characters.`));
+        }
         return this.http.post<Comment>(`${this.API_URL}/posts/${postId}/comment`, { content: sanitizedContent }).pipe(
             tap(() => this.refreshPosts())
         );
@@ -615,10 +682,20 @@ export class DataService {
     }
 
     private sanitizePostRequest(post: CreatePostRequest): CreatePostRequest {
+        const title = this.sanitizePlainText(post.title);
+        const content = this.sanitizePlainText(post.content);
+
+        if (title.length < this.TITLE_MIN || title.length > this.TITLE_MAX) {
+            throw new Error(`Title must be between ${this.TITLE_MIN} and ${this.TITLE_MAX} characters.`);
+        }
+        if (content.length < this.POST_CONTENT_MIN || content.length > this.POST_CONTENT_MAX) {
+            throw new Error(`Content must be between ${this.POST_CONTENT_MIN} and ${this.POST_CONTENT_MAX} characters.`);
+        }
+
         return {
             ...post,
-            title: this.sanitizePlainText(post.title),
-            content: this.sanitizePlainText(post.content),
+            title,
+            content,
             category: this.sanitizeOptionalPlainText(post.category),
             readTime: this.sanitizeOptionalPlainText(post.readTime),
             images: this.sanitizeStringArray(post.images),
@@ -661,7 +738,6 @@ export class DataService {
 
     private logError(context: string, err: unknown): void {
         if (isDevMode()) {
-            console.error(`${context}:`, err);
         }
     }
 

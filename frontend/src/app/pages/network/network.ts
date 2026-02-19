@@ -86,7 +86,6 @@ export class Network implements OnInit {
                 });
             },
             error: (err) => {
-                console.error('Error subscribing to user:', err);
                 // Revert on error
                 user.isFollowing = false;
                 this.alert.fire('Error', err.error?.message || 'Failed to subscribe.', 'error');

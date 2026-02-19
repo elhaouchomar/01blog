@@ -70,6 +70,16 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    @Transactional
+    public void deleteNotification(User recipient, User actor, NotificationType type, Long entityId) {
+        notificationRepository.deleteByRecipientAndActorAndTypeAndEntityId(recipient, actor, type, entityId);
+    }
+
+    @Transactional
+    public void deleteNotificationsByTypeAndEntity(NotificationType type, Long entityId) {
+        notificationRepository.deleteByTypeAndEntityId(type, entityId);
+    }
+
     private NotificationDTO mapToDTO(Notification notification) {
         String actorName = notification.getActor().getFirstname() + " " + notification.getActor().getLastname();
         String message = generateMessage(actorName, notification.getType());

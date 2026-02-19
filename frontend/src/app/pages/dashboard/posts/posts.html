@@ -62,12 +62,12 @@
                                     <h6 class="post-title" (click)="reviewPost(post)" [title]="post.title">
                                         {{ post.hidden ? '[Hidden] ' : '' }}{{ post.title }}
                                     </h6>
-                                    <p class="post-author-mobile hide-lg">by {{ post.user.name }}</p>
+                                    <p class="post-author-mobile hide-lg">by {{ post?.user?.name }}</p>
                                 </div>
                             </div>
                         </td>
                         <td class="hide-md">
-                            <span class="author-name">{{ post.user.name }}</span>
+                            <span class="author-name">{{ post?.user?.name }}</span>
                         </td>
                         <td>
                             <div class="stats-badges">
@@ -108,14 +108,14 @@
                                 <button class="btn-icon delete" (click)="deletePost(post)" title="Delete Post">
                                     <span class="material-symbols-outlined">delete</span>
                                 </button>
-                                <button class="btn-icon ban" [class.unban]="post.user.banned"
+                                <button class="btn-icon ban" *ngIf="post?.user" [class.unban]="post?.user?.banned"
                                     (click)="toggleBan(post.user)"
-                                    [title]="post.user.banned ? 'Unban Author' : 'Ban Author'">
-                                    <span class="material-symbols-outlined">{{ post.user.banned ? 'check_circle' :
+                                    [title]="post?.user?.banned ? 'Unban Author' : 'Ban Author'">
+                                    <span class="material-symbols-outlined">{{ post?.user?.banned ? 'check_circle' :
                                         'block' }}</span>
                                 </button>
                                 <button class="btn-icon danger" *ngIf="dataService.currentUser()?.isAdmin"
-                                    (click)="deleteUser(post.user)" title="Delete Author">
+                                    [disabled]="!post?.user" (click)="post?.user && deleteUser(post.user)" title="Delete Author">
                                     <span class="material-symbols-outlined">person_remove</span>
                                 </button>
                             </div>

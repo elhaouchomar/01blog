@@ -59,7 +59,7 @@
                         <label>Student Email</label>
                         <div class="input-wrapper">
                             <input [(ngModel)]="email" name="email" type="email" placeholder="name@university.edu"
-                                required />
+                                required maxlength="254" />
                             <span class="material-symbols-outlined input-icon">mail</span>
                         </div>
                     </div>
@@ -68,7 +68,7 @@
                     <div class="form-group">
                         <div class="input-wrapper">
                             <input [(ngModel)]="password" name="password" [type]="showPassword ? 'text' : 'password'"
-                                placeholder="Enter your password" required />
+                                placeholder="Enter your password" required maxlength="128" />
                             <button type="button" class="toggle-password" (click)="showPassword = !showPassword">
                                 <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' :
                                     'visibility'

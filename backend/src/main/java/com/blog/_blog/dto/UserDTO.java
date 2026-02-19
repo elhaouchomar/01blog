@@ -19,8 +19,14 @@ public class UserDTO {
     private String lastname;
 
     private String email;
+
+    @Size(max = 20, message = "Role must be at most 20 characters")
     private String role;
+
+    @Size(max = 2048, message = "Avatar URL cannot exceed 2048 characters")
     private String avatar;
+
+    @Size(max = 2048, message = "Cover URL cannot exceed 2048 characters")
     private String cover;
 
     @Size(max = 500, message = "Bio cannot exceed 500 characters")

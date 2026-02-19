@@ -38,7 +38,7 @@ export class UserListComponent implements OnInit {
                 this.filteredUsers = users;
                 this.currentPage = 1;
             },
-            error: (err) => console.error('Error loading users', err)
+            error: () => {}
         });
     }
 
@@ -104,7 +104,6 @@ export class UserListComponent implements OnInit {
             },
             error: (err) => {
                 user.isBanned = !user.isBanned; // Revert
-                console.error('Error banning user', err);
                 this.alert.fire('Error', 'Could not update ban status.', 'error');
             }
         });

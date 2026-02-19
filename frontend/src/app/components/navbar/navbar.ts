@@ -319,7 +319,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
                 this.cdr.detectChanges();
             },
             error: (err) => {
-                console.error('Search error:', err);
                 this.searchResults = [];
                 this.isSearchOpen = true;
                 this.isSearching = false;

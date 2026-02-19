@@ -1,6 +1,7 @@
 package com.blog._blog.repository;
 
 import com.blog._blog.entity.Notification;
+import com.blog._blog.entity.NotificationType;
 import com.blog._blog.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,4 +13,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     void deleteByRecipient(User recipient);
 
     void deleteByActor(User actor);
+
+    void deleteByRecipientAndActorAndTypeAndEntityId(User recipient, User actor, NotificationType type, Long entityId);
+
+    void deleteByTypeAndEntityId(NotificationType type, Long entityId);
 }

@@ -14,13 +14,15 @@
                 <!-- Title Input -->
                 <div class="form-group">
                     <input [(ngModel)]="title" name="title" type="text" class="input-field" placeholder="Post title..."
-                        style="font-size: 1.5rem; font-weight: 700;" />
+                        style="font-size: 1.5rem; font-weight: 700;" maxlength="150"
+                        (ngModelChange)="onTitleInput($event)" />
                 </div>
 
                 <!-- Content Textarea -->
                 <div class="form-group">
                     <textarea [(ngModel)]="content" name="content" class="textarea-field"
-                        placeholder="Share your thoughts..."></textarea>
+                        placeholder="Share your thoughts..." maxlength="10000"
+                        (ngModelChange)="onContentInput($event)"></textarea>
                 </div>
 
                 <!-- Media Upload Input -->

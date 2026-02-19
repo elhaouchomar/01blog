@@ -13,6 +13,8 @@ import { MaterialAlertService } from '../../../core/services/material-alert.serv
     styleUrls: ['./login.css']
 })
 export class Login {
+    readonly EMAIL_MAX_LENGTH = 254;
+    readonly PASSWORD_MAX_LENGTH = 128;
     email = '';
     password = '';
     showPassword = false;
@@ -36,6 +38,14 @@ export class Login {
             this.showErrorAlert('Invalid email format.');
             return;
         }
+        if (this.email.length > this.EMAIL_MAX_LENGTH) {
+            this.showErrorAlert(`Email must be at most ${this.EMAIL_MAX_LENGTH} characters.`);
+            return;
+        }
+        if (this.password.length > this.PASSWORD_MAX_LENGTH) {
+            this.showErrorAlert(`Password must be at most ${this.PASSWORD_MAX_LENGTH} characters.`);
+            return;
+        }
 
         this.dataService.login({ email: this.email, password: this.password })
             .subscribe({
@@ -54,7 +64,6 @@ export class Login {
                 error: (err) => {
                     const errorMessage = err.error?.message || 'Login failed. Please check your credentials.';
                     this.showErrorAlert(errorMessage);
-                    console.error('Login error:', err);
                 }
             });
     }

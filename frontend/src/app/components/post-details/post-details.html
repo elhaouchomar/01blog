@@ -118,16 +118,16 @@
 
                         <div *ngFor="let comment of comments; trackBy: trackByComment"
                             class="timeline-node comment-node">
-                            <div class="node-avatar" (click)="goToProfile(comment.user.id)" style="cursor: pointer;">
-                                <img *ngIf="comment.user.avatar; else commentInitials" [src]="comment.user.avatar" alt="">
+                            <div class="node-avatar" (click)="comment?.user?.id && goToProfile(comment.user.id)" style="cursor: pointer;">
+                                <img *ngIf="comment?.user?.avatar; else commentInitials" [src]="comment?.user?.avatar" alt="">
                                 <ng-template #commentInitials>
-                                    <div class="node-avatar-fallback">{{ getNameInitials(comment.user.name) }}</div>
+                                    <div class="node-avatar-fallback">{{ getNameInitials(comment?.user?.name) }}</div>
                                 </ng-template>
                             </div>
                             <div class="node-content">
                                 <div class="node-bubble">
-                                    <span class="node-author-name" (click)="goToProfile(comment.user.id)"
-                                        style="cursor: pointer;">{{ comment.user.name }}</span>
+                                    <span class="node-author-name" (click)="comment?.user?.id && goToProfile(comment.user.id)"
+                                        style="cursor: pointer;">{{ comment?.user?.name }}</span>
                                     <span class="node-body">{{ comment.content }}</span>
                                 </div>
                                 <div class="node-meta">
@@ -168,7 +168,8 @@
                         <div class="composer-inner">
                             <span class="material-symbols-outlined composer-icon">add_comment</span>
                             <input type="text" placeholder="Add a perspective..." [(ngModel)]="newComment"
-                                [disabled]="isSubmitting" (keyup.enter)="addComment()">
+                                [disabled]="isSubmitting" (keyup.enter)="addComment()" maxlength="1000"
+                                (ngModelChange)="onCommentInput($event)">
                             <button class="send-trigger" [disabled]="!newComment.trim() || isSubmitting"
                                 (click)="addComment()">
                                 <span class="material-symbols-outlined">{{ isSubmitting ? 'sync' : 'arrow_upward'

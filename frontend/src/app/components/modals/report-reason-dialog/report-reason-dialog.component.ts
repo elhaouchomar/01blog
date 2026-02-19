@@ -46,6 +46,18 @@ export class ReportReasonDialogComponent {
         }
     }
 
+    reasonIcon(reason: string): string {
+        const key = reason.toLowerCase();
+        if (key.includes('spam')) return 'block';
+        if (key.includes('hate')) return 'gpp_maybe';
+        if (key.includes('harass')) return 'person_off';
+        if (key.includes('violence')) return 'dangerous';
+        if (key.includes('sexual') || key.includes('nudity')) return 'no_adult_content';
+        if (key.includes('misinfo') || key.includes('false')) return 'fact_check';
+        if (key.includes('other')) return 'edit_note';
+        return 'flag';
+    }
+
     submit() {
         let finalReason = '';
         if (this.selectedReason === 'Other') {
@@ -62,6 +74,17 @@ export class ReportReasonDialogComponent {
             return;
         }
         this.close(finalReason);
+    }
+
+    onReasonInput() {
+        this.error = '';
+    }
+
+    get canSubmit(): boolean {
+        if (!this.selectedReason) return false;
+        if (this.selectedReason !== 'Other') return true;
+        const len = this.reason.trim().length;
+        return len >= this.minLength && len <= this.maxLength;
     }
 
     close(value: string | null) {

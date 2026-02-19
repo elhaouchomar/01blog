@@ -98,7 +98,6 @@ export class Profile implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error loading user profile:', err);
         this.isLoading = false;
         this.router.navigate(['/profile']);
       }
@@ -133,7 +132,7 @@ export class Profile implements OnInit {
         this.isMoreAvailable = posts.length >= this.pageSize;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error loading user posts:', err)
+      error: () => {}
     });
   }
 
@@ -156,7 +155,6 @@ export class Profile implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Error loading liked posts:', err);
         this.isLikesLoading = false;
       }
     });
@@ -208,7 +206,6 @@ export class Profile implements OnInit {
           });
         },
         error: (err) => {
-          console.error('Error toggling subscribe:', err);
           this.alert.fire('Error', err.error?.message || 'Failed to update subscription.', 'error');
         }
       });

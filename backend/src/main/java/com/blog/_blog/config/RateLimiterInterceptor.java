@@ -14,30 +14,68 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RateLimiterInterceptor implements HandlerInterceptor {
 
     private final Map<String, UserRequestInfo> requestCounts = new ConcurrentHashMap<>();
-    private static final int MAX_REQUESTS_PER_MINUTE = 60;
+    private static final int MAX_WRITE_REQUESTS_PER_MINUTE = 180;
+    private static final int MAX_AUTH_MUTATION_REQUESTS_PER_MINUTE = 45;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        String method = request.getMethod();
+        if ("OPTIONS".equalsIgnoreCase(method)
+                || "GET".equalsIgnoreCase(method)
+                || "HEAD".equalsIgnoreCase(method)) {
+            return true;
+        }
+
+        if ("/api/auth/logout".equals(request.getRequestURI())) {
             return true;
         }
 
         String clientIp = getClientIp(request);
+        String requestPath = request.getRequestURI();
+        int limit = resolveLimit(method, requestPath);
         long currentTime = System.currentTimeMillis();
 
         requestCounts.entrySet()
                 .removeIf(entry -> currentTime - entry.getValue().lastResetTime > TimeUnit.MINUTES.toMillis(1));
 
-        UserRequestInfo info = requestCounts.computeIfAbsent(clientIp, k -> new UserRequestInfo(currentTime));
+        String bucketKey = clientIp + "|" + method.toUpperCase() + "|" + normalizePath(requestPath);
+        UserRequestInfo info = requestCounts.computeIfAbsent(bucketKey, k -> new UserRequestInfo(currentTime));
 
-        if (info.count.incrementAndGet() > MAX_REQUESTS_PER_MINUTE) {
+        if (info.count.incrementAndGet() > limit) {
             response.setStatus(429); // Too Many Requests
-            response.getWriter().write("Too many requests. Please try again in a minute.");
+            response.setContentType("application/json");
+            response.setHeader("Retry-After", "5");
+            response.getWriter().write("{\"message\":\"Too many requests. Please wait a few seconds and try again.\"}");
             return false;
         }
 
         return true;
+    }
+
+    private int resolveLimit(String method, String path) {
+        if ("POST".equalsIgnoreCase(method)
+                && ("/api/auth/authenticate".equals(path) || "/api/auth/register".equals(path))) {
+            return MAX_AUTH_MUTATION_REQUESTS_PER_MINUTE;
+        }
+        return MAX_WRITE_REQUESTS_PER_MINUTE;
+    }
+
+    private String normalizePath(String path) {
+        if (path == null || path.isEmpty()) {
+            return "/";
+        }
+        // Keep only first 3 segments to avoid too many small buckets.
+        String[] parts = path.split("/");
+        StringBuilder normalized = new StringBuilder();
+        int count = 0;
+        for (String part : parts) {
+            if (part == null || part.isEmpty()) continue;
+            normalized.append('/').append(part);
+            count++;
+            if (count >= 3) break;
+        }
+        return normalized.length() == 0 ? "/" : normalized.toString();
     }
 
     private String getClientIp(HttpServletRequest request) {

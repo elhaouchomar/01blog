@@ -13,6 +13,9 @@ import { MaterialAlertService } from '../../../core/services/material-alert.serv
     styleUrls: ['./register.css']
 })
 export class Register {
+    readonly NAME_MAX_LENGTH = 50;
+    readonly EMAIL_MAX_LENGTH = 254;
+    readonly PASSWORD_MAX_LENGTH = 128;
     firstname = '';
     lastname = '';
     email = '';
@@ -69,8 +72,13 @@ export class Register {
             return;
         }
 
-        if (this.password.length < 6) {
-            this.showErrorAlert('Password must be at least 6 characters.');
+        if (this.email.length > this.EMAIL_MAX_LENGTH) {
+            this.showErrorAlert(`Email must be at most ${this.EMAIL_MAX_LENGTH} characters.`);
+            return;
+        }
+
+        if (this.password.length < 6 || this.password.length > this.PASSWORD_MAX_LENGTH) {
+            this.showErrorAlert(`Password must be between 6 and ${this.PASSWORD_MAX_LENGTH} characters.`);
             return;
         }
 
@@ -98,7 +106,6 @@ export class Register {
             error: (err) => {
                 const errorMessage = err.error?.message || 'Registration failed. Please try again.';
                 this.showErrorAlert(errorMessage);
-                console.error('Register error:', err);
             }
         });
     }

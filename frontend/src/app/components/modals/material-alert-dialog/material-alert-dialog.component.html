@@ -1,24 +1,32 @@
 <section class="alert-shell" [ngClass]="typeClass">
+    <div class="accent-strip" [ngClass]="typeClass"></div>
+
     <h2 mat-dialog-title class="dialog-title">
         <span class="icon-badge" [ngClass]="typeClass">
             <mat-icon>{{ iconName }}</mat-icon>
         </span>
-        <span>{{ data.title || defaultTitle }}</span>
+        <span class="title-copy">
+            <span class="eyebrow">Action Required</span>
+            <span>{{ data.title || defaultTitle }}</span>
+        </span>
     </h2>
 
     <mat-dialog-content class="dialog-content">
         <p *ngIf="data.text">{{ data.text }}</p>
         <div *ngIf="data.html" [innerHTML]="data.html"></div>
+        <div class="impact-note" [ngClass]="typeClass">{{ impactText }}</div>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end" class="dialog-actions">
         <button mat-button class="cancel-button" *ngIf="data.showCancelButton" [ngStyle]="cancelButtonStyle"
             (click)="close(false)">
-            {{ data.cancelButtonText || 'Cancel' }}
+            <mat-icon>close</mat-icon>
+            <span>{{ data.cancelButtonText || 'Cancel' }}</span>
         </button>
         <button mat-flat-button class="confirm-button" *ngIf="data.showConfirmButton !== false"
             [ngStyle]="confirmButtonStyle" (click)="close(true)">
-            {{ data.confirmButtonText || 'OK' }}
+            <mat-icon>{{ confirmIcon }}</mat-icon>
+            <span>{{ data.confirmButtonText || 'OK' }}</span>
         </button>
     </mat-dialog-actions>
 </section>

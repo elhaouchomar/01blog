@@ -222,3 +222,91 @@ WHERE u1.email = 'emma@example.com'
       WHERE uf.user_id = u1.id
         AND uf.following_id = u2.id
   );
+
+-- ---------------------------------------------------------------------------
+-- Bulk mock data (idempotent): ensure at least
+-- 100 users, 1000 posts, 1000 post likes, 10000 comments
+-- ---------------------------------------------------------------------------
+
+-- Ensure at least 100 users.
+INSERT INTO _user (firstname, lastname, email, password, role, banned, subscribed, avatar, cover, bio, created_at)
+SELECT
+    'User' || gs,
+    'Seed',
+    'seed.user' || gs || '@example.com',
+    '$2a$10$bMrHVx5h67Vzn9GKSPVFWOagzmZiF7UGJJO2fLYMoeoskrRNkrZg6',
+    'USER',
+    FALSE,
+    FALSE,
+    'https://i.pravatar.cc/150?img=' || ((gs % 70) + 1),
+    'https://picsum.photos/seed/cover' || gs || '/1200/400',
+    'Generated seed user #' || gs,
+    NOW() - (gs || ' hours')::interval
+FROM generate_series(
+    1,
+    GREATEST(0, 100 - (SELECT COUNT(*) FROM _user))
+) gs
+ON CONFLICT (email) DO NOTHING;
+
+-- Ensure at least 1000 posts.
+INSERT INTO posts (title, content, category, read_time, author_id, hidden, created_at, updated_at)
+SELECT
+    'Seed Post #' || gs,
+    'This is generated seed content for post #' || gs || '.',
+    (ARRAY['Frontend', 'Backend', 'DevOps', 'Security', 'Database'])[((gs - 1) % 5) + 1],
+    ((gs % 9) + 2) || ' min',
+    (
+        SELECT u.id
+        FROM (
+            SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS rn
+            FROM _user
+        ) u
+        WHERE u.rn = (((gs - 1) % (SELECT COUNT(*) FROM _user)) + 1)
+    ),
+    FALSE,
+    NOW() - (gs || ' minutes')::interval,
+    NOW() - (gs || ' minutes')::interval
+FROM generate_series(
+    1,
+    GREATEST(0, 1000 - (SELECT COUNT(*) FROM posts))
+) gs
+ON CONFLICT DO NOTHING;
+
+-- Ensure at least 1000 post likes.
+INSERT INTO post_likes (post_id, user_id)
+SELECT
+    p.id,
+    u.id
+FROM generate_series(
+    1,
+    GREATEST(0, 1000 - (SELECT COUNT(*) FROM post_likes))
+) gs
+JOIN (
+    SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS rn
+    FROM posts
+) p ON p.rn = (((gs - 1) % (SELECT COUNT(*) FROM posts)) + 1)
+JOIN (
+    SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS rn
+    FROM _user
+) u ON u.rn = ((((gs * 7) - 1) % (SELECT COUNT(*) FROM _user)) + 1)
+ON CONFLICT DO NOTHING;
+
+-- Ensure at least 10000 comments.
+INSERT INTO comments (content, author_id, post_id, created_at)
+SELECT
+    'Seed comment #' || gs || ' on generated data.',
+    u.id,
+    p.id,
+    NOW() - ((gs % 1440) || ' minutes')::interval
+FROM generate_series(
+    1,
+    GREATEST(0, 10000 - (SELECT COUNT(*) FROM comments))
+) gs
+JOIN (
+    SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS rn
+    FROM _user
+) u ON u.rn = ((((gs * 11) - 1) % (SELECT COUNT(*) FROM _user)) + 1)
+JOIN (
+    SELECT id, ROW_NUMBER() OVER (ORDER BY id) AS rn
+    FROM posts
+) p ON p.rn = ((((gs * 13) - 1) % (SELECT COUNT(*) FROM posts)) + 1);

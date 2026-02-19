@@ -16,6 +16,8 @@ import { User } from '../../shared/models/data.models';
     styleUrl: './settings.css'
 })
 export class Settings implements OnInit {
+    readonly NAME_MAX_LENGTH = 50;
+    readonly BIO_MAX_LENGTH = 500;
     activeTab: string = 'Account';
     editForm = {
         firstname: '',
@@ -56,6 +58,23 @@ export class Settings implements OnInit {
 
     saveSettings() {
         if (!this.dataService.currentUser()) return;
+        this.editForm.firstname = this.sanitizeInput(this.editForm.firstname);
+        this.editForm.lastname = this.sanitizeInput(this.editForm.lastname);
+        this.editForm.bio = this.sanitizeInput(this.editForm.bio);
+
+        const nameRegex = /^[A-Za-z\-']{2,50}$/;
+        if (!nameRegex.test(this.editForm.firstname)) {
+            this.alert.fire('Validation Error', 'First name must contain only letters and be 2-50 characters.', 'warning');
+            return;
+        }
+        if (!nameRegex.test(this.editForm.lastname)) {
+            this.alert.fire('Validation Error', 'Last name must contain only letters and be 2-50 characters.', 'warning');
+            return;
+        }
+        if (this.editForm.bio && this.editForm.bio.length > this.BIO_MAX_LENGTH) {
+            this.alert.fire('Validation Error', `Bio must be at most ${this.BIO_MAX_LENGTH} characters.`, 'warning');
+            return;
+        }
 
         this.dataService.updateProfile(this.editForm).subscribe({
             next: (updated) => {
@@ -69,7 +88,6 @@ export class Settings implements OnInit {
                 });
             },
             error: (err) => {
-                console.error('Failed to update profile:', err);
                 this.alert.fire({
                     icon: 'error',
                     title: 'Update Failed',
@@ -114,5 +132,14 @@ export class Settings implements OnInit {
                 });
             }
         });
+    }
+
+    private sanitizeInput(value: string): string {
+        if (typeof document === 'undefined') {
+            return value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        }
+        const div = document.createElement('div');
+        div.innerHTML = value;
+        return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
     }
 }

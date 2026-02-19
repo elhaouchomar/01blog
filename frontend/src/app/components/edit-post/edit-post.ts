@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ModalService } from '../../core/services/modal.service';
 import { DataService } from '../../core/services/data.service';
 import { Post } from '../../shared/models/data.models';
+import { MaterialAlertService } from '../../core/services/material-alert.service';
 
 @Component({
     selector: 'app-edit-post',
@@ -13,6 +14,8 @@ import { Post } from '../../shared/models/data.models';
     styleUrl: './edit-post.css'
 })
 export class EditPost implements OnInit, OnDestroy {
+    readonly TITLE_MAX_LENGTH = 150;
+    readonly CONTENT_MAX_LENGTH = 10000;
     title = '';
     content = '';
     imageUrls: string[] = []; // For preview/existing
@@ -25,7 +28,8 @@ export class EditPost implements OnInit, OnDestroy {
         protected modalService: ModalService,
         private dataService: DataService,
         private cdr: ChangeDetectorRef,
-        private ngZone: NgZone
+        private ngZone: NgZone,
+        private alert: MaterialAlertService
     ) {
         // Get the post data from modal service
         const data = this.modalService.modalData();
@@ -75,7 +79,19 @@ export class EditPost implements OnInit, OnDestroy {
     }
 
     updatePost() {
+        this.title = this.sanitizeInput(this.title);
+        this.content = this.sanitizeInput(this.content);
+
         if (!this.title || !this.content || !this.post) return;
+        if (this.title.length < 3 || this.title.length > this.TITLE_MAX_LENGTH) {
+            this.alert.fire('Validation Error', `Title must be between 3 and ${this.TITLE_MAX_LENGTH} characters.`, 'warning');
+            return;
+        }
+        if (this.content.length < 3 || this.content.length > this.CONTENT_MAX_LENGTH) {
+            this.alert.fire('Validation Error', `Content must be between 3 and ${this.CONTENT_MAX_LENGTH} characters.`, 'warning');
+            return;
+        }
+
         this.isLoading = true;
 
         if (this.selectedFiles.length > 0) {
@@ -86,7 +102,6 @@ export class EditPost implements OnInit, OnDestroy {
                     this.submitUpdate([...remainingExistingUrls, ...newRemoteUrls]);
                 },
                 error: (err) => {
-                    console.error('Error uploading files:', err);
                     alert('Failed to upload media.');
                     this.isLoading = false;
                     this.cdr.detectChanges();
@@ -95,6 +110,14 @@ export class EditPost implements OnInit, OnDestroy {
         } else {
             this.submitUpdate(this.imageUrls);
         }
+    }
+
+    onTitleInput(value: string) {
+        this.title = this.limitText(value, this.TITLE_MAX_LENGTH);
+    }
+
+    onContentInput(value: string) {
+        this.content = this.limitText(value, this.CONTENT_MAX_LENGTH);
     }
 
     private submitUpdate(finalUrls: string[]) {
@@ -110,8 +133,12 @@ export class EditPost implements OnInit, OnDestroy {
                 this.modalService.close();
             },
             error: (err) => {
-                console.error('Error updating post:', err);
-                alert('Failed to update post.');
+                const details = err?.error?.data;
+                const firstDetail = details && typeof details === 'object'
+                    ? Object.values(details)[0] as string
+                    : '';
+                const message = firstDetail || err?.error?.message || 'Failed to update post.';
+                this.alert.fire('Error', message, 'error');
                 this.isLoading = false;
                 this.cdr.detectChanges();
             }
@@ -151,5 +178,18 @@ export class EditPost implements OnInit, OnDestroy {
     ngOnDestroy() {
         // Restore scrolling when modal is destroyed
         document.body.style.overflow = '';
+    }
+
+    private sanitizeInput(value: string): string {
+        if (typeof document === 'undefined') {
+            return value.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+        }
+        const div = document.createElement('div');
+        div.innerHTML = value;
+        return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim();
+    }
+
+    private limitText(value: string, maxLength: number): string {
+        return (value || '').slice(0, maxLength);
     }
 }
