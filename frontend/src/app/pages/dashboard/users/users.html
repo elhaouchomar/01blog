@@ -9,6 +9,7 @@
         <div class="search-section">
             <span class="material-symbols-outlined search-icon">search</span>
             <input type="text" class="search-input" placeholder="Search by name, email or role..."
+                [attr.maxlength]="maxSearchLength"
                 [ngModel]="searchQuery()" (input)="onSearch($event)">
         </div>
         <div class="filter-section">

@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 
 export interface MaterialAlertDialogData {
     icon?: 'success' | 'error' | 'warning' | 'info' | 'question';
@@ -28,7 +27,7 @@ const ICON_MAP = {
 @Component({
     selector: 'app-material-alert-dialog',
     standalone: true,
-    imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule],
+    imports: [CommonModule, MatDialogModule, MatButtonModule],
     templateUrl: './material-alert-dialog.component.html',
     styleUrl: './material-alert-dialog.component.css'
 })

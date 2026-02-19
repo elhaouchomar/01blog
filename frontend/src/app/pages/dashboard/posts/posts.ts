@@ -9,6 +9,7 @@ import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
 import { DbPaginationComponent } from '../../../components/dashboard/db-pagination';
 import { usePagination } from '../../../shared/utils/pagination.utils';
 import { MaterialAlertService } from '../../../core/services/material-alert.service';
+import { APP_CONSTANTS } from '../../../shared/constants/app.constants';
 
 @Component({
   selector: 'app-posts',
@@ -18,6 +19,7 @@ import { MaterialAlertService } from '../../../core/services/material-alert.serv
   styleUrl: './posts.css',
 })
 export class Posts implements OnInit {
+  readonly maxSearchLength = APP_CONSTANTS.VALIDATION.MAX_SEARCH_LENGTH;
   searchQuery = signal('');
   statusFilter = signal('visible');
   sortBy = signal('newest');
@@ -87,7 +89,7 @@ export class Posts implements OnInit {
   }
 
   setSearchQuery(value: string) {
-    this.searchQuery.set(value);
+    this.searchQuery.set(this.normalizeSearch(value));
     this.pagination.goToPage(1);
   }
 
@@ -214,5 +216,9 @@ export class Posts implements OnInit {
 
   exportPosts() {
     // TODO: Implement CSV/JSON export
+  }
+
+  private normalizeSearch(value: string): string {
+    return (value ?? '').trim().slice(0, this.maxSearchLength);
   }
 }

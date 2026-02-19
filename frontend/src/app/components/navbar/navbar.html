@@ -18,6 +18,7 @@
                 <div class="search-bar desktop-search" [class.active]="isSearchOpen">
                     <span class="material-symbols-outlined search-icon">search</span>
                     <input #searchInput type="text" class="search-input" placeholder="Search for posts or people..."
+                        [attr.maxlength]="maxSearchLength"
                         [(ngModel)]="searchQuery" (keyup.enter)="performSearch()" (input)="onSearchInput()"
                         (focus)="onSearchFocus()">
 
@@ -183,6 +184,7 @@
     <div class="mobile-search-bar" [class.active]="isSearchOpen && isMobileSearch">
         <div class="mobile-search-header">
             <input type="text" class="search-input" placeholder="Search for posts or people..."
+                [attr.maxlength]="maxSearchLength"
                 [(ngModel)]="searchQuery" (input)="onSearchInput()" #mobileSearchInput (keyup.enter)="performSearch()">
 
             <div class="search-spinner" *ngIf="isSearching"></div>

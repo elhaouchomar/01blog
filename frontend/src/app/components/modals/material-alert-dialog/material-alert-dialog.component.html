@@ -3,7 +3,7 @@
 
     <h2 mat-dialog-title class="dialog-title">
         <span class="icon-badge" [ngClass]="typeClass">
-            <mat-icon>{{ iconName }}</mat-icon>
+            <span class="material-symbols-outlined dialog-symbol-icon">{{ iconName }}</span>
         </span>
         <span class="title-copy">
             <span class="eyebrow">Action Required</span>
@@ -20,12 +20,12 @@
     <mat-dialog-actions align="end" class="dialog-actions">
         <button mat-button class="cancel-button" *ngIf="data.showCancelButton" [ngStyle]="cancelButtonStyle"
             (click)="close(false)">
-            <mat-icon>close</mat-icon>
+            <span class="material-symbols-outlined dialog-symbol-icon">close</span>
             <span>{{ data.cancelButtonText || 'Cancel' }}</span>
         </button>
         <button mat-flat-button class="confirm-button" *ngIf="data.showConfirmButton !== false"
             [ngStyle]="confirmButtonStyle" (click)="close(true)">
-            <mat-icon>{{ confirmIcon }}</mat-icon>
+            <span class="material-symbols-outlined dialog-symbol-icon">{{ confirmIcon }}</span>
             <span>{{ data.confirmButtonText || 'OK' }}</span>
         </button>
     </mat-dialog-actions>

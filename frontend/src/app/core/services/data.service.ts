@@ -14,6 +14,7 @@ type UserDTO = Partial<User> & {
 };
 
 const BANNED_POPUP_LOCK_KEY = '__bannedModalActive';
+const SESSION_ACTIVE_KEY = 'sessionActive';
 
 @Injectable({
     providedIn: 'root'
@@ -100,6 +101,12 @@ export class DataService {
     }
 
     private initializeAuth() {
+        if (!this.hasSessionHint()) {
+            this._authChecked.set(true);
+            this.loadPosts();
+            return;
+        }
+
         this.getProfile().pipe(
             retry({
                 count: 2,
@@ -129,6 +136,7 @@ export class DataService {
     }
 
     private handleTokenExpiration() {
+        this.clearSessionHint();
         this._currentUser.set(null);
         this._notifications.set([]);
         this._dashboardStats.set(null);
@@ -265,6 +273,7 @@ export class DataService {
                             }
                         }),
                         tap(() => this.refreshAllData()), // Only refresh if not banned
+                        tap(() => this.markSessionActive()),
                         tap(() => this._authChecked.set(true)),
                         tap(() => this.startPolling()),
                         map(() => response) // Map back to the original AuthenticationResponse
@@ -279,6 +288,7 @@ export class DataService {
             .pipe(
                 tap(() => {
                     this.getProfile().subscribe(() => {
+                        this.markSessionActive();
                         this.refreshAllData();
                         this._authChecked.set(true);
                         this.startPolling();
@@ -655,7 +665,9 @@ export class DataService {
 
     search(query: string, filter: string = 'all', limit: number = 10): Observable<any> {
         if (this.checkBanned()) return new Observable(o => o.error('Banned'));
-        const params = { q: this.sanitizePlainText(query), filter, limit: limit.toString() };
+        const maxLength = APP_CONSTANTS.VALIDATION.MAX_SEARCH_LENGTH;
+        const sanitizedQuery = this.sanitizePlainText(query).slice(0, maxLength);
+        const params = { q: sanitizedQuery, filter, limit: limit.toString() };
         return this.http.get<any>(`${this.API_URL}/search`, { params });
     }
 
@@ -739,6 +751,21 @@ export class DataService {
     private logError(context: string, err: unknown): void {
         if (isDevMode()) {
         }
+    }
+
+    private hasSessionHint(): boolean {
+        if (typeof window === 'undefined') return false;
+        return window.localStorage.getItem(SESSION_ACTIVE_KEY) === '1';
+    }
+
+    private markSessionActive(): void {
+        if (typeof window === 'undefined') return;
+        window.localStorage.setItem(SESSION_ACTIVE_KEY, '1');
+    }
+
+    private clearSessionHint(): void {
+        if (typeof window === 'undefined') return;
+        window.localStorage.removeItem(SESSION_ACTIVE_KEY);
     }
 
     private mapDTOToUser(dto: UserDTO): User {

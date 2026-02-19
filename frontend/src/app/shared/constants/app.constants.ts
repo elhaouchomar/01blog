@@ -32,6 +32,7 @@ export const APP_CONSTANTS = {
 
     VALIDATION: {
         MIN_SEARCH_LENGTH: 2,
+        MAX_SEARCH_LENGTH: 100,
         MAX_SEARCH_RESULTS: 10,
         DEBOUNCE_TIME: 400
     }

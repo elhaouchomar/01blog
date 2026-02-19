@@ -7,6 +7,7 @@ import { ModalService } from '../../core/services/modal.service';
 import { DropdownNotifComponent } from '../dropdown-notif/dropdown-notif';
 import { filter, debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
 import { getInitials } from '../../shared/utils/string.utils';
+import { APP_CONSTANTS } from '../../shared/constants/app.constants';
 
 @Component({
     selector: 'app-navbar',
@@ -33,6 +34,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     searchResults: any[] = [];
     searchAttempted = false;
     isSearching = false;
+    readonly maxSearchLength = APP_CONSTANTS.VALIDATION.MAX_SEARCH_LENGTH;
     private searchSubject = new Subject<string>();
     private destroy$ = new Subject<void>();
 
@@ -255,9 +257,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     // Search methods
     onSearchInput() {
-        if (this.searchQuery.trim().length >= 2) {
+        this.searchQuery = this.normalizeSearchQuery(this.searchQuery);
+
+        if (this.searchQuery.length >= APP_CONSTANTS.VALIDATION.MIN_SEARCH_LENGTH) {
             this.isSearching = true;
-            this.searchSubject.next(this.searchQuery.trim());
+            this.searchSubject.next(this.searchQuery);
         } else {
             this.searchResults = [];
             this.searchAttempted = false;
@@ -292,14 +296,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     setFilter(filter: string) {
         this.searchFilter = filter;
-        if (this.searchQuery.trim().length >= 2) {
+        if (this.searchQuery.length >= APP_CONSTANTS.VALIDATION.MIN_SEARCH_LENGTH) {
             this.performSearch();
         }
         this.cdr.detectChanges();
     }
 
     performSearch() {
-        if (!this.searchQuery.trim()) {
+        this.searchQuery = this.normalizeSearchQuery(this.searchQuery);
+        if (!this.searchQuery) {
             this.searchResults = [];
             this.isSearchOpen = false;
             this.searchAttempted = false;
@@ -311,7 +316,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.isSearching = true;
         this.searchAttempted = true;
         this.cdr.detectChanges(); // Force UI update to show loading state
-        this.dataService.search(this.searchQuery.trim(), this.searchFilter).subscribe({
+        this.dataService.search(this.searchQuery, this.searchFilter).subscribe({
             next: (response) => {
                 this.searchResults = this.processSearchResults(response);
                 this.isSearchOpen = true;
@@ -398,5 +403,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
             this.isSearchOpen = false;
             this.cdr.detectChanges();
         }
+    }
+
+    private normalizeSearchQuery(value: string): string {
+        return (value ?? '').trim().slice(0, this.maxSearchLength);
     }
 }

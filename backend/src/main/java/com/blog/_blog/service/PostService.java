@@ -78,25 +78,16 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostDTO> getUserPosts(Integer userId, String currentUserEmail, int page, int size) {
         User currentUser = currentUserEmail != null ? userRepository.findByEmail(currentUserEmail).orElse(null) : null;
-        User targetUser = userRepository.findById(userId).orElse(null);
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
 
         boolean isOwner = currentUser != null && currentUser.getId().equals(userId);
         boolean isAdmin = currentUser != null && currentUser.getRole() == com.blog._blog.entity.Role.ADMIN;
-        boolean isFollowingTarget = currentUser != null
-                && targetUser != null
-                && currentUser.getFollowing() != null
-                && currentUser.getFollowing().stream()
-                        .map(User::getId)
-                        .anyMatch(id -> id != null && id.equals(userId));
 
         org.springframework.data.domain.Page<Post> postsPage;
         if (isOwner || isAdmin) {
             postsPage = postRepository.findByAuthorIdOrderByCreatedAtDesc(userId, pageable);
-        } else if (isFollowingTarget) {
-            postsPage = postRepository.findByAuthorIdAndHiddenFalseOrderByCreatedAtDesc(userId, pageable);
         } else {
-            postsPage = org.springframework.data.domain.Page.empty(pageable);
+            postsPage = postRepository.findByAuthorIdAndHiddenFalseOrderByCreatedAtDesc(userId, pageable);
         }
 
         return postsPage.getContent().stream()
@@ -427,14 +418,7 @@ public class PostService {
         if (post == null || user == null) return false;
         if (user.getRole() == com.blog._blog.entity.Role.ADMIN) return true;
         if (post.getAuthor() != null && post.getAuthor().getId().equals(user.getId())) return true;
-        if (post.isHidden()) return false;
-        if (user.getFollowing() == null || post.getAuthor() == null || post.getAuthor().getId() == null) {
-            return false;
-        }
-        Integer authorId = post.getAuthor().getId();
-        return user.getFollowing().stream()
-                .map(User::getId)
-                .anyMatch(id -> id != null && id.equals(authorId));
+        return !post.isHidden();
     }
 
     private String sanitizeRequiredText(String value, String fieldName, int minLen, int maxLen) {

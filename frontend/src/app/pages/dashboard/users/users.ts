@@ -9,6 +9,7 @@ import { DbFeedbackComponent } from '../../../components/dashboard/db-feedback';
 import { DbPaginationComponent } from '../../../components/dashboard/db-pagination';
 import { usePagination } from '../../../shared/utils/pagination.utils';
 import { MaterialAlertService } from '../../../core/services/material-alert.service';
+import { APP_CONSTANTS } from '../../../shared/constants/app.constants';
 
 @Component({
   selector: 'app-users',
@@ -18,6 +19,7 @@ import { MaterialAlertService } from '../../../core/services/material-alert.serv
   styleUrl: './users.css',
 })
 export class Users implements OnInit {
+  readonly maxSearchLength = APP_CONSTANTS.VALIDATION.MAX_SEARCH_LENGTH;
   searchQuery = signal('');
   statusFilter = signal('all');
 
@@ -79,7 +81,8 @@ export class Users implements OnInit {
   }
 
   onSearch(event: any) {
-    this.searchQuery.set(event.target.value);
+    const value = this.normalizeSearch(event?.target?.value);
+    this.searchQuery.set(value);
     this.pagination.goToPage(1);
   }
 
@@ -143,5 +146,9 @@ export class Users implements OnInit {
         });
       }
     });
+  }
+
+  private normalizeSearch(value: string): string {
+    return (value ?? '').trim().slice(0, this.maxSearchLength);
   }
 }

@@ -40,6 +40,7 @@ public class SecurityConfiguration {
                 .authorizeRequests()
                 .antMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/auth/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/trends").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/search").permitAll()
                 .antMatchers(HttpMethod.GET, "/uploads/**").permitAll()

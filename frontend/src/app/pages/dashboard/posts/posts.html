@@ -10,6 +10,7 @@
         <div class="search-section">
             <span class="material-symbols-outlined search-icon">search</span>
             <input type="text" class="search-input" placeholder="Filter by author or keyword..."
+                [attr.maxlength]="maxSearchLength"
                 [ngModel]="searchQuery()" (input)="setSearchQuery($any($event.target).value)">
         </div>
 
