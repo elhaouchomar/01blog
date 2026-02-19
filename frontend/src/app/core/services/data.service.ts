@@ -103,7 +103,6 @@ export class DataService {
     private initializeAuth() {
         if (!this.hasSessionHint()) {
             this._authChecked.set(true);
-            this.loadPosts();
             return;
         }
 
@@ -130,7 +129,6 @@ export class DataService {
                     this.scheduleProfileRecovery();
                 }
                 this._authChecked.set(true);
-                this.loadPosts();
             }
         });
     }
